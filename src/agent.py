@@ -61,6 +61,9 @@ SYSTEM_PROMPT = """당신은 골프를 시작한 지 0~3개월 된 입문자를 
 2. 반드시 아래 '근거 문서' 안의 내용만 사용합니다. 문서에 없는 내용은 지어내지 않습니다.
 3. '판정'이 있으면 측정 각도와 교육용 기준값을 먼저 알려 주고, 근거 문서의 교정 방법과 연습 방법을 안내합니다.
 4. 장비 구매 추천, 가격, 의학적 진단은 하지 않습니다.
+   이 질문은 시스템이 이미 답해도 되는 범위로 판정했으므로, 근거 문서가 있으면 범위를 이유로 거절하지 않습니다.
+   제품명·브랜드명은 쓰지 않고, 근거에 있는 일반 특징(예: SPF, 워터프루프)만으로 답합니다.
+   근거에 없는 조건별 조언(피부 타입·체형별 등)을 덧붙이지 않습니다.
 5. 근거가 '웹 검색 결과'이면 조회 날짜 기준의 정보라고 밝히고, 결과끼리 말이 다르면 단정하지 말고 그렇다고 알립니다.
    근거가 골프 규칙 문서이면 몇 년판 규칙 기준인지(예: 2023년판 골프 규칙 기준) 답변에 밝힙니다.
 6. '이전 기록'(이 사용자의 지난 자세 판정)이 있으면 이번 판정과 비교해 좋아진 점이나 반복되는 문제를 한 문장으로 짚습니다.
@@ -86,6 +89,7 @@ class AgentState(TypedDict, total=False):
     video_base64: str | None
     pose: dict | None          # 테스트·채점이 주입한 관절 좌표(pose_fixture)
     model: str | None          # 이번 요청의 코칭 모델 ID (없으면 기본 모델)
+    served_model: str | None   # 실제로 답한 모델 (대체 경로로 다른 모델이 답했을 수 있음)
     user_id: str | None        # 장기 기억 주인. 없으면 장기 기억을 쓰지 않음
     # 이번 요청 결과 (start 노드에서 매번 초기화)
     status: str
@@ -138,11 +142,27 @@ def _text_of(message) -> str:
     return str(content)
 
 
-def default_llm(model_id: str = config.MODEL_ID):
-    """실제 코칭 모델. 기본값은 고정 스택이고, 웹 화면에서 고른 모델이면 그 ID로 만듭니다. 함수 안에서만 만듭니다."""
+def fallback_chain(model_id: str | None) -> list[str]:
+    """코칭 모델을 시도할 순서: 고른 모델(없으면 기본 모델) → 허용 목록(config.AVAILABLE_MODELS)의 나머지 순서대로."""
+    first = model_id or config.MODEL_ID
+    return [first, *(m["id"] for m in config.AVAILABLE_MODELS if m["id"] != first)]
+
+
+def default_llm(model_id: str = config.MODEL_ID, fallback: bool = True):
+    """실제 코칭 모델. 기본값은 고정 스택이고, 웹 화면에서 고른 모델이면 그 ID로 만듭니다. 함수 안에서만 만듭니다.
+
+    고른 모델이 사용량 한도(ThrottlingException)·권한·일시 장애 등 Bedrock 오류로 실패하면
+    허용 목록의 다음 모델로 넘어갑니다(LangChain with_fallbacks). 실제로 답한 모델은 응답의
+    response_metadata["model_name"] 에 남아 API 응답의 model 필드로 나갑니다.
+    fallback=False 면 고른 모델만 씁니다(평가 --strict-model: 회차 간 같은 모델 조건을 지키기 위해).
+    """
+    from botocore.exceptions import BotoCoreError, ClientError
     from langchain_aws import ChatBedrockConverse
 
-    return ChatBedrockConverse(model=model_id, region_name=config.REGION, temperature=0)
+    llms = [ChatBedrockConverse(model=m, region_name=config.REGION, temperature=0) for m in fallback_chain(model_id)]
+    if not fallback:
+        return llms[0]
+    return llms[0].with_fallbacks(llms[1:], exceptions_to_handle=(ClientError, BotoCoreError))
 
 
 class GolfCoachAgent:
@@ -153,6 +173,7 @@ class GolfCoachAgent:
         self.memory = memory or LongTermMemory()   # 사용자별 장기 기억 (대화방 기억은 checkpointer)
         self._llm_injected = llm is not None  # 주입한 모델(가짜 모델 등)이 있으면 모델 선택을 무시합니다
         self._llms: dict[str, Any] = {}       # 모델 ID별로 한 번만 만들어 재사용
+        self.model_fallback = True            # False 면 한도 초과 시 다른 모델로 넘기지 않음(평가 --strict-model)
         self._retriever = retriever
         self._pose_estimator = pose_estimator
         self._web_search = web_search
@@ -176,7 +197,7 @@ class GolfCoachAgent:
     @property
     def llm(self):
         if self._llm is None:
-            self._llm = default_llm()
+            self._llm = default_llm(fallback=self.model_fallback)
         return self._llm
 
     def llm_for(self, model_id: str | None):
@@ -184,14 +205,15 @@ class GolfCoachAgent:
         if self._llm_injected or not model_id or model_id == config.MODEL_ID:
             return self.llm
         if model_id not in self._llms:
-            self._llms[model_id] = default_llm(model_id)
+            self._llms[model_id] = default_llm(model_id, fallback=self.model_fallback)
         return self._llms[model_id]
 
-    def model_label(self, model_id: str | None) -> str:
-        """응답에 적을 모델 이름. 주입한 모델이면 그 클래스 이름(예: FakeCoachLLM)입니다."""
+    def model_label(self, model_id: str | None, served: str | None = None) -> str:
+        """응답에 적을 모델 이름. 주입한 모델이면 그 클래스 이름(예: FakeCoachLLM),
+        대체 경로로 다른 모델이 답했으면 실제로 답한 모델입니다."""
         if self._llm_injected:
             return type(self._llm).__name__
-        return model_id or config.MODEL_ID
+        return served or model_id or config.MODEL_ID
 
     @property
     def retriever(self):
@@ -315,11 +337,13 @@ class GolfCoachAgent:
         for turn in history:
             messages.append(HumanMessage(turn["content"]) if turn["role"] == "user" else AIMessage(turn["content"]))
         messages.append(HumanMessage(prompt))
-        answer = _text_of(self.llm_for(state.get("model")).invoke(messages)).strip()
+        message = self.llm_for(state.get("model")).invoke(messages)
+        answer = _text_of(message).strip()
         finding = state.get("finding")
         update = {
             "trace": _step(state, "coach", state["question"], answer),
             "status": config.STATUS_ANSWERED,
+            "served_model": (getattr(message, "response_metadata", None) or {}).get("model_name"),
             "answer": answer,
             "history": [
                 *state.get("history", []),
@@ -422,6 +446,7 @@ class GolfCoachAgent:
                 "video_base64": video_base64,
                 "pose": pose_fixture,
                 "model": model,
+                "served_model": None,   # 이전 턴 값이 체크포인트에 남아 섞이지 않게 매번 비웁니다
                 "user_id": user_id,
             },
             config_,
@@ -437,7 +462,7 @@ class GolfCoachAgent:
             "agents": state.get("agents", []),
             # 영상 판정이면 프레임별 왼팔 각도(화면 그래프용). 그 밖에는 None
             "angle_series": (state.get("finding") or {}).get("series"),
-            "model": self.model_label(model),
+            "model": self.model_label(model, state.get("served_model")),
         }
 
 

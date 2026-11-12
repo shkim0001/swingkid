@@ -134,3 +134,16 @@ def test_case20_live_passes_when_web_answer_is_grounded():
 def test_case20_live_fails_when_judge_finds_made_up_content():
     case = _case20_live(result(3, grounded=False, violations=["근거에 없는 제품 추천"]))
     assert not case.passed and ("기대: judge 위반·근거 밖 내용 없음", False) in case.checks
+
+
+def test_judge_failure_does_not_stop_the_run():
+    """judge 가 사용량 한도 등으로 실패해도 평가 실행은 계속되고, 그 문항은 사람 확인 대상으로 남습니다."""
+    from src.evaluate import run
+
+    class BrokenJudge:
+        def judge(self, case):
+            raise RuntimeError("ThrottlingException: Too many tokens per day")
+
+    results = run(judge=BrokenJudge())
+    assert len(results) == 20
+    assert any("judge 실행 오류" in m for r in results for m in r.manual)

@@ -5,6 +5,7 @@
 0. McpWebSearch — 라이브 기본값. info_agent 는 웹을 직접 부르지 않고 MCP 도구(golf_web_search)를 호출합니다.
    도구는 src/mcp_server.py(stdio MCP 서버)가 노출하고, 서버 안에서 아래 DuckDuckGoSearch 로 검색합니다.
 1. DuckDuckGoSearch — MCP 서버 안에서 쓰는 실제 검색기. API 키 없이 쓰는 ddgs 패키지로 검색합니다.
+   엔진 여러 개(config.WEB_BACKENDS)와 검색어 2개(키워드 → 문장)를 차례로 시도합니다.
    질문에 '골프'가 없으면 앞에 붙여 골프 관련 결과만 찾게 합니다.
    패키지가 없거나 네트워크 오류가 나면 예외를 올리지 않고 빈 목록을 돌려줘 no_answer 로 끝나게 합니다.
 2. FakeWebSearch — 자동 채점·테스트용. data/fixtures/web_search.json 의 고정 결과를 돌려줍니다.
@@ -20,6 +21,7 @@ import json
 import logging
 import sys
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -42,31 +44,68 @@ def golf_query(query: str) -> str:
     return query if "골프" in query or "golf" in query.lower() else f"골프 {query}"
 
 
-class DuckDuckGoSearch:
-    """라이브용 웹 검색기 (ddgs, API 키 불필요)."""
+def keyword_query(query: str) -> str:
+    """질문 문장에서 명사·숫자·영문만 남긴 검색어 ('…성적이 몇 타였나요?' → '타이거 우즈 2000 us 오픈 최종 성적').
 
-    def __init__(self, max_results: int = config.WEB_TOP_K, region: str = "kr-kr", timeout: int = 10, attempts: int = 2):
+    검색 엔진에 따라 질문 문장을 통째로 넣으면 결과가 없고 키워드로 넣어야 나오는 경우가 있어 두 번째 검색어로 씁니다.
+    형태소 분석은 지식 검색(BM25)과 같은 kiwipiepy 토큰화를 그대로 씁니다.
+    """
+    from src.retriever import tokenize
+
+    return " ".join(tokenize(query))
+
+
+class DuckDuckGoSearch:
+    """라이브용 웹 검색기 (ddgs, API 키 불필요).
+
+    한 엔진이 막히거나 결과가 없어도 멈추지 않도록, 검색어 2개(키워드 → 질문 문장) × 엔진 여러 개(config.WEB_BACKENDS)를
+    차례로 시도하고 처음 나온 결과를 씁니다. 모두 실패하면 빈 목록 + last_error 로 no_answer 가 되게 합니다.
+    """
+
+    def __init__(self, max_results: int = config.WEB_TOP_K, region: str = "kr-kr", timeout: int = config.WEB_ATTEMPT_TIMEOUT,
+                 backends: tuple[str, ...] = config.WEB_BACKENDS, total_timeout: float = config.WEB_TOTAL_TIMEOUT):
         self.max_results = max_results
         self.region = region
         self.timeout = timeout
-        self.attempts = attempts  # 검색 서버가 가끔 시간 초과로 실패해 한 번 더 시도합니다
+        self.backends = backends
+        self.total_timeout = total_timeout
         self.last_error: str | None = None
+
+    def queries(self, query: str) -> list[str]:
+        """키워드 검색어를 먼저, 질문 문장을 다음에 씁니다(측정상 키워드 쪽 성공률이 높음)."""
+        sentence = golf_query(query)
+        keywords = keyword_query(query)
+        return [sentence] if not keywords or golf_query(keywords) == sentence else [golf_query(keywords), sentence]
 
     def search(self, query: str) -> list[WebResult]:
         self.last_error = None
-        rows = None
-        for _ in range(self.attempts):
-            try:
-                from ddgs import DDGS
-
-                rows = DDGS(timeout=self.timeout).text(golf_query(query), region=self.region, max_results=self.max_results)
-                self.last_error = None
-                break
-            except Exception as exc:  # 패키지 없음·네트워크·검색 제한 등은 '근거 없음'으로 처리합니다
-                self.last_error = f"{type(exc).__name__}: {exc}"
-                log.warning("웹 검색 실패: %s", self.last_error)
-        if rows is None:
+        errors = []
+        try:
+            from ddgs import DDGS
+        except Exception as exc:  # 패키지 없음
+            self.last_error = f"{type(exc).__name__}: {exc}"
             return []
+        deadline = time.monotonic() + self.total_timeout
+        for q in self.queries(query):
+            for backend in self.backends:
+                if time.monotonic() > deadline:
+                    errors.append("전체 시간 제한 초과")
+                    break
+                try:
+                    rows = DDGS(timeout=self.timeout).text(q, region=self.region, max_results=self.max_results, backend=backend)
+                except Exception as exc:  # 네트워크·검색 제한·결과 없음 → 다음 엔진
+                    errors.append(f"{backend}: {type(exc).__name__}: {exc}"[:200])
+                    continue
+                results = self._parse(rows)
+                if results:
+                    self.last_error = None
+                    return results
+                errors.append(f"{backend}: 결과 없음")
+        self.last_error = " | ".join(errors) or "결과 없음"
+        log.warning("웹 검색 실패: %s", self.last_error)
+        return []
+
+    def _parse(self, rows) -> list[WebResult]:
         results = []
         for row in rows or []:
             url, body = row.get("href") or "", (row.get("body") or "").strip()

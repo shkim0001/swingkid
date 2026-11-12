@@ -111,3 +111,9 @@ SWING_AGENT = "swing_agent"          # 사진·영상 자세 판정 (포즈 추�
 KNOWLEDGE_AGENT = "knowledge_agent"  # 내부 골프 지식 문서 검색 (RAG)
 INFO_AGENT = "info_agent"            # 웹 검색 (최신 결과·순위·문서에 없는 골프 정보)
 WEB_TOP_K = 4                        # 웹 검색 결과를 근거로 쓸 최대 개수
+# 웹 검색 엔진을 이 순서로 시도합니다(ddgs 백엔드). 2026-11-12 측정(질문 3개 × 2회, 키워드/문장):
+# yahoo 5/6·3/6(1~2초), yandex 4/6·4/6, google 4/6·1/6, bing 3/6·4/6, brave·mojeek·wikipedia 0, duckduckgo 는 이 네트워크에서 시간 초과.
+# 3차 평가 6번 실패 원인이 DuckDuckGo 시간 초과였습니다. 한 엔진이 막혀도 다음 엔진으로 넘어갑니다.
+WEB_BACKENDS = ("yahoo", "yandex", "google", "bing")
+WEB_ATTEMPT_TIMEOUT = 6     # 엔진 한 번 호출 제한(초)
+WEB_TOTAL_TIMEOUT = 40      # 검색 한 번 전체 제한(초). MCP 호출 제한(60초) 안에 끝나도록

@@ -4,7 +4,7 @@
 src/web_search.py 의 McpWebSearch 가 MCP 클라이언트(langchain-mcp-adapters)로 자식 프로세스로 띄웁니다.
 
 노출 도구
-- golf_web_search(query, max_results): DuckDuckGo(ddgs) 로 골프 웹 검색.
+- golf_web_search(query, max_results): ddgs 로 골프 웹 검색(엔진 여러 개를 차례로 시도: config.WEB_BACKENDS).
   결과는 {"results": [{url, title, text}], "error": str | None} 구조로 돌려줘
   클라이언트가 출처 URL 을 그대로 sources 에 쓸 수 있습니다.
 

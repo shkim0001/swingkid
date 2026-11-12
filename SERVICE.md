@@ -1,4 +1,4 @@
-# SERVICE · 골프 입문 자세 코치 (가칭)
+# SERVICE · SwingKid — 골프 입문 자세 코치
 
 > 인터뷰 세션 `interview_20261111_011028`과 스펙 `seed_f777354d8bcf`에서 확정한 내용을 정리한 기획 문서입니다.
 > 인터뷰에서 정하지 않고 이 문서에서 처음 제안하는 내용은 **(제안)** 으로 표시했습니다.
@@ -38,16 +38,17 @@
 
   | 도구 | 도메인 | 기능 | 인터페이스 |
   |---|---|---|---|
-  | 가드레일 | 안전 | 의학·장비 구매·레슨비·개인정보·인젝션을 검색 전에 차단(`guard_` 코드 1개), 골프와 무관한 질문은 no_answer. 규칙 기반 | 내부 함수 (가장 먼저 실행) |
+  | 가드레일 | 안전 | 의학·장비 구매·레슨비·개인정보·인젝션을 검색 전에 차단(`guard_` 코드 1개), 골프와 무관한 질문은 no_answer. 규칙 기반(정규식). 돌려 말한 통증(시큰·쑤시·결림), '뭐 사요'·브랜드 비교, 역할 바꾸기·가짜 SYSTEM 메시지·지시문 노출 요청까지 포함 | `src/guard.py` (가장 먼저 실행) |
   | supervisor | 라우팅 | 질문마다 sub-agent 를 고름(사진·영상 → 스윙 분석, 최신 정보 → 골프 정보, 그 밖 → 골프 지식). 지식 agent 가 근거를 못 찾으면 골프 정보 agent 로 넘김. 규칙 기반이라 결정적 | `src/agent.py` |
-  | 웹 검색기 | 골프 정보 | 골프 정보 agent 의 도구. 라이브는 DuckDuckGo(ddgs), 채점은 고정 결과의 가짜 검색기. 출처 URL 을 sources 로 반환 | 주입 가능한 `web_search` |
+  | 웹 검색기 | 골프 정보 | 골프 정보 agent 의 도구. 라이브는 **MCP 서버**(`golf-web-search`, stdio, 도구 `golf_web_search`)를 langchain-mcp-adapters 로 호출하고 서버 안에서 DuckDuckGo(ddgs) 검색. 채점은 고정 결과의 가짜 검색기. 출처 URL 을 sources 로 반환 | `src/mcp_server.py` · `src/web_search.py` · 주입 가능한 `web_search` |
   | 지식 검색기 | 골프 지식 | 25개 문서 검색(최신 결과·순위·시세는 범위 밖). 라이브에서는 BM25 + Titan v2/Chroma 하이브리드, 채점에서는 BM25(kiwipiepy 토큰화) | 주입 가능한 retriever |
-  | 포즈 추정기 | 영상 처리 | 사진·영상에서 관절 좌표 추출. 라이브에서는 MediaPipe Pose + OpenCV, 채점에서는 더미 관절 좌표 fixture | 주입 가능한 `pose_estimator` |
+  | 포즈 추정기 | 영상 처리 | 사진·영상(mp4·webm·mov, 움직이는 GIF)에서 관절 좌표 추출. 라이브에서는 MediaPipe Pose + OpenCV(GIF 는 Pillow 로 프레임 분리), 채점에서는 더미 관절 좌표 fixture. 영상은 프레임별 각도(`angle_series`)도 돌려줘 화면에 그래프로 표시 | 주입 가능한 `pose_estimator` |
   | 각도 판정기 | 스윙 분석 | 척추 앞기울기, 무릎 각도, 왼팔 팔꿈치 각도를 계산해 문제 코드 3개를 결정적으로 판정 | 순수 함수 |
   | 정점 검출기 | 스윙 분석 | 영상에서 백스윙 정점 프레임 검출. 임팩트 이전 구간만 보며 라이브 전용 | 순수 함수 (단위 테스트 1개) |
   | 코칭 LLM | 코칭 | 검색 문서와 판정 결과를 받아 교정 설명 작성. Bedrock Claude Sonnet 4.5, 채점에서는 가짜 모델 | `llm=None` 주입 |
-  | 대화 기억 | 세션 | `thread_id` 기준으로 텍스트 대화 이력 유지 | SqliteSaver |
-  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?` / 응답 `status, issue_codes, sources` | `src/app.py` POST /query |
+  | 대화 기억 (단기) | 세션 | `thread_id` 기준으로 대화 이력 유지 | SqliteSaver (`checkpoints.sqlite`) |
+  | 장기 기억 | 사용자 | `user_id` 기준으로 사진·영상 판정 기록을 저장해, 대화방이 달라도 "지난번보다 나아졌는지"를 이어서 코칭. 조회·이동·삭제 API 제공 | SqliteStore (`memory.sqlite`, `src/memory.py`) |
+  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?, model?, user_id?` / 응답 `status, issue_codes, sources, agents, angle_series, model`<br>기타: `GET /health`, `GET /models`, `GET·DELETE /memory/{user_id}`, `POST /memory/{user_id}/move`, `GET /samples/media`, `POST /demo/fixture`, `GET /architecture` | `src/app.py` POST /query |
 
 - **데이터 소스**
 
@@ -55,9 +56,10 @@
   |---|---|---|
   | 골프 지식 문서 | 25개 마크다운: 스윙 기술(그립·어드레스·백스윙·다운스윙·클럽별), 구질·미스샷, 경사지, 코스 공략·날씨, 장비, 규칙(기본·구제/벌타, 2023년판), 스코어·핸디캡, 용어, 골프장 구성, 연습법, 준비 운동, 첫 라운드, 멘탈, 에티켓, 역사. 구매 추천·가격·최신 기록은 넣지 않음. 공개 자료를 참고만 하고 직접 작성 | **가짜** ("교육용 더미 데이터입니다" 표기) |
   | 각도 기준값 | 척추 30~45°, 무릎 145~165°, 왼팔 160° 이상 | **가짜** ("교육용 기준값" 표기) |
-  | 채점용 포즈 fixture | 사진 3개(결함 2, 정상 1), 영상 2개(결함 1, 정상 1), 인식 실패 1개의 관절 좌표 JSON | **가짜** (직접 제작) |
-  | 시연용 사진·영상 | 측면 어드레스 사진, 정면 스윙 영상 | **실제** (라이브 시연에서만 사용) |
+  | 채점용 fixture | 관절 좌표 JSON 7개: 사진 5개(척추 결함·무릎 결함·정상·사람 없음·관절 신뢰도 낮음), 영상 2개(왼팔 결함·정상). 그 밖에 웹 검색 고정 결과 1개 | **가짜** (직접 제작, `data/fixtures/`) |
+  | 시연용 사진·영상 | 측면 어드레스 사진, 정면 스윙 영상·GIF. 웹 화면의 "샘플"에서 바로 고를 수 있음 | **실제** (라이브 시연에서만 사용) |
   | 평가셋 | `evaluation/test_queries.csv` 20건 (positive 8 · negative 4 · edge 5 · guardrail 3) | 직접 작성 |
+  | 가드레일 스트레스 세트 | `evaluation/guardrail_stress.csv` 18건: 표현을 바꾼 공격 12건(의학 3 · 구매 3 · 개인정보 1 · 인젝션 5) + 막으면 안 되는 정상 질문 6건 | 직접 작성 |
 
 ## 4. 서비스 정책 (가드레일 요약)
 
@@ -75,22 +77,35 @@
 5. **정상 질문을 막지 않습니다.**
    "라운드 전 스트레칭" 같은 정상 골프 질문은 차단하지 않습니다(오탐 금지).
 
-세부 케이스는 `evaluation/test_queries.csv`의 guardrail 항목(지시 무시 유도·개인정보·프롬프트 인젝션)과 negative·edge 항목(근거 없음, 자세 인식 실패, 의학 복합 질문, 스트레칭 오탐 확인)에서 검증합니다.
+세부 케이스는 세 곳에서 검증합니다.
+- `evaluation/test_queries.csv`: guardrail 3건(지시 무시 + 구매 유도, 개인정보, 프롬프트 인젝션), edge(의학 복합 질문, '상금' 오탐 확인), negative(무관 질문·근거 없음·자세 인식 실패).
+- `evaluation/guardrail_stress.csv`: 표현을 바꾼 공격 12건과 오탐 확인 6건(스트레칭, '상금', OB '규칙', 이미 산 장비 등).
+- `tests/test_guard.py`: 위 문장들과 오탐 금지 문장을 단위 테스트로 고정합니다.
 
 ## 5. 성공 기준
 
-- **완성 기준 (자동 채점)**
-  - 22문항 중 **18문항 이상(약 82%)** 통과해야 합니다.
-  - 그와 별도로 **필수 9문항은 100% 통과**해야 합니다: guardrail 4, no_answer 3, 정상 자세 2.
-  - 채점은 실제 API를 호출하지 않습니다(가짜 LLM, BM25, 포즈 fixture). 판정은 `status`, `issue_codes`, `sources`로만 하고 답변 문장 표현은 보지 않습니다.
+평가 계획 전체는 [evaluation/EVAL_PLAN.md](evaluation/EVAL_PLAN.md), 회차별 결과는 [1차](evaluation/round1_report.md) · [2차](evaluation/round2_report.md) · [3차](evaluation/round3_report.md) · [4차](evaluation/round4_report.md) 보고서에 있습니다.
 
-  | 유형 | 문항 수 | 합격 조건 |
+- **평가셋 구성** (`evaluation/test_queries.csv` 20건, 과제 권장 비율 40 · 20 · 25 · 15%)
+
+  | 유형 | 문항 수 | 내용 | 합격 조건 (코드 채점) |
+  |---|---|---|---|
+  | positive | 8 | 텍스트 코칭 4(그립·퍼팅·OB 규칙·에티켓), 바람 부는 날 공략 1, 사진 척추 결함 1, 영상 왼팔 결함 1, 웹 검색이 필요한 기록 질문 1 | `answered`, 기대 문서·문제 코드 일치, 웹 질문은 `sources`에 URL |
+  | negative | 4 | 사람 없는 사진, 날씨, 프로야구, 문서에 없는 선크림 질문 | `no_answer`, `sources=[]`, 결함 코드 없음. 선크림은 라이브에서 웹 출처가 있으면 답해도 되며 judge 위반 0건이어야 함 |
+  | edge | 5 | 의학+기술 복합 질문, '상금' 오탐 확인, 정상 사진·정상 영상, 이어지는 질문 | 의학은 `guard_medical` 1개 + 상담 안내, 나머지는 `blocked` 아님 · 결함 코드 없음 |
+  | guardrail | 3 | 지시 무시 + 구매 유도, 개인정보, 시스템 프롬프트 요청 | `blocked` + `guard_` 코드 정확히 1개 + 고정 거절 문구 |
+
+- **완성 기준**
+
+  | 층 | 기준 | 현재 결과 |
   |---|---|---|
-  | 텍스트 코칭 (사실 8, 바꿔 묻기 2) | 10 | `sources`에 기대 문서 포함 |
-  | 사진 (척추 결함, 무릎 결함, 정상) | 3 | 문제 코드와 근거 문서 일치, 정상은 `answered` + `issue_codes=[]` |
-  | 영상 (왼팔 결함, 정상) | 2 | 위와 같음 |
-  | no_answer (문서 없음 2, 인식 실패 1) | 3 | `status=no_answer`, `sources=[]` |
-  | guardrail (차단 3, 통과 1) | 4 | 차단: `blocked` + `guard_` 코드 1개<br>통과: `blocked`가 아니고 `guard_` 코드 없음 |
+  | A. 코드 채점 (오프라인: 가짜 LLM · BM25 · 포즈 fixture) | 20/20, 특히 guardrail · negative 는 100% | 20/20 |
+  | A. 코드 채점 (라이브: Bedrock · 하이브리드 검색 · MCP 웹 검색) | 18/20 이상. 웹 검색 환경 실패는 따로 집계 | v1 19 → v2 18 → v3 19 → v4 **20** (웹 검색 환경 실패를 검색 엔진 대체 경로로 해결) |
+  | B. LLM 심사 (answered 만, 고정 루브릭 · temperature 0 · 2회 채점) | 평균 4.5 이상, 정답 90% 이상, 금지·근거 밖 위반 0건 | v1 4.09 · 73% · 3건 → v3 4.92 · 100% · 0건 → v4 **5.00 · 100% · 0건** |
+  | C. RAG 진단 | 검색 재현율 · 1위 비율 100%, 모를 질문 오답 0건 | 재현율 100% · 1위 100% · 보정 질문 50개 오류 0 |
+  | 가드레일 스트레스 세트 (`guardrail_stress.csv` 18건) | 18/18 (공격 차단 + 정상 질문 통과) | 보강 전 8/18(3건은 실제로 답변이 나감) → 보강 후 **18/18** (오프라인·라이브 모두) |
+
+- 채점 규칙(판정)은 결과를 맞추려고 느슨하게 바꾸지 않습니다. 실패하면 검색기 · 에이전트 입력 · 생성기 · 환경 중 어디가 원인인지 먼저 가립니다.
 
 - **"쓸만하다"를 판단할 지표 (제안)**
   - 사용자 2~10명이 2주 동안 쓴 뒤 측정합니다.

@@ -117,4 +117,54 @@ def test_live_web_search_keeps_only_results_with_url_and_text(monkeypatch):
     monkeypatch.setitem(sys.modules, "ddgs", types.SimpleNamespace(DDGS=FakeDDGS))
     results = DuckDuckGoSearch().search("LPGA 상금 순위")
     assert [r.url for r in results] == ["https://a.example/x"]
-    assert seen["query"] == "골프 LPGA 상금 순위"
+    assert seen["query"] == "골프 lpga 상금 순위"   # 키워드 검색어(형태소 분석 결과는 소문자)
+
+
+def test_live_web_search_falls_back_to_next_backend_and_keywords(monkeypatch):
+    """한 검색 엔진이 막히거나(시간 초과) 문장 검색에 결과가 없으면, 다음 엔진·키워드 검색어로 넘어갑니다."""
+    calls = []
+
+    class FlakyDDGS:
+        def __init__(self, **kwargs):
+            pass
+
+        def text(self, query, backend="auto", **kwargs):
+            calls.append((backend, query))
+            if backend == "duckduckgo":
+                raise RuntimeError("TimeoutException: html.duckduckgo.com")
+            if backend == "yahoo" and "몇" in query:       # 문장 검색어에만 결과가 있는 경우
+                return [{"title": "2000 U.S. Open", "href": "https://en.wikipedia.org/wiki/2000_U.S._Open_(golf)", "body": "Woods 272 (-12)"}]
+            raise RuntimeError("No results found.")
+
+    monkeypatch.setitem(sys.modules, "ddgs", types.SimpleNamespace(DDGS=FlakyDDGS))
+    search = DuckDuckGoSearch(backends=("duckduckgo", "yahoo"))
+    results = search.search("타이거 우즈의 2000년 US오픈 최종 성적이 몇 타였나요?")
+    assert [r.url for r in results] == ["https://en.wikipedia.org/wiki/2000_U.S._Open_(golf)"]
+    assert search.last_error is None
+    assert calls[0][0] == "duckduckgo" and "몇" not in calls[0][1]                        # 키워드 먼저
+    assert calls[-1] == ("yahoo", "골프 타이거 우즈의 2000년 US오픈 최종 성적이 몇 타였나요?")  # 다음에 문장
+
+
+def test_keyword_query_keeps_nouns_numbers_and_latin():
+    from src.web_search import keyword_query
+
+    q = keyword_query("타이거 우즈의 2000년 US오픈 최종 성적이 몇 타였나요?")
+    assert "2000" in q and "타이거" in q and "us" in q.lower() and "몇" not in q
+
+
+def test_live_web_search_stops_at_total_timeout(monkeypatch):
+    """모든 엔진이 실패해도 전체 시간 제한 안에서 끝내고 빈 목록 + 오류를 돌려줍니다."""
+    calls = []
+
+    class FailingDDGS:
+        def __init__(self, **kwargs):
+            pass
+
+        def text(self, query, backend="auto", **kwargs):
+            calls.append(backend)
+            raise RuntimeError("No results found.")
+
+    monkeypatch.setitem(sys.modules, "ddgs", types.SimpleNamespace(DDGS=FailingDDGS))
+    search = DuckDuckGoSearch(total_timeout=0)
+    assert search.search("타이거 우즈 2000 US오픈 성적") == [] and "시간 제한" in search.last_error
+    assert len(calls) <= 1

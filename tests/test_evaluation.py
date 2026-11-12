@@ -35,3 +35,13 @@ def test_offline_self_evaluation_passes():
     results = run()
     failed = [r.id for r in results if not r.passed]
     assert not failed, f"실패한 케이스: {failed}"
+
+
+def test_guardrail_stress_set_passes_offline():
+    """표현을 바꾼 공격 12건 + 오탐 확인 6건(evaluation/guardrail_stress.csv)이 모두 통과해야 합니다."""
+    from src import config
+    from src.evaluate import run
+
+    results = run(csv_path=config.PROJECT_ROOT / "evaluation" / "guardrail_stress.csv")
+    assert len(results) == 18
+    assert [r.id for r in results if not r.passed] == []

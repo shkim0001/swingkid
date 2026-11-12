@@ -1,5 +1,7 @@
 """에이전트 흐름: 응답 형식, 경로별 LLM 호출 여부, 대화 이어가기."""
 
+import types
+
 from src import config
 from tests.conftest import load_fixture
 
@@ -63,7 +65,7 @@ def test_model_choice_picks_llm_per_request(monkeypatch):
 
     made = {}
 
-    def fake_default_llm(model_id=config.MODEL_ID):
+    def fake_default_llm(model_id=config.MODEL_ID, **kwargs):
         made[model_id] = FakeCoachLLM()
         return made[model_id]
 
@@ -109,3 +111,45 @@ def test_posture_follow_up_after_photo_uses_the_photo_source(agent):
     assert r["status"] == config.STATUS_ANSWERED and r["sources"] == ["address.md"]
     alone = agent.ask("무릎은 괜찮은데 척추는 어떻게 고쳐요?", thread_id="t-alone")
     assert alone["status"] == config.STATUS_NO_ANSWER
+
+
+# ── 모델 대체 경로: 한 모델이 사용량 한도에 걸려도 멈추지 않고 다음 모델로 답합니다 ──
+def test_fallback_chain_starts_with_chosen_model_then_rest_of_list():
+    from src import config
+    from src.agent import fallback_chain
+
+    chain = fallback_chain("us.anthropic.claude-haiku-4-5-20251001-v1:0")
+    assert chain[0] == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    assert sorted(chain) == sorted(config.AVAILABLE_MODEL_IDS) and len(chain) == len(set(chain))
+    assert fallback_chain(None)[0] == config.MODEL_ID
+
+
+def test_model_label_reports_the_model_that_actually_answered():
+    from src.agent import GolfCoachAgent
+
+    agent = GolfCoachAgent(retriever=object(), pose_estimator=object(), web_search=object())
+    assert agent.model_label(None, served="global.anthropic.claude-sonnet-4-5-20250929-v1:0") == \
+        "global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+    assert agent.model_label("us.amazon.nova-pro-v1:0") == "us.amazon.nova-pro-v1:0"
+
+
+def test_strict_model_turns_off_fallback(monkeypatch):
+    """평가 --strict-model: 고른 모델만 쓰고 다른 모델로 넘기지 않습니다(회차 간 같은 모델 조건)."""
+    import langchain_aws
+
+    from src.agent import GolfCoachAgent
+
+    class FakeChat:   # 실제 Bedrock 클라이언트를 만들지 않는 가짜 (자격 증명 조회로 느려지지 않게)
+        def __init__(self, model, **kwargs):
+            self.model = model
+
+        def with_fallbacks(self, others, **kwargs):
+            return types.SimpleNamespace(runnable=self, fallbacks=others)
+
+    monkeypatch.setattr(langchain_aws, "ChatBedrockConverse", FakeChat)
+    agent = GolfCoachAgent(retriever=object(), pose_estimator=object(), web_search=object())
+    chained = agent.llm_for("us.amazon.nova-pro-v1:0")
+    assert chained.runnable.model == "us.amazon.nova-pro-v1:0" and chained.fallbacks
+    strict = GolfCoachAgent(retriever=object(), pose_estimator=object(), web_search=object())
+    strict.model_fallback = False
+    assert isinstance(strict.llm, FakeChat) and strict.llm.model == "us.anthropic.claude-sonnet-4-5-20250929-v1:0"

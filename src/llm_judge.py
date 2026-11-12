@@ -24,6 +24,7 @@ from src import config
 
 # judge 모델과 파라미터를 상수로 고정합니다. 버전 비교는 항상 같은 judge 로 합니다.
 JUDGE_MODEL = "us.anthropic.claude-sonnet-4-5-20250929-v1:0"
+JUDGE_FALLBACKS = (JUDGE_MODEL, "global.anthropic.claude-sonnet-4-5-20250929-v1:0")  # 같은 모델, 다른 추론 프로필
 JUDGE_TEMPERATURE = 0
 JUDGE_RUNS = 2            # 같은 입력을 두 번 채점해 재현성을 봅니다
 CONTEXT_CHARS = 1500      # 근거 한 건당 judge 에게 보여 줄 최대 글자 수
@@ -109,24 +110,33 @@ class Verdict:
         }
 
 
-def default_judge_llm():
-    """실제 judge (Bedrock Claude Sonnet 4.5, temperature 0, 구조화 출력). 함수 안에서만 만듭니다."""
+def default_judge_llm(model: str = JUDGE_MODEL):
+    """실제 judge (Bedrock Claude Sonnet 4.5, temperature 0, 구조화 출력). 함수 안에서만 만듭니다.
+
+    model: 같은 모델의 다른 추론 프로필(us. ↔ global.)로 바꿀 때만 씁니다(일일 사용량 한도 대비).
+    """
     from langchain_aws import ChatBedrockConverse
 
-    llm = ChatBedrockConverse(model=JUDGE_MODEL, region_name=config.REGION, temperature=JUDGE_TEMPERATURE)
-    return llm.with_structured_output(JudgeResult)
+    from botocore.exceptions import BotoCoreError, ClientError
+
+    # 같은 Sonnet 4.5 의 다른 추론 프로필(us. ↔ global.)로만 넘어갑니다. 회차 간 비교를 위해 judge 모델 자체는 바꾸지 않습니다.
+    chain = [model, *(m for m in JUDGE_FALLBACKS if m != model)]
+    llms = [ChatBedrockConverse(model=m, region_name=config.REGION, temperature=JUDGE_TEMPERATURE).with_structured_output(JudgeResult)
+            for m in chain]
+    return llms[0].with_fallbacks(llms[1:], exceptions_to_handle=(ClientError, BotoCoreError))
 
 
 class LLMJudge:
-    def __init__(self, llm=None, runs: int = JUDGE_RUNS):
+    def __init__(self, llm=None, runs: int = JUDGE_RUNS, model: str = JUDGE_MODEL):
         self._llm = llm
+        self.model = model
         self.runs = runs
         self.calls = 0
 
     @property
     def llm(self):
         if self._llm is None:
-            self._llm = default_judge_llm()
+            self._llm = default_judge_llm(self.model)
         return self._llm
 
     def score_once(self, case: JudgeCase) -> JudgeResult:

@@ -180,9 +180,12 @@ def _build(mode: str):
     return build_agent("live", checkpointer=InMemorySaver())
 
 
-def run(detail: bool = False, mode: str = "offline", judge=None, model: str | None = None, agent=None) -> list[CaseResult]:
+def run(detail: bool = False, mode: str = "offline", judge=None, model: str | None = None, agent=None,
+        csv_path: Path | None = None, strict_model: bool = False) -> list[CaseResult]:
     agent = agent or _build(mode)
-    rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8-sig")))
+    if strict_model:   # 사용량 한도에 걸려도 다른 모델로 넘기지 않음: 그 문항은 실행 오류로 남김
+        agent.model_fallback = False
+    rows = list(csv.DictReader((csv_path or CSV_PATH).open(encoding="utf-8-sig")))
     threads: dict[str, str] = {}
     asked: dict[str, tuple[str, str]] = {}          # id → (질문, 답변): 이어지는 질문의 이전 대화
     results: list[CaseResult] = []
@@ -239,12 +242,15 @@ def run(detail: bool = False, mode: str = "offline", judge=None, model: str | No
             from src.llm_judge import JudgeCase
 
             pose = next((s["output"] for s in r["trace"] if s["step"] == "pose"), "")
-            verdict = judge.judge(JudgeCase(
-                question=question, answer=r["answer"], contexts=r["contexts"],
-                expected=manual_expected, forbidden=manual_forbidden, measured=pose,
-                prior=f"사용자: {prior[0]}\n코치: {prior[1]}" if prior else "",
-            ))
-            case.verdict = verdict.to_dict()
+            try:
+                verdict = judge.judge(JudgeCase(
+                    question=question, answer=r["answer"], contexts=r["contexts"],
+                    expected=manual_expected, forbidden=manual_forbidden, measured=pose,
+                    prior=f"사용자: {prior[0]}\n코치: {prior[1]}" if prior else "",
+                ))
+                case.verdict = verdict.to_dict()
+            except Exception as exc:   # judge 사용량 한도 등: 실행은 계속하고 이 문항은 사람이 확인합니다
+                case.manual.append(f"judge 실행 오류: {type(exc).__name__}: {exc}"[:200])
         for atom in judge_atoms:   # judge 결과로 판정하는 조각
             ok = check_judge(r, case.verdict)
             if ok is None:
@@ -339,13 +345,14 @@ def report(results: list[CaseResult], detail: bool = False, mode: str = "offline
     return "\n".join(lines)
 
 
-def save_results(results: list[CaseResult], mode: str, model: str | None, label: str, judge_model: str | None) -> Path:
+def save_results(results: list[CaseResult], mode: str, model: str | None, label: str, judge_model: str | None,
+                 eval_set: str = CSV_PATH.name) -> Path:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     path = RESULTS_DIR / f"{stamp}_{mode}_{label}.json"
     data = {
         "meta": {"created": stamp, "mode": mode, "label": label, "model": model or config.MODEL_ID if mode == "live" else "FakeCoachLLM",
-                 "judge_model": judge_model, "eval_set": CSV_PATH.name},
+                 "judge_model": judge_model, "eval_set": eval_set},
         "summary": summarize(results),
         "cases": [asdict(r) for r in results],
     }
@@ -385,6 +392,9 @@ def main() -> int:
     parser.add_argument("--save", action="store_true", help="evaluation/results/ 에 결과 JSON 저장")
     parser.add_argument("--label", default="run", help="저장 파일 이름표 (예: v1, prompt-fix)")
     parser.add_argument("--compare", help="이전 결과 JSON 과 전후 비교")
+    parser.add_argument("--judge-model", help="judge 모델 ID (기본 JUDGE_MODEL). 같은 모델의 다른 추론 프로필로 바꿀 때만 씁니다")
+    parser.add_argument("--strict-model", action="store_true", help="코칭 모델 대체 경로 끄기(한도 초과 문항은 오류로 남김). 회차 비교용")
+    parser.add_argument("--set", help="다른 평가셋 CSV (예: evaluation/guardrail_stress.csv). 기본은 test_queries.csv")
     args = parser.parse_args()
     mode = "live" if args.live else "offline"
     if args.judge and not args.live:
@@ -397,14 +407,16 @@ def main() -> int:
     if args.judge:
         from src.llm_judge import JUDGE_MODEL, LLMJudge
 
-        judge = LLMJudge()
-    results = run(mode=mode, judge=judge, model=args.model)
+        judge = LLMJudge(model=args.judge_model or JUDGE_MODEL)
+    results = run(mode=mode, judge=judge, model=args.model, csv_path=Path(args.set) if args.set else None,
+                  strict_model=args.strict_model)
     print(report(results, detail=args.detail, mode=mode))
     if args.compare:
         print()
         print(compare(json.loads(Path(args.compare).read_text(encoding="utf-8")), results))
     if args.save:
-        path = save_results(results, mode, args.model, args.label, JUDGE_MODEL if judge else None)
+        path = save_results(results, mode, args.model, args.label, judge.model if judge else None,
+                            Path(args.set).name if args.set else CSV_PATH.name)
         print(f"\n결과 저장: {path.relative_to(config.PROJECT_ROOT)}")
     return 0 if all(r.passed for r in results) else 1
 
