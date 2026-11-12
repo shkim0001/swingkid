@@ -61,6 +61,13 @@ button, select, textarea, input { font: inherit; color: inherit; letter-spacing:
 .auth-form .auth-btns { display: flex; gap: 6px; justify-content: center; }
 .nick-err { font-size: 11px; color: var(--bad); min-height: 1em; }
 .nav .grow { flex: 1; }
+.nav-right { display: flex; align-items: center; gap: 16px; }
+.nav-icon, .nav-avatar { display: none; border: 0; background: none; color: var(--fg); cursor: pointer; padding: 0; }
+.nav-icon { width: 36px; height: 36px; border-radius: 10px; place-items: center; }
+.nav-icon:hover, .nav-icon:focus-visible { background: var(--surface-2); }
+.nav-icon svg { width: 22px; height: 22px; }
+.nav-avatar .avatar { width: 32px; height: 32px; font-size: 13px; }
+.drawer-head, .drawer-settings, .scrim { display: none; }
 .nav-field { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
 .mode { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 10px; letter-spacing: .01em; }
 .mode.live { background: var(--ok-soft); color: var(--ok); }
@@ -82,10 +89,6 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 /* 2단 배치: 왼쪽 사이드바(프로필·기억·기준값) + 넓은 대화창. 추천 질문은 입력창 바로 위 칩 줄 */
 .page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 56px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
 @media (max-width: 1000px) { .page { grid-template-columns: 260px minmax(0, 1fr); gap: 20px; } }
-@media (max-width: 760px) {
-  .page { grid-template-columns: 1fr; padding: 20px 16px 40px; gap: 16px; } .left { grid-column: auto; } .page > main { order: -1; }
-  .nav { position: static; } .brand small { display: none; } .nav-in { padding: 8px 16px; }
-}
 .left { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 @media (min-width: 761px) { .left { position: sticky; top: 76px; } }
 .card { background: var(--surface); border: 0; border-radius: var(--radius); box-shadow: var(--shadow); }
@@ -145,7 +148,12 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .new-coach { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
 .new-head { display: flex; align-items: center; gap: 12px; }
 .new-head b { font-size: 17px; font-weight: 600; }
-.composer { display: flex; flex-direction: column; gap: 10px; }
+.composer { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 10px 8px; align-items: center; }
+.composer > .preview, .composer > textarea, .composer > .hint { grid-column: 1 / -1; }
+.composer > .send { grid-column: 4; }
+.composer .extras { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.composer .extras select { max-width: 200px; font-size: 13px; }
+.composer .more, .composer .send svg { display: none; }
 .composer textarea { width: 100%; min-height: 80px; resize: vertical; border: 1px solid transparent; border-radius: 14px; padding: 12px 14px; background: var(--surface-2); transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s; }
 .composer textarea:focus { outline: none; background: var(--surface); border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .15); }
 .composer textarea::placeholder { color: var(--muted); }
@@ -298,7 +306,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 .active-card .thread { min-height: 120px; }
 .turn-q, .turn-a { scroll-margin-top: 76px; scroll-margin-bottom: 200px; }
 .dock { position: sticky; bottom: 0; z-index: 3; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--line); margin: 0 -22px; padding: 12px 22px 14px; border-radius: 0 0 var(--radius) var(--radius); }
-@media (max-width: 480px) { .tools select { max-width: 150px; } .tools .btn span { display: none; } }
+
 
 /* 아래쪽: 아키텍처 다이어그램과 흐름 설명 */
 .arch-wrap { max-width: 1240px; margin: 0 auto; padding: 8px 22px 64px; }
@@ -345,20 +353,100 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 .past.mini .past-foot .btn { padding: 5px 12px; font-size: 12.5px; }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 14px; margin: 2px 0 12px; }
 .past-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin: 0 -22px; padding: 10px 22px 0; }
+/* ── 모바일(760px 이하): 기본 규칙보다 뒤에 두어 덮어씀 ── */
+@media (max-width: 760px) {
+  /* 상단 바: ☰ · 로고 · 내 캐릭터. 모드 표시와 모델 선택은 메뉴(서랍) 안으로 */
+  .nav-in { padding: 6px 10px; min-height: 52px; flex-wrap: nowrap; gap: 6px; }
+  .brand small, .nav-right { display: none; }
+  .brand { font-size: 16px; gap: 8px; }
+  .brand-mark.logo, .brand-mark.logo svg { width: 28px; height: 28px; }
+  .nav-icon { display: grid; }
+  .nav-avatar { display: block; border-radius: 50%; }
+  /* 사용자 패널 → 왼쪽에서 밀려 나오는 서랍 */
+  .page { grid-template-columns: minmax(0, 1fr); padding: 12px 10px 28px; gap: 14px; }
+  .left { position: fixed; z-index: 40; inset: 0 auto 0 0; width: min(88vw, 360px); padding: 0 12px calc(16px + env(safe-area-inset-bottom));
+          overflow-y: auto; overscroll-behavior: contain; background: var(--bg); gap: 14px; box-shadow: 0 0 40px rgb(0 0 0 / .25);
+          transform: translateX(-105%); visibility: hidden; transition: transform .28s var(--ease), visibility 0s linear .28s; }
+  body.drawer-open .left { transform: none; visibility: visible; transition: transform .28s var(--ease); }
+  body.drawer-open { overflow: hidden; }
+  .scrim { display: block; position: fixed; inset: 0; z-index: 35; background: rgb(0 0 0 / .38); opacity: 0; pointer-events: none; transition: opacity .28s var(--ease); }
+  body.drawer-open .scrim { opacity: 1; pointer-events: auto; }
+  .drawer-head { display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1; background: var(--bg); padding: 10px 2px 6px; margin-bottom: -6px; }
+  .drawer-head b { font-family: var(--font-display); font-size: 18px; }
+  .drawer-settings { display: flex; flex-direction: column; gap: 10px; padding: 14px 16px; }
+  .drawer-settings .mode { align-self: flex-start; }
+  .drawer-settings .nav-field { justify-content: space-between; }
+  .drawer-settings select { max-width: 62%; }
+  .profile { padding-top: 18px; }
+  .avatar.big { width: 60px; height: 60px; }
+  .clist { max-height: none; }
+  /* 코칭 카드: 머리글 한 줄, 제목·수치 작게 */
+  .active-card { padding: 14px 14px 0; scroll-margin-top: 60px; }
+  .act-head { gap: 10px; }
+  .act-head .avatar { width: 32px; height: 32px; }
+  .act-when { flex-wrap: nowrap; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  .act-when > span { display: none !important; }
+  .act-actions .btn { padding: 6px 10px; font-size: 13px; }
+  .act-title { font-size: 20px; margin-top: 10px; }
+  .active-card .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 10px; }
+  .active-card .stats .stat { padding: 0 8px; }
+  .active-card .stats .stat:first-child { padding-left: 0; }
+  .active-card .stats .lbl { font-size: 11px; white-space: nowrap; }
+  .active-card .stats .val { font-size: 17px; white-space: nowrap; }
+  .thread { padding: 12px 0; gap: 12px; }
+  .feed-title { margin: 8px 4px -4px; }
+  .feed-title h2 { font-size: 18px; }
+  /* 입력창: 한 줄 [샘플][첨부][입력칸][↑] */
+  .dock { margin: 0 -14px; padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
+  .dock.has-thread .suggest { display: none; }
+  .suggest { margin-bottom: 8px; }
+  .suggest-row .chip { font-size: 13px; padding: 6px 12px; max-width: 240px; }
+  .composer { grid-template-columns: auto auto minmax(0, 1fr) auto; gap: 6px; }
+  .composer > .preview { order: 0; }
+  .composer > .more { order: 1; display: inline-flex; }
+  .composer > .attach { order: 2; }
+  .composer > textarea { order: 3; grid-column: auto; }
+  .composer > .send { order: 4; grid-column: auto; }
+  .composer > .extras { order: 5; grid-column: 1 / -1; display: none; }
+  .composer.show-extras > .extras { display: flex; }
+  .composer > .hint { order: 6; display: none; }
+  .composer > .hint.msg { display: block; }
+  .composer .extras select { flex: 1; min-width: 0; max-width: none; }
+  .composer > .attach, .composer > .more, .composer > .send { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
+  .composer > .more { width: auto; padding: 0 12px; border-radius: 20px; font-size: 13px; }
+  .composer.show-extras > .more { background: var(--yellow-soft); color: var(--yellow); }
+  .composer > .attach span, .composer > .send .send-tx { display: none; }
+  .composer > .send svg { display: block; width: 20px; height: 20px; }
+  .dock textarea { min-height: 40px; max-height: 120px; padding: 9px 14px; border-radius: 20px; font-size: 16px; }
+}
 </style>
 </head>
 <body>
 <nav class="nav" aria-label="상단">
   <div class="nav-in">
+    <button class="nav-icon" id="menuBtn" type="button" aria-label="메뉴 열기 · 프로필과 코칭 목록" aria-controls="sidePanel" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
     <span class="brand"><span class="brand-mark logo" data-icon="mascot" aria-hidden="true"></span><span class="wordmark" aria-label="SwingKid">Swing<b>Kid</b></span><small>골프 입문 코치</small></span>
     <span class="grow"></span>
-    <span id="mode" class="mode">확인 중</span>
-    <label class="nav-field" for="model">코칭 모델 <select id="model"></select></label>
+    <span class="nav-right" id="navRight">
+      <span id="mode" class="mode">확인 중</span>
+      <label class="nav-field" id="modelField" for="model">코칭 모델 <select id="model"></select></label>
+    </span>
+    <button class="nav-avatar" id="navAvatar" type="button" aria-label="내 정보 열기" aria-controls="sidePanel"></button>
   </div>
 </nav>
 
 <div class="page">
-  <aside class="left" aria-label="내 코칭 요약">
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+  <aside class="left" id="sidePanel" aria-label="내 코칭 요약">
+    <div class="drawer-head">
+      <b>내 코칭</b>
+      <button class="nav-icon" id="drawerClose" type="button" aria-label="메뉴 닫기">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <section class="card card-pad drawer-settings" id="drawerSettings" aria-label="설정"></section>
     <section class="card">
       <div class="profile">
         <div class="avatar big" aria-hidden="true" id="nickAvatar">나</div>
@@ -594,7 +682,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     let att = null;
     const ta = el("textarea", { rows: "1", placeholder, "aria-label": "질문" });
     const file = el("input", { type: "file", accept: "image/*,video/*", hidden: "" });
-    const attachBtn = el("button", { type: "button", class: "btn", "aria-label": "사진·영상 첨부" });
+    const attachBtn = el("button", { type: "button", class: "btn attach", "aria-label": "사진·영상 첨부" });
     attachBtn.innerHTML = ICON.camera + "<span>사진·영상</span>";
     const fx = el("select", { "aria-label": "판정용 관절 좌표 샘플", hidden: "" }, el("option", { value: "" }, "관절 좌표 샘플"));
     // 프로젝트에 들어 있는 실제 사진·영상(data/test_photos, test_videos). 고르면 직접 올린 것과 똑같이 분석합니다
@@ -602,12 +690,23 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     const pvThumb = el("span"), pvText = el("span", { class: "pv-text" });
     const pvClear = el("button", { type: "button", class: "x", "aria-label": "첨부 취소" }, "×");
     const preview = el("div", { class: "preview", hidden: "" }, pvThumb, pvText, pvClear);
-    const send = el("button", { type: "submit", class: "btn yellow" }, buttonText);
-    const note = el("p", { class: "hint", role: "status" }, "Enter 전송 · Shift+Enter 줄바꿈 · 사진은 측면에서 전신이 보이게");
-    const form = el("form", { class: "composer" },
-      preview, ta, el("div", { class: "tools" }, attachBtn, sm, fx, el("span", { class: "grow" }), send), file, note);
+    const sendTx = el("span", { class: "send-tx" }, buttonText);
+    const send = el("button", { type: "submit", class: "btn yellow send", "aria-label": buttonText }, sendTx);
+    send.insertAdjacentHTML("afterbegin", '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>');
+    const HINT = "Enter 전송 · Shift+Enter 줄바꿈 · 사진은 측면에서 전신이 보이게";
+    const note = el("p", { class: "hint", role: "status" }, HINT);
+    // 안내 문구는 모바일에서 숨기고, 오류·진행 메시지일 때만 보입니다
+    const setNote = (text) => { note.textContent = text || HINT; note.classList.toggle("msg", !!text); };
+    // 모바일: 샘플 선택은 '샘플' 버튼으로 펼침(데스크톱은 항상 보임)
+    const moreBtn = el("button", { type: "button", class: "btn more", "aria-expanded": "false" }, "샘플");
+    const extras = el("div", { class: "extras" }, sm, fx);
+    const form = el("form", { class: "composer" }, preview, ta, attachBtn, moreBtn, extras, send, file, note);
+    moreBtn.addEventListener("click", () => {
+      const open = form.classList.toggle("show-extras");
+      moreBtn.setAttribute("aria-expanded", String(open));
+    });
 
-    const autosize = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, 160) + "px"; };
+    const autosize = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, matchMedia("(max-width: 760px)").matches ? 120 : 160) + "px"; };
     const setAtt = (a) => {
       att = a;
       if (!a) { preview.hidden = true; pvThumb.innerHTML = ""; fx.value = ""; sm.value = ""; return; }
@@ -619,19 +718,19 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       preview.hidden = false;
     };
     const attach = async (f, sample) => {
-      note.textContent = "Enter 전송 · Shift+Enter 줄바꿈 · 사진은 측면에서 전신이 보이게";
-      try { setAtt({ ...(await readAttachment(f)), ...(sample ? { sample: true } : {}) }); ta.focus(); } catch (err) { note.textContent = err.message || String(err); }
+      setNote("");
+      try { setAtt({ ...(await readAttachment(f)), ...(sample ? { sample: true } : {}) }); ta.focus(); } catch (err) { setNote(err.message || String(err)); }
     };
     sm.addEventListener("change", async () => {
       const s = mediaSamples.find((x) => x.name === sm.value);
       if (!s) { setAtt(null); return; }
-      note.textContent = `샘플 불러오는 중… (${s.label})`;
+      setNote(`샘플 불러오는 중… (${s.label})`);
       try {
         const res = await fetch(s.url);
         if (!res.ok) throw new Error(`샘플을 불러오지 못했어요 (${res.status})`);
         const blob = await res.blob();
         await attach(new File([blob], s.name, { type: s.type }), true);
-      } catch (err) { note.textContent = err.message || String(err); sm.value = ""; }
+      } catch (err) { setNote(err.message || String(err)); sm.value = ""; }
     });
     attachBtn.addEventListener("click", () => file.click());
     file.addEventListener("change", () => { if (file.files[0]) attach(file.files[0]); file.value = ""; });
@@ -649,11 +748,12 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       if (!text && !att) { ta.focus(); return; }
       const a = att;
       ta.value = ""; autosize(); setAtt(null);
+      form.classList.remove("show-extras"); moreBtn.setAttribute("aria-expanded", "false");
       onSend(text, a);
     });
     return {
       form,
-      setBusy(v) { send.disabled = v; send.textContent = v ? "답변 중…" : buttonText; },
+      setBusy(v) { send.disabled = v; sendTx.textContent = v ? "답변 중…" : buttonText; send.setAttribute("aria-label", v ? "답변 중" : buttonText); },
       fill(text, fixture) { ta.value = text; autosize(); if (fixture) { fx.value = fixture; setAtt({ kind: "fixture", fixture }); } else setAtt(null); ta.focus({ preventScroll: true }); },
       focus() { ta.focus({ preventScroll: true }); },
       setMediaSamples(list) {
@@ -798,6 +898,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   // ── 진행 중 코칭 카드 ──
   function renderActive() {
     $("composeDock").hidden = !!viewing;
+    $("composeDock").classList.toggle("has-thread", !!(viewing || active()));   // 모바일: 대화 중엔 추천 칩 숨김
     if (viewing) { renderViewing(); return; }
     const th = active();
     const newBtn = el("button", { class: "btn", type: "button", "data-lock": "" }, "+ 새 코칭");
@@ -865,6 +966,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   function startNew() {
     if (busyId) return;
+    closeDrawer();
     activeId = null; viewing = null;
     save();
     renderActive(); renderPast();
@@ -874,6 +976,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   function setActive(id) {
     if (busyId) return;
+    closeDrawer();
     activeId = id; viewing = null;
     save();
     renderActive(); renderPast();
@@ -911,6 +1014,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   function openOther(owner, th) {
     if (busyId) return;
+    closeDrawer();
     viewing = { owner, thread: th };
     renderActive(); renderPast(); reveal("start");
     $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1308,6 +1412,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function renderNick() {
     $("nickName").textContent = nickname || "게스트";
     $("nickAvatar").replaceWith(Object.assign(myAvatar(true), { id: "nickAvatar" }));
+    $("navAvatar").replaceChildren(myAvatar());
     $("authForm").hidden = !!nickname;
     $("logoutBtn").hidden = !nickname;
     $("memRow").hidden = !nickname;
@@ -1379,6 +1484,35 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     try { await fetch("/memory", { method: "DELETE" }); } catch (e) {}
     loadMemory();
   });
+
+  // ── 모바일 서랍: 프로필·코칭 목록·판정 기준. ☰ 또는 상단 캐릭터로 열고, 코칭을 고르면 닫힘 ──
+  const mqMobile = matchMedia("(max-width: 760px)");
+  function openDrawer() {
+    if (!mqMobile.matches) return;
+    document.body.classList.add("drawer-open");
+    $("menuBtn").setAttribute("aria-expanded", "true");
+    $("drawerClose").focus({ preventScroll: true });
+  }
+  function closeDrawer() {
+    if (!document.body.classList.contains("drawer-open")) return;
+    document.body.classList.remove("drawer-open");
+    $("menuBtn").setAttribute("aria-expanded", "false");
+  }
+  $("menuBtn").addEventListener("click", openDrawer);
+  $("navAvatar").addEventListener("click", openDrawer);
+  $("drawerClose").addEventListener("click", closeDrawer);
+  $("scrim").addEventListener("click", closeDrawer);
+  addEventListener("keydown", (e) => { if (e.key === "Escape") closeDrawer(); });
+  // 모드 표시·모델 선택: 데스크톱은 상단 바, 모바일은 서랍 맨 위
+  function placeSettings() {
+    (mqMobile.matches ? $("drawerSettings") : $("navRight")).append($("mode"), $("modelField"));
+    // 모바일 입력칸은 한 줄이라 안내 문구를 짧게(길면 두 줄로 접혀 입력칸이 커짐)
+    const ta = document.querySelector(".dock textarea");
+    if (ta) { ta.placeholder = mqMobile.matches ? "질문을 입력하세요" : "질문을 입력하거나 사진을 올려 주세요"; ta.style.height = ""; }
+    if (!mqMobile.matches) closeDrawer();
+  }
+  mqMobile.addEventListener("change", placeSettings);
+  placeSettings();
 
   // ── 업로드한 영상 원본 저장소 (IndexedDB: localStorage 에는 영상이 들어가지 않음) ──
   const mediaUrls = new Map();   // mediaId → 재생용 object URL
