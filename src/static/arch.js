@@ -19,7 +19,7 @@
     { id: "guard", col: "b", row: 1, kind: "guard", chip: "가드레일", title: "가드레일", sub: "규칙 기반 · 항상 같은 결과", file: "src/guard.py" },
     { id: "exit", col: "a", row: 1, kind: "exit", chip: "즉시 응답", title: "고정 문구로 응답", sub: "차단(blocked) · 골프 무관", file: "LLM 호출 없음" },
     { id: "supervisor", col: "b", row: 2, kind: "router", chip: "라우터", title: "Supervisor", sub: "규칙 라우팅 · 웹 폴백", file: "src/agent.py" },
-    { id: "memory", col: "a", row: 2, kind: "store", chip: "기억", title: "기억 저장소", sub: "대화방 · 계정별 판정 기록", file: "SqliteSaver · SqliteStore" },
+    { id: "memory", col: "a", row: 2, kind: "store", chip: "기억", title: "기억 · 훈련 저장소", sub: "대화방 · 판정 기록 · 연습 기록", file: "SqliteSaver · SqliteStore · training.py" },
     { id: "coach", col: "b", row: 3, kind: "coach", chip: "LLM 호출", title: "coach", sub: "근거로만 답변 작성", file: "src/agent.py · _coach" },
     { id: "claude", col: "b", row: 4, kind: "llm", chip: "LLM", title: "Bedrock · Claude", sub: "답변 생성 (Converse API)", file: "ChatBedrockConverse" },
     { id: "swing", col: "c", row: 1, kind: "agent", chip: "sub-agent", title: "swing_agent", sub: "사진 · 영상 · GIF 자세 판정", file: "src/subagents.py" },
@@ -55,12 +55,12 @@
   const STEPS = [
     ["질문 받기", "웹 화면이 질문과 사진·영상·GIF, 대화방(<code>thread_id</code>)을 <code>POST /query</code>로 보냅니다. 로그인했으면 세션 쿠키로 장기 기억 주인을 정합니다."],
     ["가드레일", "의학·구매/가격·개인정보·프롬프트 인젝션은 바로 차단하고, 골프와 무관한 질문은 검색 없이 <code>no_answer</code>로 끝냅니다. LLM을 부르지 않습니다."],
-    ["Supervisor 라우팅", "사진·영상·GIF는 <code>swing_agent</code>, 올해·순위·시세 같은 최신 정보는 <code>info_agent</code>, 그 밖의 골프 질문은 <code>knowledge_agent</code>로. '지난번 판정' 질문은 장기 기억으로 바로 답합니다."],
+    ["Supervisor 라우팅", "사진·영상·GIF는 <code>swing_agent</code>, 올해·순위·시세 같은 최신 정보는 <code>info_agent</code>, 그 밖의 골프 질문은 <code>knowledge_agent</code>로. '지난번 판정' 질문은 장기 기억으로, '요즘 연습 어때?' 질문은 코드가 집계한 연습 요약으로 바로 답합니다."],
     ["sub-agent가 근거 모으기", "자세는 MediaPipe 관절 → 각도로 판정(순수 함수), 지식은 문서 25개를 단어·의미 검색, 최신 정보는 <b>MCP 서버</b>의 <code>golf_web_search</code> 도구로 DuckDuckGo 검색. 결과를 들고 Supervisor로 돌아옵니다."],
     ["폴백과 근거 없음", "문서에 근거가 없으면 <code>info_agent</code>로 한 번 더. 자세 인식 실패나 웹에서도 근거가 없으면 LLM 없이 <code>no_answer</code>."],
-    ["coach → LLM", "근거·판정 각도·직전 판정·이전 기록으로 프롬프트를 만들어 <b class=\"gka-llm-text\">Bedrock Claude를 한 번 호출</b>합니다. 근거 밖 내용과 측정하지 않은 수치는 만들지 않습니다."],
+    ["coach → LLM", "근거·판정 각도·직전 판정·이전 기록·연습 기록으로 프롬프트를 만들어 <b class=\"gka-llm-text\">Bedrock Claude를 한 번 호출</b>합니다. 근거 밖 내용과 측정하지 않은 수치는 만들지 않습니다."],
     ["응답과 화면", "<code>answer</code>·<code>contexts</code>·<code>trace</code>에 <code>status</code>·<code>issue_codes</code>·<code>sources</code>·<code>agents</code>·<code>angle_series</code>를 더해 돌려주고, 화면은 판정·각도 그래프·근거를 그립니다."],
-    ["기억", "대화방별 단기 기억은 이어지는 질문('손목 스냅은요?')에 직전 판정을, 로그인 계정별 장기 기억은 기기를 넘어 판정 기록을 이어 줍니다."],
+    ["기억", "대화방별 단기 기억은 이어지는 질문('손목 스냅은요?')에 직전 판정을, 로그인 계정별 장기 기억은 기기를 넘어 판정 기록을 이어 줍니다. 훈련 화면의 계획·기록·달성률(코드 집계)도 같은 계정에 쌓여 코칭 근거가 됩니다."],
   ];
 
   const CSS = `

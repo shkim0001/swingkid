@@ -645,6 +645,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   .lib-grid { grid-template-columns: minmax(0, 1fr); }
   .mine-add { grid-template-columns: minmax(0, 1fr) 72px 64px; }
   .mine-add .btn { grid-column: 1 / -1; justify-content: center; }
+  .mine-row { grid-template-columns: minmax(0, 1fr); }   /* 버튼은 글 아래 줄로 */
+  .mine-acts { justify-content: flex-start; }
   .plan-row { grid-template-columns: auto minmax(0, 1fr); }
   .plan-acts { grid-column: 1 / -1; justify-content: flex-start; }
   dialog.sheet { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 22px 22px 0 0; max-height: 92vh; }
@@ -2187,8 +2189,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
         del.addEventListener("click", () => { if (confirm(`${adminSel} 님의 ${l.day} ${l.count}${x.unit} 기록을 지울까요?`)) adminAct(() => api("DELETE", `/admin/training/logs/${l.id}`), "기록을 지웠어요"); });
         return el("li", {}, el("span", {}, md(l.day)), el("b", {}, `${l.count}${x.unit}`), el("span", { class: "memo" }, l.memo || ""), del);
       });
-      const archive = el("button", { class: "btn text", type: "button" }, "항목 내리기");
-      archive.addEventListener("click", () => { if (confirm(`${adminSel} 님의 '${x.title}' 항목을 내릴까요? 기록은 남고 일정에서 빠집니다.`)) adminAct(() => api("DELETE", `/admin/training/drills/${x.id}`), "항목을 내렸어요"); });
+      const archive = el("button", { class: "btn text", type: "button" }, "항목 삭제");
+      archive.addEventListener("click", () => { if (confirm(`${adminSel} 님의 '${x.title}' 항목을 삭제할까요? 달력의 계획·루틴에서 빠지고, 지금까지 남긴 기록은 보관됩니다.`)) adminAct(() => api("DELETE", `/admin/training/drills/${x.id}`), "항목을 삭제했어요"); });
       return el("div", { class: "mine-row" },
         el("div", {}, el("div", { class: "t" }, x.title, el("span", { class: "tag" + (x.source === "auto" ? " auto" : "") }, SRC_KO[x.source] || x.source)),
           el("div", { class: "m" }, `1회 ${x.target}${x.unit} · 이번 주 ${x.week_days}일 · 누적 ${x.total_count}${x.unit}` + (x.streak ? ` · 연속 ${x.streak}일` : "")),
@@ -2324,6 +2326,12 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     box.replaceChildren(...nodes);
   }
 
+  // 항목 삭제: 내 목록·달력의 계획·루틴에서 빠집니다. 남긴 기록은 연속 연습일 등 통계에 쓰이도록 서버에 보관합니다.
+  function confirmDrillDelete(d) {
+    const routines = (cal?.routines || []).filter((r) => r.drill_id === d.id).length;
+    return confirm(`'${d.title}' 항목을 삭제할까요?\n` + (routines ? `연결된 루틴 ${routines}개와 ` : "") + "달력의 계획에서 빠지고, 지금까지 남긴 기록은 보관됩니다.");
+  }
+
   function renderMine() {
     const drills = training?.drills || [];
     const routines = cal?.routines || [];
@@ -2348,11 +2356,13 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       sched.addEventListener("click", () => openSchedule(d));
       const logs = el("button", { class: "btn", type: "button" }, "기록 보기");
       logs.addEventListener("click", () => openDrill(d.id));
+      const delBtn = el("button", { class: "btn text", type: "button", "aria-label": `${d.title} 삭제` }, "삭제");
+      delBtn.addEventListener("click", () => { if (confirmDrillDelete(d)) act(() => api("DELETE", `/training/drills/${d.id}`), "항목을 삭제했어요"); });
       return el("div", { class: "mine-row" },
         el("div", {}, el("div", { class: "t" }, d.title, ...tags),
           el("div", { class: "m" }, `1회 ${d.target}${d.unit} · 이번 주 ${d.week_days}일 · 누적 ${d.total_count}${d.unit}` + (d.streak ? ` · 연속 ${d.streak}일` : "")),
           chips.length ? el("div", {}, ...chips) : ""),
-        el("div", { class: "mine-acts" }, logs, sched));
+        el("div", { class: "mine-acts" }, delBtn, logs, sched));
     });
     $("tvMine").replaceChildren(
       el("div", { class: "tv-sec-head" }, el("h2", {}, "내 훈련 항목 ", el("span", {}, drills.length ? `${drills.length}개` : "")), addBtn),
@@ -2544,10 +2554,10 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     }) : [el("li", { class: "empty" }, "아직 기록이 없어요.")]));
     const sched = el("button", { class: "btn", type: "button" }, "일정 잡기");
     sched.addEventListener("click", () => { dlg.close(); openSchedule(d); });
-    const archive = el("button", { class: "btn text", type: "button" }, "목록에서 내리기");
+    const archive = el("button", { class: "btn text", type: "button" }, "삭제");
     archive.addEventListener("click", () => {
-      if (!confirm(`'${d.title}' 항목을 내릴까요? 남긴 기록은 지워지지 않고, 달력의 계획·루틴에서는 빠집니다.`)) return;
-      dlg.close(); act(() => api("DELETE", `/training/drills/${d.id}`), "항목을 내렸어요");
+      if (!confirmDrillDelete(d)) return;
+      dlg.close(); act(() => api("DELETE", `/training/drills/${d.id}`), "항목을 삭제했어요");
     });
     dlg.replaceChildren(el("div", { class: "sheet-in" },
       el("div", { class: "sheet-head" },

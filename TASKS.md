@@ -39,4 +39,4 @@
 
 - [x] **T12. 관리자 훈련 보기** — 사용자별 계획·기록·달성률, 지우기 (2026-11-12, `GET /admin/training`·`/admin/training/{username}`·`DELETE /admin/training/routines/{id}`, API 테스트 2개, Playwright 데스크톱·390px)
 
-- [ ] **T13. 문서 정리** — README·HISTORY·아키텍처, 전체 테스트·평가 결과
+- [x] **T13. 문서 정리** — README·HISTORY·아키텍처, 전체 테스트·평가 결과 (2026-11-12, 334 passed, 오프라인 평가 20/20, 가드레일 스트레스 18/18)

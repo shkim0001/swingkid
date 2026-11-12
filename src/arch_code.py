@@ -63,10 +63,13 @@ MODULES: dict[str, Module] = {
          Ref("src/agent.py", "GolfCoachAgent._build", highlight=(r"add_conditional_edges", r"add_edge\(name")),),
     ),
     "memory": Module(
-        "기억 저장소",
-        "단기: thread_id 별 체크포인터(대화 이력·직전 판정). 장기: 로그인 계정별 Store 에 판정 코드·각도만 저장하고, '지난번 판정' 질문은 이 기록으로 바로 답합니다.",
+        "기억 · 훈련 저장소",
+        "단기: thread_id 별 체크포인터(대화 이력·직전 판정). 장기: 로그인 계정별 Store 에 판정 코드·각도만 저장하고, '지난번 판정' 질문은 이 기록으로 바로 답합니다. "
+        "훈련: 계획·루틴·기록과 달성률을 코드가 집계하고, '요즘 연습 어때?' 질문은 그 요약으로 답합니다.",
         (Ref("src/memory.py", "LongTermMemory.add_finding", highlight=(r"store\.put",)),
-         Ref("src/agent.py", "GolfCoachAgent._recall", highlight=(r"describe\(records\)",))),
+         Ref("src/agent.py", "GolfCoachAgent._recall", highlight=(r"describe\(records\)",)),
+         Ref("src/training.py", "practice_summary", highlight=(r"_rate\(",)),
+         Ref("src/agent.py", "GolfCoachAgent._practice", highlight=(r"PRACTICE_DOC_ID",))),
     ),
     "swing": Module(
         "swing_agent",
