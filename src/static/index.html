@@ -121,7 +121,8 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .clist-tabs { display: flex; gap: 4px; padding: 3px; margin: 0 8px 8px; background: var(--surface-2); border-radius: 10px; }
 .clist-tabs button { flex: 1; border: 0; background: none; border-radius: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; color: var(--muted); }
 .clist-tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
-.clist { list-style: none; margin: 0; padding: 0; max-height: min(46vh, 440px); overflow-y: auto; overscroll-behavior: contain; }
+/* 목록이 끝에 닿으면 스크롤이 바깥(페이지·모바일 서랍)으로 이어지게 contain 을 쓰지 않음 — contain 이면 목록 위에서 끌어도 화면이 안 움직임 */
+.clist { list-style: none; margin: 0; padding: 0; max-height: min(46vh, 440px); overflow-y: auto; }
 .clist-item { width: 100%; display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; gap: 10px; align-items: center; text-align: left; border: 0; background: none; padding: 8px; border-radius: 12px; cursor: pointer; color: var(--fg); transition: background .15s var(--ease); }
 .clist-item:hover, .clist-item:focus-visible { background: var(--surface-2); }
 .clist-item.on { background: color-mix(in srgb, var(--yellow) 12%, transparent); }
@@ -141,7 +142,7 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .field:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
 .tr-card { padding: 16px 12px 10px; }
 .tr-card #trWeek { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
-.tr-list { max-height: none; }
+.tr-list { max-height: none; overflow: visible; }
 .tr-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
 .tr-open { border: 0; background: none; text-align: left; padding: 8px; border-radius: 12px; cursor: pointer; color: var(--fg); display: flex; flex-direction: column; gap: 1px; min-width: 0; font: inherit; }
 .tr-open:hover, .tr-open:focus-visible { background: var(--surface-2); }
@@ -581,7 +582,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   .drawer-settings select { max-width: 62%; }
   .profile { padding-top: 18px; }
   .avatar.big { width: 60px; height: 60px; }
-  .clist { max-height: none; }
+  .clist { max-height: none; overflow: visible; }   /* 모바일 서랍에서는 목록이 따로 스크롤되지 않고 서랍과 함께 움직임 */
   /* 코칭 카드: 머리글 한 줄, 제목·수치 작게 */
   .active-card { padding: 14px 14px 0; scroll-margin-top: 60px; }
   .act-head { gap: 10px; }
