@@ -2,7 +2,9 @@
 //   웹(src/static)은 Cloudflare 가 직접 내려주고,
 //   API 요청(/query, /models, /memory ...)은 Worker 가 내 PC 의 백엔드(Cloudflare Tunnel)로 넘깁니다.
 //
-// 배포:   npx wrangler deploy --var BACKEND_URL:https://<터널주소>
+// 터널 주소(BACKEND_URL)는 이 파일이 아니라 Cloudflare Secret 에 둡니다.
+//   그래야 git push 로 자동 배포될 때 지워지지 않습니다.
+//   터널 주소가 바뀌면:  npx wrangler secret put BACKEND_URL   (새 주소 입력, 재배포 불필요)
 {
   "name": "swingkid",
   "main": "cloudflare/worker.js",
@@ -12,9 +14,5 @@
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
-  },
-  "vars": {
-    // 터널 주소. 배포할 때 --var 로 덮어씁니다.
-    "BACKEND_URL": ""
   }
 }
