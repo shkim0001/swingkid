@@ -1,0 +1,30 @@
+# 라이브 모드 대화 저장(SqliteSaver)의 보조 파일
+checkpoints.sqlite-wal
+checkpoints.sqlite-shm
+
+# MediaPipe 포즈 모델 파일 (처음 쓸 때 자동으로 내려받음)
+data/models/
+
+# 장기 기억 저장소(사용자별 판정 기록, 라이브 모드)
+memory.sqlite
+memory.sqlite-wal
+memory.sqlite-shm
+
+# ── 비밀 정보 (절대 올리지 않음) ──
+.env
+.env.*
+
+# ── 사용자 데이터 · 실행 중 생기는 파일 ──
+checkpoints.sqlite
+checkpoints.sqlite-*
+memory.sqlite
+memory.sqlite-*
+
+# 라이브 검색 색인(Chroma). 처음 실행할 때 data/docs 로 다시 만듭니다
+chroma_db/
+
+# ── 캐시 · 편집기 ──
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.vscode/

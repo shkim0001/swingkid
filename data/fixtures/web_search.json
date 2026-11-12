@@ -1,0 +1,25 @@
+{
+  "_note": "채점용 가짜 웹 검색 결과입니다(교육용 더미 데이터입니다). 실제 페이지가 아니며 URL 은 example.com 의 가짜 주소입니다. 질문에 keywords 가 모두 들어 있으면 results 를 돌려주고, 맞는 항목이 없으면 빈 목록(웹에서도 근거 없음)입니다.",
+  "entries": [
+    {
+      "keywords": ["타이거", "US오픈"],
+      "results": [
+        {
+          "url": "https://example.com/fake-golf-news/2000-us-open",
+          "title": "[가짜 검색 결과] 2000년 US오픈 최종 결과",
+          "text": "(채점용 가짜 데이터) 2000년 페블비치에서 열린 US오픈에서 타이거 우즈가 4라운드 합계 272타(12언더파)로 2위와 15타 차이로 우승했다."
+        }
+      ]
+    },
+    {
+      "keywords": ["LPGA", "상금"],
+      "results": [
+        {
+          "url": "https://example.com/fake-golf-news/lpga-money-list",
+          "title": "[가짜 검색 결과] LPGA 투어 상금 순위",
+          "text": "(채점용 가짜 데이터) 2026-11-01 기준 LPGA 투어 상금 순위 1위는 선수 A, 2위는 선수 B이다. 순위는 대회가 끝날 때마다 바뀐다."
+        }
+      ]
+    }
+  ]
+}

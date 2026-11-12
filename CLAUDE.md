@@ -1,0 +1,1 @@
+SERVICE.md를 보고 기획을 파악하고, HISTORY.md를 보고 개발 현황을 파악해

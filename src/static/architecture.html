@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwingKid · 멀티 agent 아키텍처</title>
+<style>
+/* /architecture — 메인 화면 아래쪽과 같은 다이어그램(arch.js)을 넓게 보는 페이지. 애플풍 토큰은 메인 화면과 같습니다. */
+:root {
+  --yellow: #0071e3; --yellow-soft: #e8f2fd;
+  --bg: #f5f5f7; --surface: #ffffff; --surface-2: #f5f5f7; --fg: #1d1d1f; --muted: #6e6e73; --line: rgb(0 0 0 / .08);
+  --glass: rgb(255 255 255 / .82);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --yellow: #0a84ff; --yellow-soft: #0a2540; --bg: #000; --surface: #1c1c1e; --surface-2: #2c2c2e; --fg: #f5f5f7; --muted: #98989d; --line: rgb(255 255 255 / .1); --glass: rgb(28 28 30 / .86); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+main { max-width: 1360px; margin: 0 auto; padding: 48px 24px 72px; }
+.eyebrow { color: var(--yellow); font-weight: 600; font-size: 15px; margin: 0 0 6px; }
+h1 { margin: 0; font: 700 44px/1.1 var(--font-display); letter-spacing: -.035em; }
+.lead { color: var(--muted); font-size: 19px; line-height: 1.55; max-width: 860px; margin: 14px 0 28px; }
+.back { display: inline-block; margin-top: 28px; color: var(--yellow); text-decoration: none; font-weight: 600; }
+.back:hover { text-decoration: underline; }
+.note { color: var(--muted); font-size: 14px; margin-top: 18px; }
+@media (max-width: 760px) { main { padding: 28px 16px 56px; } h1 { font-size: 32px; } .lead { font-size: 16px; } }
+</style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">SwingKid · 골프 입문 코치</p>
+  <h1>멀티 agent 아키텍처</h1>
+  <p class="lead">가드레일이 먼저 거르고, Supervisor가 sub-agent 3개 중 하나를 골라 근거를 모은 뒤, coach가 그 근거로 <b>LLM(Bedrock Claude)을 한 번</b> 불러 답변합니다. 모듈을 누르면 실제 소스 코드에서 중요한 부분이 열립니다.</p>
+  <div id="arch"></div>
+  <p class="note">채점용 오프라인 모드에서는 Bedrock·웹·포즈 추정 대신 가짜 모델·가짜 웹 검색기·관절 좌표 샘플을 써서 실제 API 호출 없이 같은 흐름을 확인합니다.</p>
+  <a class="back" href="/">‹ SwingKid로 돌아가기</a>
+</main>
+<script src="/static/arch.js"></script>
+<script>SwingKidArch.mount(document.getElementById("arch"));</script>
+</body>
+</html>

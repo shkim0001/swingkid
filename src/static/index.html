@@ -1,0 +1,1260 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SwingKid · 골프 입문 코치</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg viewBox=%220 0 48 48%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cdefs%3E%3ClinearGradient id=%22sk-bg%22 x1=%220%22 y1=%220%22 x2=%221%22 y2=%221%22%3E%3Cstop offset=%220%22 stop-color=%22%232997ff%22/%3E%3Cstop offset=%221%22 stop-color=%22%235e5ce6%22/%3E%3C/linearGradient%3E%3ClinearGradient id=%22sk-sw%22 x1=%229%22 y1=%2211%22 x2=%2232%22 y2=%2237%22 gradientUnits=%22userSpaceOnUse%22%3E%3Cstop offset=%220%22 stop-color=%22%23fff%22 stop-opacity=%22.15%22/%3E%3Cstop offset=%22.45%22 stop-color=%22%23fff%22 stop-opacity=%22.6%22/%3E%3Cstop offset=%221%22 stop-color=%22%23fff%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=%2248%22 height=%2248%22 rx=%2212%22 fill=%22url%28%23sk-bg%29%22/%3E%3Cpath d=%22M9.5 10.5 C7 27.5 16.5 38.6 32 37.2 C21 33.6 13.8 25.6 9.5 10.5 Z%22 fill=%22url%28%23sk-sw%29%22/%3E%3Ccircle cx=%2237%22 cy=%2234.6%22 r=%224.5%22 fill=%22%23fff%22/%3E%3Cg fill=%22%23c9d6ff%22%3E%3Ccircle cx=%2235.7%22 cy=%2233.5%22 r=%22.65%22/%3E%3Ccircle cx=%2238%22 cy=%2233.2%22 r=%22.65%22/%3E%3Ccircle cx=%2236.9%22 cy=%2235.8%22 r=%22.65%22/%3E%3Ccircle cx=%2238.8%22 cy=%2235.4%22 r=%22.65%22/%3E%3C/g%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap">
+<style>
+/* 구성: 상단 바 · 왼쪽 프로필/통계 · 가운데 진행 중 코칭 + 지난 코칭 · 오른쪽 추천 질문
+   스타일: 애플풍 — 시스템 서체, 밝은 회색 배경(#f5f5f7) 위 흰 카드, 반투명 상단 바, 파란 포인트, 알약형 버튼, iMessage 말풍선
+   변수 이름 --yellow* 는 예전 '포인트 색' 자리라 이름만 남기고 값은 파란 포인트입니다(스크립트의 .btn.yellow 클래스 호환). */
+:root {
+  --yellow: #0071e3; --yellow-press: #0077ed; --yellow-soft: #e8f2fd; --on-yellow: #ffffff;
+  --bg: #f5f5f7; --surface: #ffffff; --surface-2: #f5f5f7; --fg: #1d1d1f; --muted: #6e6e73; --line: rgb(0 0 0 / .08);
+  --bubble-coach: #e9e9eb; --glass: rgb(255 255 255 / .72);
+  --ok: #248a3d; --ok-soft: #e3f5e8; --info: #0066cc; --info-soft: #e8f2fd; --warn: #b25000; --warn-soft: #fff3e0;
+  --bad: #d70015; --bad-soft: #fdecee; --band: rgb(52 199 89 / .22);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --shadow: 0 2px 6px rgb(0 0 0 / .03), 0 8px 28px rgb(0 0 0 / .05);
+  --radius: 22px;
+  --ease: cubic-bezier(.25, .1, .25, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --yellow: #0a84ff; --yellow-press: #409cff; --yellow-soft: #0a2540; --on-yellow: #ffffff;
+    --bg: #000000; --surface: #1c1c1e; --surface-2: #2c2c2e; --fg: #f5f5f7; --muted: #98989d; --line: rgb(255 255 255 / .1);
+    --bubble-coach: #2c2c2e; --glass: rgb(22 22 23 / .72);
+    --ok: #30d158; --ok-soft: #12301b; --info: #64b5ff; --info-soft: #0a2540; --warn: #ff9f0a; --warn-soft: #3a2608;
+    --bad: #ff453a; --bad-soft: #3d1512; --band: rgb(48 209 88 / .25);
+    --shadow: none;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 var(--font); letter-spacing: -.01em; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+button, select, textarea, input { font: inherit; color: inherit; letter-spacing: inherit; }
+:focus-visible { outline: 3px solid rgb(0 125 250 / .6); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.hint { font-size: 12px; color: var(--muted); margin: 0; font-weight: 400; }
+
+/* 상단 바: 반투명 유리 */
+.nav { position: sticky; top: 0; z-index: 10; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+.nav-in { max-width: 1240px; margin: 0 auto; padding: 0 22px; min-height: 52px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; white-space: nowrap; }
+.brand small { font-size: 12px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; background: var(--yellow); color: var(--on-yellow); display: grid; place-items: center; }
+.brand-mark svg { width: 20px; height: 20px; }
+.brand-mark.logo { width: 32px; height: 32px; border-radius: 9px; background: none; overflow: hidden; box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.brand-mark.logo svg { width: 32px; height: 32px; display: block; }
+.wordmark { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -.025em; }
+.wordmark b { color: var(--yellow); font-weight: 700; }
+.avatar.coach svg { width: 100%; height: 100%; display: block; }
+.nick-edit { background: none; border: 0; padding: 2px 8px; margin: 0 auto; font: inherit; color: inherit; cursor: pointer; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; transition: background .2s var(--ease); }
+.nick-edit:hover, .nick-edit:focus-visible { background: var(--surface-2); }
+.nick-edit .pen { font-size: 12px; color: var(--yellow); }
+.nick-form { display: flex; gap: 6px; justify-content: center; margin-top: 2px; }
+.nick-form input { width: 140px; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--surface-2); color: var(--fg); }
+.nick-form input:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
+.nick-err { font-size: 11px; color: var(--bad); min-height: 1em; }
+.nav .grow { flex: 1; }
+.nav-field { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.mode { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 10px; letter-spacing: .01em; }
+.mode.live { background: var(--ok-soft); color: var(--ok); }
+.mode.offline { background: var(--surface-2); color: var(--muted); }
+select { appearance: none; -webkit-appearance: none; border: 0; background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2386868b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center; border-radius: 10px; padding: 6px 30px 6px 12px; max-width: 100%; cursor: pointer; font-size: 13px; }
+select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25); }
+
+/* 버튼: 알약형 */
+.btn { border: 0; background: var(--surface-2); border-radius: 999px; padding: 8px 16px; cursor: pointer; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--fg); text-decoration: none; transition: background .2s var(--ease), transform .1s var(--ease), opacity .2s; }
+.btn:hover { background: color-mix(in srgb, var(--surface-2) 88%, var(--fg)); }
+.btn:active { transform: scale(.97); }
+.btn svg { width: 17px; height: 17px; }
+.btn.yellow { background: var(--yellow); color: var(--on-yellow); font-weight: 500; }
+.btn.yellow:hover { background: var(--yellow-press); }
+.btn.text { background: none; padding: 4px 6px; font-size: 12px; color: var(--yellow); }
+.btn.text:hover { background: none; color: var(--bad); }
+.btn:disabled { opacity: .4; cursor: progress; transform: none; }
+
+/* 2단 배치: 왼쪽 사이드바(프로필·기억·기준값) + 넓은 대화창. 추천 질문은 입력창 바로 위 칩 줄 */
+.page { max-width: 1200px; margin: 0 auto; padding: 32px 24px 56px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
+@media (max-width: 1000px) { .page { grid-template-columns: 260px minmax(0, 1fr); gap: 20px; } }
+@media (max-width: 760px) {
+  .page { grid-template-columns: 1fr; padding: 20px 16px 40px; gap: 16px; } .left { grid-column: auto; } .page > main { order: -1; }
+  .nav { position: static; } .brand small { display: none; } .nav-in { padding: 8px 16px; }
+}
+.left { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (min-width: 761px) { .left { position: sticky; top: 76px; } }
+.card { background: var(--surface); border: 0; border-radius: var(--radius); box-shadow: var(--shadow); }
+@media (prefers-color-scheme: dark) { .card { border: 1px solid var(--line); } }
+.card-pad { padding: 22px; }
+.card h2 { margin: 0 0 14px; font-family: var(--font-display); font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+
+/* 프로필 카드 */
+.profile { text-align: center; padding: 26px 18px 0; }
+.avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--yellow); color: var(--on-yellow); display: grid; place-items: center; font-weight: 600; flex: none; }
+.avatar.big { width: 72px; height: 72px; border-radius: 50%; font-size: 28px; margin: 0 auto 12px; background: linear-gradient(180deg, #5ac8fa, #0071e3); }
+.avatar.coach { width: 32px; height: 32px; border-radius: 50%; background: none; overflow: hidden; }
+.avatar svg { width: 20px; height: 20px; }
+.profile .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+.profile .sub { font-size: 12px; color: var(--muted); }
+.pstats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 18px -18px 0; border-top: 1px solid var(--line); }
+.pstats div { padding: 14px 4px; }
+.pstats div + div { border-left: 1px solid var(--line); }
+.pstats .lbl { display: block; font-size: 11px; color: var(--muted); }
+.pstats .val { font-family: var(--font-display); font-size: 24px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.profile-foot { padding: 12px 22px 16px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); text-align: left; }
+
+.ref { display: flex; flex-direction: column; gap: 12px; font-size: 14px; }
+.ref-row { display: flex; justify-content: space-between; gap: 8px; }
+.ref-row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.ref-note { color: var(--muted); font-size: 12px; }
+
+/* 입력창 (새 코칭 / 이어서 질문 공용) */
+.new-coach { padding: 22px; display: flex; flex-direction: column; gap: 12px; }
+.new-head { display: flex; align-items: center; gap: 12px; }
+.new-head b { font-size: 17px; font-weight: 600; }
+.composer { display: flex; flex-direction: column; gap: 10px; }
+.composer textarea { width: 100%; min-height: 80px; resize: vertical; border: 1px solid transparent; border-radius: 14px; padding: 12px 14px; background: var(--surface-2); transition: border-color .2s var(--ease), box-shadow .2s var(--ease), background .2s; }
+.composer textarea:focus { outline: none; background: var(--surface); border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .15); }
+.composer textarea::placeholder { color: var(--muted); }
+.composer.compact { gap: 8px; }
+.composer.compact textarea { min-height: 40px; height: 40px; border-radius: 20px; padding: 8px 16px; resize: none; overflow: hidden; }
+.composer.drop textarea { outline: 2px dashed var(--yellow); outline-offset: 2px; }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.tools .grow { flex: 1; }
+.tools select { max-width: 200px; font-size: 13px; }
+.preview { display: flex; align-items: center; gap: 10px; background: var(--surface-2); border-radius: 14px; padding: 6px 8px; font-size: 13px; }
+.preview[hidden] { display: none; }
+.preview img { width: 48px; height: 48px; object-fit: cover; border-radius: 10px; }
+.pv-icon { width: 48px; height: 48px; border-radius: 10px; background: var(--yellow); color: var(--on-yellow); display: grid; place-items: center; font-weight: 600; font-size: 12px; }
+.pv-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.x { border: 0; background: none; font-size: 18px; color: var(--muted); cursor: pointer; padding: 2px 8px; border-radius: 50%; }
+.x:hover { color: var(--fg); }
+
+/* 피드 */
+.feed { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+.feed-title { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 6px -6px; }
+.feed-title h2 { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; letter-spacing: -.025em; }
+.feed-title span { font-size: 13px; color: var(--muted); }
+.empty { padding: 44px 24px; text-align: center; color: var(--muted); }
+.empty b { display: block; color: var(--fg); font-size: 19px; font-weight: 600; margin-bottom: 6px; letter-spacing: -.02em; }
+
+.act { padding: 22px 22px 0; }
+.act-head { display: flex; gap: 12px; align-items: center; }
+.act-meta { flex: 1; min-width: 0; }
+.act-who { font-weight: 600; font-size: 14px; }
+.act-when { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.act-when svg { width: 14px; height: 14px; }
+.act-title { margin: 14px 0 0; font-family: var(--font-display); font-size: 26px; line-height: 1.2; font-weight: 700; overflow-wrap: anywhere; letter-spacing: -.03em; }
+
+.stats { display: flex; flex-wrap: wrap; margin: 16px 0 6px; }
+.stat { padding: 0 22px 0 0; margin: 0 22px 8px 0; border-right: 1px solid var(--line); }
+.stat:last-child { border-right: 0; }
+.stat .lbl { display: block; font-size: 12px; color: var(--muted); }
+.stat .val { font-family: var(--font-display); font-size: 26px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat .val small { font-size: 14px; font-weight: 400; color: var(--muted); margin-left: 2px; }
+.stat .val.answered { color: var(--ok); }
+.stat .val.no_answer { color: var(--info); }
+.stat .val.blocked { color: var(--warn); }
+.stat .val.hot { color: var(--bad); }
+@media (max-width: 480px) {
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 0; }
+  .stat, .stat:last-child { margin: 0; padding: 0 12px; border-right: 0; border-left: 2px solid var(--line); }
+}
+
+/* 카드 안 대화: 메시지 앱 풍 */
+.thread { display: flex; flex-direction: column; gap: 14px; padding: 16px 0 16px; border-top: 1px solid var(--line); margin-top: 10px; }
+.turn-q { display: flex; justify-content: flex-end; align-items: flex-end; gap: 6px; }
+.turn-q .stack { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 80%; }
+.bubble-me { background: var(--yellow); color: var(--on-yellow); border-radius: 20px 20px 6px 20px; padding: 9px 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.photo { display: block; max-width: 220px; width: 100%; border-radius: 18px; border: 0; }
+.att { font-size: 12px; background: var(--surface-2); color: var(--muted); border-radius: 999px; padding: 3px 10px; }
+.clip { width: auto; max-width: 280px; max-height: 360px; background: #000; }
+.clip-note { font-size: 11px; color: var(--muted); }
+canvas.gif { cursor: pointer; }
+.mem { padding: 12px 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); text-align: left; }
+.mem b { color: var(--fg); font-weight: 600; }
+.time { font-size: 11px; color: var(--muted); white-space: nowrap; flex: none; }
+.turn-a { display: flex; gap: 8px; align-items: flex-start; }
+.turn-a .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.coach-name { font-size: 12px; font-weight: 600; display: flex; flex-wrap: wrap; gap: 6px; }
+.coach-name span { font-weight: 400; color: var(--muted); }
+.bubble-coach { background: var(--bubble-coach); border-radius: 20px 20px 20px 6px; padding: 12px 15px; overflow-wrap: anywhere; min-width: 0; }
+.bubble-coach.err { color: var(--bad); }
+
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.badge { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; }
+.badge.answered { background: var(--ok-soft); color: var(--ok); }
+.badge.no_answer { background: var(--info-soft); color: var(--info); }
+.badge.blocked { background: var(--warn-soft); color: var(--warn); }
+.badge.issue { background: var(--bad-soft); color: var(--bad); font-weight: 500; font-family: var(--mono); }
+
+.gauges { background: var(--surface); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 12px; }
+.gauge { display: grid; grid-template-columns: 96px minmax(80px, 1fr) 66px; gap: 10px; align-items: center; font-size: 13px; }
+.track { position: relative; height: 8px; border-radius: 4px; background: var(--surface-2); }
+.band { position: absolute; top: 0; bottom: 0; background: var(--band); border-radius: 4px; }
+.mark { position: absolute; top: -5px; width: 18px; height: 18px; margin-left: -9px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 4px rgb(0 0 0 / .3), 0 0 0 .5px rgb(0 0 0 / .08); }
+.gauge .v { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.gauge .v.out { color: var(--bad); }
+.gauge .v small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+@media (max-width: 480px) { .gauge { grid-template-columns: 1fr 60px; } .gauge .track { grid-column: 1 / -1; grid-row: 2; } }
+
+/* 영상 각도 그래프: 재생 위치에 맞춰 왼팔 각도를 실시간으로 보여 줌 */
+.achart { background: var(--surface); border-radius: 14px; padding: 12px 14px 10px; margin-bottom: 10px; }
+.achart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.achart-title { font-size: 13px; font-weight: 600; }
+.achart-title small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.achart-live { display: flex; align-items: baseline; gap: 8px; font-variant-numeric: tabular-nums; }
+.achart-live .num { font-family: var(--font-display); font-size: 28px; font-weight: 600; letter-spacing: -.02em; min-width: 3.6em; text-align: right; }
+.achart-live .num.out { color: var(--bad); }
+.achart-live .num.ok { color: var(--ok); }
+.achart-live .meta { font-size: 11px; color: var(--muted); text-align: right; }
+.achart svg { display: block; width: 100%; height: auto; margin-top: 6px; cursor: pointer; touch-action: none; }
+.achart .grid { stroke: var(--line); stroke-width: 1; }
+.achart .axis { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.achart .zone { fill: var(--band); }
+.achart .thr { stroke: var(--ok); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.achart .line { fill: none; stroke: var(--yellow); stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+.achart .apex { fill: var(--bad); stroke: var(--surface); stroke-width: 2; }
+.achart .apex-label { fill: var(--bad); font-size: 11px; font-weight: 600; font-family: var(--font); }
+.achart .head { stroke: var(--fg); stroke-width: 1.25; opacity: .6; }
+.achart .head-dot { fill: #fff; stroke: var(--yellow); stroke-width: 2.5; }
+.achart-note { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+.md p { margin: 0 0 6px; }
+.md p:last-child { margin-bottom: 0; }
+.md h4 { margin: 10px 0 4px; font-size: 15px; font-weight: 600; }
+.md ul, .md ol { margin: 0 0 6px; padding-left: 20px; }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 8px 0; }
+.md code { font-family: var(--mono); font-size: 13px; background: var(--surface); padding: 1px 5px; border-radius: 6px; }
+.md .tbl { overflow-x: auto; margin: 4px 0 8px; border-radius: 10px; }
+.md table { border-collapse: collapse; font-size: 13px; min-width: 100%; background: var(--surface); }
+.md th, .md td { border-bottom: 1px solid var(--line); padding: 6px 10px; text-align: left; }
+.md th { font-weight: 600; color: var(--muted); font-size: 12px; }
+
+.srcs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.src { font-size: 12px; font-family: var(--mono); color: var(--muted); background: var(--surface); border-radius: 999px; padding: 2px 10px; }
+.more { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
+details { font-size: 12px; }
+details > summary { cursor: pointer; color: var(--yellow); padding: 4px 0; }
+details[open] { flex-basis: 100%; }
+.ctx { border-left: 2px solid var(--yellow); padding: 2px 12px; margin: 4px 0 8px; white-space: pre-wrap; font-size: 13px; }
+.ctx b { font-family: var(--mono); font-size: 12px; }
+ol.trace { margin: 0 0 8px; padding-left: 20px; }
+ol.trace code { font-family: var(--mono); font-weight: 600; }
+pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius: 10px; overflow-x: auto; font: 11px/1.5 var(--mono); max-height: 300px; }
+
+.typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.typing i:nth-child(2) { animation-delay: .2s; }
+.typing i:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 60%, 100% { opacity: .25; } 30% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } .btn, .composer textarea { transition: none; } }
+
+.reply { border-top: 1px solid var(--line); margin: 0 -22px; padding: 12px 22px 16px; background: var(--surface); border-radius: 0 0 var(--radius) var(--radius); }
+
+/* 오른쪽: 추천 질문 */
+.legend { display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.legend .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 10px; vertical-align: 1px; }
+
+/* ── 진행 중 코칭: 카드가 그 자리에 머물고 입력칸은 화면 아래에 붙어 있습니다 ── */
+[hidden] { display: none !important; }
+.active-card { padding: 22px 22px 0; scroll-margin-top: 72px; }
+.act-actions { display: flex; gap: 4px; align-items: center; }
+.active-card .thread { min-height: 120px; }
+.turn-q, .turn-a { scroll-margin-top: 76px; scroll-margin-bottom: 200px; }
+.dock { position: sticky; bottom: 0; z-index: 3; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-top: 1px solid var(--line); margin: 0 -22px; padding: 12px 22px 14px; border-radius: 0 0 var(--radius) var(--radius); }
+@media (max-width: 480px) { .tools select { max-width: 150px; } .tools .btn span { display: none; } }
+
+/* 아래쪽: 아키텍처 다이어그램과 흐름 설명 */
+.arch-wrap { max-width: 1240px; margin: 0 auto; padding: 8px 22px 64px; }
+.arch-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.arch-head h2 { margin: 0; font-family: var(--font-display); font-size: 28px; font-weight: 700; letter-spacing: -.03em; }
+.arch-lead { margin: 10px 0 0; color: var(--muted); font-size: 16px; line-height: 1.6; max-width: 760px; }
+.arch-mount { margin-top: 22px; }
+.arch-note { margin: 16px 0 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+@media (max-width: 760px) { .arch-head h2 { font-size: 22px; } }
+.dock textarea { min-height: 44px; max-height: 160px; resize: none; border-radius: 22px; padding: 10px 16px; overflow-y: auto; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.suggest { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; margin: 0 0 10px; }
+.suggest .lbl { font-size: 12px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.suggest-row { display: flex; gap: 8px; overflow-x: auto; scroll-behavior: smooth; scrollbar-width: none; padding: 2px; -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent); mask-image: linear-gradient(90deg, #000 92%, transparent); }
+.suggest-row::-webkit-scrollbar { display: none; }
+.suggest-row .chip { flex: none; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-flex; align-items: center; gap: 7px; background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); }
+.suggest-row .chip:hover { box-shadow: inset 0 0 0 1px var(--yellow); }
+.suggest-row .chip .cd { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.suggest-row .chip .tx { overflow: hidden; text-overflow: ellipsis; }
+.cd.positive { background: var(--ok); } .cd.negative { background: var(--info); } .cd.edge { background: var(--warn); } .cd.guardrail { background: var(--bad); }
+.suggest .nav-btn { border: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--surface-2); color: var(--fg); cursor: pointer; font-size: 15px; line-height: 1; }
+.suggest .nav-btn:hover { background: var(--yellow-soft); color: var(--yellow); }
+@media (max-width: 760px) { .suggest { grid-template-columns: minmax(0, 1fr); } .suggest .lbl, .suggest .nav-btn { display: none; } }
+.legend.compact { gap: 8px; font-size: 12.5px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.chip { border: 0; background: var(--surface-2); border-radius: 999px; padding: 6px 14px; font-size: 13px; cursor: pointer; text-align: left; transition: background .15s var(--ease), color .15s; }
+.chip:hover { background: var(--yellow-soft); color: var(--yellow); }
+.chip b { font-weight: 600; }
+.past { padding: 20px 22px; }
+.past .title-row { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.past .act-title { font-size: 19px; }
+.past .thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 14px; flex: none; margin-top: 12px; }
+.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 14px; margin: 2px 0 12px; }
+.past-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin: 0 -22px; padding: 10px 22px 0; }
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="상단">
+  <div class="nav-in">
+    <span class="brand"><span class="brand-mark logo" data-icon="mascot" aria-hidden="true"></span><span class="wordmark" aria-label="SwingKid">Swing<b>Kid</b></span><small>골프 입문 코치</small></span>
+    <span class="grow"></span>
+    <span id="mode" class="mode">확인 중</span>
+    <label class="nav-field" for="model">코칭 모델 <select id="model"></select></label>
+  </div>
+</nav>
+
+<div class="page">
+  <aside class="left" aria-label="내 코칭 요약">
+    <section class="card">
+      <div class="profile">
+        <div class="avatar big" aria-hidden="true" id="nickAvatar">나</div>
+        <button class="nick-edit name" id="nickBtn" type="button" aria-label="닉네임 정하기"><span id="nickName">닉네임을 정해 주세요</span><span class="pen" aria-hidden="true">✎</span></button>
+        <form class="nick-form" id="nickForm" hidden>
+          <input id="nickInput" maxlength="20" placeholder="예: 골프키드" aria-label="닉네임" autocomplete="nickname">
+          <button class="btn yellow" type="submit">저장</button>
+        </form>
+        <div class="nick-err" id="nickErr" role="alert"></div>
+        <div class="sub" id="nickSub">닉네임을 정하면 다른 기기에서도 판정 기록이 이어져요</div>
+        <div class="pstats">
+          <div><span class="lbl">코칭</span><span class="val" id="sT">0</span></div>
+          <div><span class="lbl">질문</span><span class="val" id="sQ">0</span></div>
+          <div><span class="lbl">자세 판정</span><span class="val" id="sP">0</span></div>
+        </div>
+      </div>
+      <div class="mem" id="memRow">
+        <span>장기 기억 · 자세 판정 <b id="memCount">0</b>건 <span class="ref-note" style="display:block">코칭이 달라도 지난 판정과 비교해 줘요</span></span>
+        <button class="btn text" id="clearMem" type="button">기억 지우기</button>
+      </div>
+      <div class="profile-foot">
+        <span>코칭마다 대화가 이어집니다</span>
+        <button class="btn text" id="clearAll" type="button">기록 지우기</button>
+      </div>
+    </section>
+    <section class="card card-pad">
+      <h2>판정 기준과 읽는 법</h2>
+      <div class="ref">
+        <div class="ref-row"><span>척추 앞기울기 <span class="ref-note">사진</span></span><b>30–45°</b></div>
+        <div class="ref-row"><span>무릎 각도 <span class="ref-note">사진</span></span><b>145–165°</b></div>
+        <div class="ref-row"><span>정점 왼팔 각도 <span class="ref-note">영상</span></span><b>160° 이상</b></div>
+        <p class="ref-note">교육용 기준값입니다. 사진은 측면, 영상은 정면에서 전신이 보이게, 오른손잡이 기준.</p>
+      </div>
+      <div class="legend compact">
+        <span><span class="dot" style="background:var(--ok)"></span>답변 · 근거로 답함</span>
+        <span><span class="dot" style="background:var(--info)"></span>근거 없음 · 문서·웹에 없거나 자세 인식 실패</span>
+        <span><span class="dot" style="background:var(--warn)"></span>범위 밖 · 코칭 범위를 벗어난 질문</span>
+        <span><span class="dot" style="background:#fff;box-shadow:0 0 0 1px var(--muted)"></span>막대 · 흰 점이 내 각도, 초록 구간이 기준</span>
+      </div>
+    </section>
+  </aside>
+
+  <main class="feed" aria-label="코칭">
+    <section class="card act active-card" id="activeCard" aria-label="진행 중인 코칭">
+      <div id="activeHead"></div>
+      <div class="stats" id="activeStats" hidden></div>
+      <div class="thread" id="activeThread" aria-live="polite"></div>
+      <div class="dock" id="composeDock"></div>
+    </section>
+
+    <div class="feed-title" id="pastTitle" hidden><h2>지난 코칭</h2><span id="pastCount"></span></div>
+    <div id="past" class="feed"></div>
+  </main>
+
+</div>
+
+<section class="arch-wrap" id="architecture" aria-labelledby="archTitle">
+  <div class="card card-pad">
+    <div class="arch-head">
+      <h2 id="archTitle">SwingKid는 이렇게 동작해요</h2>
+      <a class="btn" href="/architecture" target="_blank" rel="noopener">크게 보기 ↗</a>
+    </div>
+    <p class="arch-lead">질문이 들어오면 가드레일이 먼저 거르고, Supervisor가 질문 종류에 맞는 sub-agent를 골라 근거를 모은 뒤, coach가 그 근거로 LLM(Bedrock Claude)을 한 번 불러 답변을 씁니다. 근거가 없으면 LLM을 부르지 않고 모른다고 답합니다. <b>모듈을 누르면 실제 코드가 열려요.</b></p>
+    <div id="archMount" class="arch-mount"></div>
+    <p class="arch-note">채점용 오프라인 모드에서는 Bedrock·웹·포즈 추정 대신 가짜 모델·가짜 웹 검색기·관절 좌표 샘플을 써서 실제 API 호출 없이 같은 흐름을 확인합니다.</p>
+  </div>
+</section>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const modelSel = $("model");
+  const STORE_KEY = "golf-coach-threads-v2", OLD_KEY = "golf-coach-rooms-v1", ACTIVE_KEY = "golf-coach-active", MODEL_KEY = "golf-coach-model";
+  const NICK_KEY = "golf-coach-nick";   // 사용자가 정한 닉네임. 있으면 이것이 장기 기억 주인(user_id)
+  const USER_KEY = "golf-coach-user";   // 장기 기억 주인(이 브라우저의 사용자 id). 서버는 이 id 로 판정 기록을 대화방을 넘어 쌓습니다
+  const MAX_BYTES = 10 * 1024 * 1024;
+  const ICON = {
+    mascot: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2997ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient><linearGradient id="sk-sw" x1="9" y1="11" x2="32" y2="37" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset=".45" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#sk-bg)"/><path d="M9.5 10.5 C7 27.5 16.5 38.6 32 37.2 C21 33.6 13.8 25.6 9.5 10.5 Z" fill="url(#sk-sw)"/><circle cx="37" cy="34.6" r="4.5" fill="#fff"/><g fill="#c9d6ff"><circle cx="35.7" cy="33.5" r=".65"/><circle cx="38" cy="33.2" r=".65"/><circle cx="36.9" cy="35.8" r=".65"/><circle cx="38.8" cy="35.4" r=".65"/></g></svg>',
+    flag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4l11 4-11 4"/><ellipse cx="12" cy="20.5" rx="7" ry="1.5"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+    text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+    video: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="13" height="12" rx="1"/><path d="M16 10l5-3v10l-5-3z"/></svg>',
+  };
+  const KIND_KO = { text: "텍스트 코칭", photo: "사진 판정", video: "영상 판정" };
+  const STATUS_KO = { answered: "답변", no_answer: "근거 없음", blocked: "범위 밖" };
+  // 교육용 기준값 (src/config.py 와 같은 값)
+  const METRICS = {
+    spine_tilt: { label: "척추 앞기울기", lo: 30, hi: 45, min: 0, max: 80, range: "기준 30–45°" },
+    knee_flex: { label: "무릎 각도", lo: 145, hi: 165, min: 110, max: 180, range: "기준 145–165°" },
+    lead_arm: { label: "정점 왼팔", lo: 160, hi: 180, min: 100, max: 180, range: "기준 160° 이상" },
+  };
+  document.querySelectorAll('[data-icon="flag"]').forEach((n) => (n.innerHTML = ICON.flag));
+  document.querySelectorAll('[data-icon="mascot"]').forEach((n) => (n.innerHTML = ICON.mascot));
+
+  let mode = "live", demo = false, fixtures = [], samples = [], mediaSamples = [];
+  const modelLabels = {};
+  let busyId = null;              // 답변을 기다리는 코칭 id
+  // 장기 기억 주인(user_id): 닉네임을 정했으면 닉네임, 아니면 이 브라우저가 만든 임의 id. 저장소를 못 쓰면 장기 기억 없이 동작
+  const autoId = (() => {
+    try {
+      let id = localStorage.getItem(USER_KEY);
+      if (!id) { id = "user-" + Math.random().toString(36).slice(2, 12); localStorage.setItem(USER_KEY, id); }
+      return id;
+    } catch (e) { return null; }
+  })();
+  let nickname = (() => { try { return localStorage.getItem(NICK_KEY) || ""; } catch (e) { return ""; } })();
+  let userId = nickname || autoId;
+
+  // ── 저장: 코칭 스레드 목록 (브라우저 localStorage, 실패해도 화면은 동작) ──
+  // thread = {id, created, turns:[{q, ts, attach?, res?:{data, seconds}, error?}]}
+  let threads = loadThreads();
+  let activeId = loadActive();    // 진행 중인 코칭. null 이면 아직 질문하지 않은 새 코칭
+  function loadThreads() {
+    try {
+      const v = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
+      if (Array.isArray(v)) return v;
+      return migrateRooms(JSON.parse(localStorage.getItem(OLD_KEY) || "[]"));
+    } catch (e) { return []; }
+  }
+  // 이전 대화방 화면(rooms-v1)의 기록을 스레드 형식으로 옮깁니다.
+  function migrateRooms(rooms) {
+    if (!Array.isArray(rooms)) return [];
+    return rooms.filter((r) => r.messages?.length).map((r) => {
+      const turns = [];
+      r.messages.forEach((m, i) => {
+        if (m.role !== "user") return;
+        const next = r.messages[i + 1];
+        const t = { q: m.text, ts: m.ts, attach: m.attach };
+        if (next?.role === "bot") { if (next.error) t.error = next.error; else t.res = { data: next.data, seconds: next.seconds }; }
+        turns.push(t);
+      });
+      return { id: r.id, created: r.created, turns };
+    });
+  }
+  function loadActive() {
+    try { const id = localStorage.getItem(ACTIVE_KEY); return threads.some((t) => t.id === id) ? id : null; } catch (e) { return null; }
+  }
+  function save() {
+    try { activeId ? localStorage.setItem(ACTIVE_KEY, activeId) : localStorage.removeItem(ACTIVE_KEY); } catch (e) {}
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(threads)); return; } catch (e) {}
+    try { // 저장 공간이 모자라면 오래된 사진 미리보기부터 지우고 다시 시도
+      for (const th of [...threads].sort((a, b) => a.created - b.created)) for (const t of th.turns) if (t.attach) delete t.attach.thumb;
+      localStorage.setItem(STORE_KEY, JSON.stringify(threads));
+    } catch (e) {}
+  }
+  const newId = () => "web-" + Math.random().toString(36).slice(2, 10);
+  const active = () => threads.find((t) => t.id === activeId) || null;
+  const lastTs = (th) => (th.turns.length ? th.turns[th.turns.length - 1].ts : th.created);
+  const kindOf = (th) => {
+    const a = th.turns[0]?.attach;
+    return !a ? "text" : a.kind === "video" || a.fixture?.startsWith("video") ? "video" : "photo";
+  };
+
+  // ── 입력칸: 진행 중 코칭 카드 아래에 붙어 있고, 스크롤해도 화면 아래에 남습니다 ──
+  const composer = makeComposer({
+    placeholder: "질문을 입력하거나 사진을 올려 주세요",
+    buttonText: "보내기",
+    onSend: ask,
+  });
+  // 추천 질문(test_queries.csv): 입력창 바로 위 가로 칩 줄. 누르면 입력창에 채워 넣기만 하고 보내지는 않습니다
+  const suggestRow = el("div", { class: "suggest-row", role: "list", "aria-label": "추천 질문" });
+  const scrollBy = (dx) => suggestRow.scrollBy({ left: dx, behavior: "smooth" });
+  const prevBtn = el("button", { class: "nav-btn", type: "button", "aria-label": "추천 질문 이전" }, "‹");
+  const nextBtn = el("button", { class: "nav-btn", type: "button", "aria-label": "추천 질문 다음" }, "›");
+  prevBtn.addEventListener("click", () => scrollBy(-360)); nextBtn.addEventListener("click", () => scrollBy(360));
+  const suggest = el("div", { class: "suggest" }, el("span", { class: "lbl" }, "추천 질문"), suggestRow, el("span", { style: "display:flex;gap:4px" }, prevBtn, nextBtn));
+  $("composeDock").append(suggest, composer.form);
+  function renderSuggest() {
+    suggestRow.replaceChildren();
+    for (const s of samples) {
+      const fx = s.input.match(/^\[[^\]]*fixture:\s*(\w+)\]\s*(.*)$/);
+      if (fx && !demo) continue;   // 관절 좌표 샘플 질문은 데모 모드에서만
+      const text = fx ? fx[2] : s.input.replace(/^\[[^\]]*\]\s*/, "");
+      const chip = el("button", { class: "chip", type: "button", role: "listitem", title: `${s.category} · ${s.input}` },
+        el("span", { class: `cd ${s.category}`, "aria-hidden": "true" }), fx ? el("b", {}, "좌표") : "", el("span", { class: "tx" }, text));
+      chip.addEventListener("click", () => useSample(s));
+      suggestRow.append(chip);
+    }
+  }
+
+  function makeComposer({ placeholder, buttonText, onSend }) {
+    let att = null;
+    const ta = el("textarea", { rows: "1", placeholder, "aria-label": "질문" });
+    const file = el("input", { type: "file", accept: "image/*,video/*", hidden: "" });
+    const attachBtn = el("button", { type: "button", class: "btn", "aria-label": "사진·영상 첨부" });
+    attachBtn.innerHTML = ICON.camera + "<span>사진·영상</span>";
+    const fx = el("select", { "aria-label": "판정용 관절 좌표 샘플", hidden: "" }, el("option", { value: "" }, "관절 좌표 샘플"));
+    // 프로젝트에 들어 있는 실제 사진·영상(data/test_photos, test_videos). 고르면 직접 올린 것과 똑같이 분석합니다
+    const sm = el("select", { "aria-label": "사진·영상 샘플", hidden: "" }, el("option", { value: "" }, "사진·영상 샘플"));
+    const pvThumb = el("span"), pvText = el("span", { class: "pv-text" });
+    const pvClear = el("button", { type: "button", class: "x", "aria-label": "첨부 취소" }, "×");
+    const preview = el("div", { class: "preview", hidden: "" }, pvThumb, pvText, pvClear);
+    const send = el("button", { type: "submit", class: "btn yellow" }, buttonText);
+    const note = el("p", { class: "hint", role: "status" }, "Enter 전송 · Shift+Enter 줄바꿈 · 사진은 측면에서 전신이 보이게");
+    const form = el("form", { class: "composer" },
+      preview, ta, el("div", { class: "tools" }, attachBtn, sm, fx, el("span", { class: "grow" }), send), file, note);
+
+    const autosize = () => { ta.style.height = "auto"; ta.style.height = Math.min(ta.scrollHeight + 2, 160) + "px"; };
+    const setAtt = (a) => {
+      att = a;
+      if (!a) { preview.hidden = true; pvThumb.innerHTML = ""; fx.value = ""; sm.value = ""; return; }
+      if (a.kind !== "fixture") fx.value = "";
+      if (!a.sample) sm.value = "";
+      pvThumb.innerHTML = "";
+      pvThumb.append(a.thumb ? el("img", { src: a.thumb, alt: "" }) : el("span", { class: "pv-icon" }, a.kind === "video" ? "영상" : "좌표"));
+      pvText.textContent = a.kind === "fixture" ? `관절 좌표 샘플 · ${a.fixture}` : `${a.kind === "video" ? "영상" : "사진"} · ${a.name}`;
+      preview.hidden = false;
+    };
+    const attach = async (f, sample) => {
+      note.textContent = "Enter 전송 · Shift+Enter 줄바꿈 · 사진은 측면에서 전신이 보이게";
+      try { setAtt({ ...(await readAttachment(f)), ...(sample ? { sample: true } : {}) }); ta.focus(); } catch (err) { note.textContent = err.message || String(err); }
+    };
+    sm.addEventListener("change", async () => {
+      const s = mediaSamples.find((x) => x.name === sm.value);
+      if (!s) { setAtt(null); return; }
+      note.textContent = `샘플 불러오는 중… (${s.label})`;
+      try {
+        const res = await fetch(s.url);
+        if (!res.ok) throw new Error(`샘플을 불러오지 못했어요 (${res.status})`);
+        const blob = await res.blob();
+        await attach(new File([blob], s.name, { type: s.type }), true);
+      } catch (err) { note.textContent = err.message || String(err); sm.value = ""; }
+    });
+    attachBtn.addEventListener("click", () => file.click());
+    file.addEventListener("change", () => { if (file.files[0]) attach(file.files[0]); file.value = ""; });
+    fx.addEventListener("change", () => setAtt(fx.value ? { kind: "fixture", fixture: fx.value } : null));
+    pvClear.addEventListener("click", () => setAtt(null));
+    form.addEventListener("dragover", (e) => { e.preventDefault(); form.classList.add("drop"); });
+    form.addEventListener("dragleave", () => form.classList.remove("drop"));
+    form.addEventListener("drop", (e) => { e.preventDefault(); form.classList.remove("drop"); if (e.dataTransfer.files[0]) attach(e.dataTransfer.files[0]); });
+    ta.addEventListener("input", autosize);
+    ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); form.requestSubmit(); } });
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (busyId) return;
+      const text = ta.value.trim();
+      if (!text && !att) { ta.focus(); return; }
+      const a = att;
+      ta.value = ""; autosize(); setAtt(null);
+      onSend(text, a);
+    });
+    return {
+      form,
+      setBusy(v) { send.disabled = v; send.textContent = v ? "답변 중…" : buttonText; },
+      fill(text, fixture) { ta.value = text; autosize(); if (fixture) { fx.value = fixture; setAtt({ kind: "fixture", fixture }); } else setAtt(null); ta.focus({ preventScroll: true }); },
+      focus() { ta.focus({ preventScroll: true }); },
+      setMediaSamples(list) {
+        if (sm.options.length > 1 || !list.length) return;
+        const groups = { photo: el("optgroup", { label: "측면 어드레스 사진" }), video: el("optgroup", { label: "정면 스윙 영상·GIF" }) };
+        for (const s of list) groups[s.kind].append(el("option", { value: s.name }, `${s.label} · ${(s.size / 1e6).toFixed(1)}MB`));
+        for (const g of Object.values(groups)) if (g.children.length) sm.append(g);
+        sm.hidden = false;
+      },
+      setFixtures(names) {
+        if (fx.options.length > 1) return;
+        for (const n of names) fx.append(el("option", { value: n }, n));
+        fx.hidden = false;
+      },
+    };
+  }
+
+  async function readAttachment(f) {
+    if (f.type === "image/gif") {   // 움직이는 GIF 는 영상으로 보냅니다(서버가 프레임별로 분석)
+      if (f.size > MAX_BYTES) throw new Error("GIF가 10MB를 넘어요. 짧게 잘라서 올려 주세요.");
+      const { thumb } = await shrinkImage(f);
+      return { kind: "video", gif: true, name: f.name, b64: await fileToBase64(f), thumb, file: f };
+    }
+    if (f.type.startsWith("video/")) {
+      if (f.size > MAX_BYTES) throw new Error("영상이 10MB를 넘어요. 짧게 잘라서 올려 주세요.");
+      return { kind: "video", name: f.name, b64: await fileToBase64(f), thumb: await videoThumb(f), file: f };
+    }
+    if (f.type.startsWith("image/")) return { kind: "photo", name: f.name, ...(await shrinkImage(f)) };
+    throw new Error("사진이나 영상 파일만 올릴 수 있어요.");
+  }
+
+  // 영상 미리보기: 영상 길이의 40% 지점 장면을 360px 이미지로 뽑습니다. 브라우저가 못 여는 형식이면 미리보기 없이 보냅니다.
+  function videoThumb(file) {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(file);
+      const v = document.createElement("video");
+      const done = (thumb) => { clearTimeout(timer); URL.revokeObjectURL(url); resolve(thumb); };
+      const timer = setTimeout(() => done(null), 4000);
+      v.muted = true; v.preload = "auto"; v.src = url;
+      v.addEventListener("loadedmetadata", () => { v.currentTime = Math.min(v.duration * 0.4, Math.max(0, v.duration - 0.1)) || 0; });
+      v.addEventListener("seeked", () => {
+        try {
+          const s = Math.min(1, 360 / Math.max(v.videoWidth, v.videoHeight));
+          const c = document.createElement("canvas");
+          c.width = Math.round(v.videoWidth * s); c.height = Math.round(v.videoHeight * s);
+          c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+          done(c.toDataURL("image/jpeg", 0.75));
+        } catch (e) { done(null); }
+      }, { once: true });
+      v.addEventListener("error", () => done(null), { once: true });
+    });
+  }
+
+  // 큰 사진은 긴 변 1600px JPEG 로 줄여 보냅니다(관절 좌표는 0~1 비율이라 판정에 영향 없음). 미리보기는 360px.
+  async function shrinkImage(file) {
+    let bitmap;
+    try { bitmap = await createImageBitmap(file); } catch {
+      if (file.size > MAX_BYTES) throw new Error("이 사진 형식은 브라우저에서 줄일 수 없고 10MB를 넘어요. JPG나 PNG로 올려 주세요.");
+      return { b64: await fileToBase64(file), thumb: null };
+    }
+    const draw = (max, quality) => {
+      const s = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(bitmap.width * s); c.height = Math.round(bitmap.height * s);
+      c.getContext("2d").drawImage(bitmap, 0, 0, c.width, c.height);
+      return c.toDataURL("image/jpeg", quality);
+    };
+    const full = draw(1600, 0.9), thumb = draw(360, 0.75);
+    bitmap.close?.();
+    return { b64: full.split(",")[1], thumb };
+  }
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(",")[1]);
+      r.onerror = () => reject(r.error);
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ── 질문 보내기: 진행 중 코칭에 이어 붙입니다. 첫 질문이면 그 자리에서 코칭이 시작됩니다 ──
+  async function ask(text, att) {
+    let th = active();
+    if (!th) { th = { id: newId(), created: Date.now(), turns: [] }; threads.unshift(th); activeId = th.id; }
+    const turn = { q: text || (att?.kind === "video" ? "제 스윙 영상을 봐 주세요" : "제 어드레스 자세를 봐 주세요"), ts: Date.now() };
+    if (att) turn.attach = att.kind === "fixture" ? { kind: "fixture", fixture: att.fixture } : { kind: att.kind, name: att.name, thumb: att.thumb, ...(att.gif ? { gif: true } : {}) };
+    if (att?.kind === "video" && att.file) {
+      turn.attach.mediaId = newId();
+      mediaUrls.set(turn.attach.mediaId, URL.createObjectURL(att.file));
+      mediaBlobs.set(turn.attach.mediaId, att.file);
+      media.put(turn.attach.mediaId, att.file);   // 새로고침 뒤에도 재생되게 (실패해도 이번 화면에선 재생됨)
+    }
+    th.turns.push(turn);
+    save();
+    setBusy(th.id);
+    renderActive(); renderProfile();
+    reveal("end");                       // 방금 보낸 질문과 '작성 중' 표시가 보이게
+    const started = performance.now();
+    try {
+      const body = { question: turn.q, thread_id: th.id, model: modelSel.value || undefined, user_id: userId || undefined };
+      let url = "/query";
+      if (att?.kind === "fixture") { url = "/demo/fixture"; body.fixture = att.fixture; }
+      else if (att?.kind === "video") body.video_base64 = att.b64;
+      else if (att?.kind === "photo") body.image_base64 = att.b64;
+      const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const raw = await res.text();
+      let data;
+      try { data = JSON.parse(raw); } catch { data = { detail: raw || res.statusText }; }
+      if (!res.ok) throw new Error(`(${res.status}) ${typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail)}`);
+      turn.res = { data, seconds: (performance.now() - started) / 1000 };
+    } catch (err) {
+      turn.error = err.message;
+    }
+    save();
+    setBusy(null);
+    renderActive(); renderPast(); renderProfile();
+    if (turn.res?.data.trace.some((s) => s.step === "memory")) loadMemory();
+    if (activeId === th.id) reveal("start");   // 답변 첫머리부터 읽을 수 있게
+  }
+
+  function setBusy(id) {
+    busyId = id;
+    composer.setBusy(!!id);
+    document.querySelectorAll("[data-lock]").forEach((b) => (b.disabled = !!id));
+  }
+
+  // 진행 중 코칭의 마지막 답변을 화면에 맞춥니다.
+  // 답변이 입력칸 위 공간에 다 들어가면 입력칸을 화면 맨 아래에 붙여 대화가 이어지는 느낌을 유지하고,
+  // 길면 답변 첫머리부터 보이게 합니다. end: 방금 보낸 질문·'작성 중' 표시가 입력칸 바로 위에 오게.
+  function reveal(where) {
+    requestAnimationFrame(() => {
+      const last = [...$("activeThread").querySelectorAll(".turn-a")].pop();
+      if (!last) return;
+      const room = innerHeight - $("composeDock").offsetHeight - 90;
+      if (where === "end" || last.offsetHeight <= room) {
+        const cardBottom = $("activeCard").getBoundingClientRect().bottom + scrollY;
+        scrollTo({ top: Math.max(0, cardBottom - innerHeight + 16), behavior: "smooth" });
+      } else last.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
+
+  // ── 진행 중 코칭 카드 ──
+  function renderActive() {
+    const th = active();
+    const newBtn = el("button", { class: "btn", type: "button", "data-lock": "" }, "+ 새 코칭");
+    newBtn.disabled = !!busyId;
+    newBtn.addEventListener("click", startNew);
+    if (!th) {
+      const flag = el("div", { class: "avatar coach", "aria-hidden": "true" }); flag.innerHTML = ICON.mascot;
+      $("activeHead").replaceChildren(
+        el("div", { class: "act-head" }, flag,
+          el("div", { class: "act-meta" }, el("div", { class: "act-who" }, "골프 코치"), el("div", { class: "act-when" }, "새 코칭"))),
+        el("h3", { class: "act-title" }, "무엇을 확인해 볼까요?"));
+      $("activeStats").hidden = true;
+      $("activeThread").replaceChildren(welcome());
+      return;
+    }
+    const kind = kindOf(th);
+    const del = el("button", { class: "btn text", type: "button", "data-lock": "", "aria-label": "이 코칭 기록 삭제" }, "삭제");
+    del.disabled = !!busyId;
+    del.addEventListener("click", () => removeThread(th.id));
+    $("activeHead").replaceChildren(
+      el("div", { class: "act-head" }, el("div", { class: "avatar", "aria-hidden": "true" }, nickname ? [...nickname][0].toUpperCase() : "나"),
+        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, nickname || "골프 입문자"), whenLine(kind, th.created)),
+        el("div", { class: "act-actions" }, newBtn, del)),
+      el("h3", { class: "act-title" }, th.turns[0].q));
+    $("activeStats").hidden = false;
+    $("activeStats").replaceChildren(...threadStats(th));
+    $("activeThread").replaceChildren(...th.turns.flatMap(renderTurn));
+  }
+
+  function welcome() {
+    const flag = el("div", { class: "avatar coach", "aria-hidden": "true" }); flag.innerHTML = ICON.mascot;
+    return el("div", { class: "turn-a" }, flag, el("div", { class: "body" },
+      el("div", { class: "coach-name" }, "골프 코치"),
+      el("div", { class: "bubble-coach" }, el("div", { class: "md" },
+        el("p", {}, "안녕하세요! SwingKid 코치예요. ⛳"),
+        el("p", {}, "그립·어드레스·퍼팅처럼 궁금한 걸 물어보거나, 측면 어드레스 사진이나 정면 스윙 영상·GIF를 올려 주세요. 관절 각도를 재서 교육용 기준값과 비교해 드려요. 같은 코칭 안에서는 앞의 대화를 기억하고 이어서 답해요."),
+        el("p", {}, "아래 입력창 위의 추천 질문을 눌러 바로 시작할 수도 있어요.")))));
+  }
+
+  // 추천 질문을 누르면 지금 대화의 입력창에 채워 넣습니다(관절 좌표 샘플이면 첨부까지). 보내기는 직접 누릅니다.
+  function useSample(s) {
+    if (busyId) return;
+    const fx = s.input.match(/^\[[^\]]*fixture:\s*(\w+)\]\s*(.*)$/);
+    if (fx && demo) composer.fill(fx[2], fx[1]); else composer.fill(s.input.replace(/^\[[^\]]*\]\s*/, ""));
+  }
+
+  function startNew() {
+    if (busyId) return;
+    activeId = null;
+    save();
+    renderActive(); renderPast();
+    $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    composer.focus();
+  }
+
+  function setActive(id) {
+    if (busyId) return;
+    activeId = id;
+    save();
+    renderActive(); renderPast();
+    reveal("start");
+    composer.focus();
+  }
+
+  // ── 지난 코칭 (요약 카드) ──
+  function renderPast() {
+    const list = threads.filter((t) => t.id !== activeId).sort((a, b) => lastTs(b) - lastTs(a));
+    $("pastTitle").hidden = !list.length;
+    $("pastCount").textContent = `${list.length}개`;
+    $("past").replaceChildren(...list.map(pastCard));
+  }
+
+  function pastCard(th) {
+    const kind = kindOf(th);
+    const first = th.turns[0];
+    const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
+    const preview = !lastDone ? "답변을 기다리는 중…" : lastDone.error ? "요청 실패" : plain(lastDone.res.data.answer);
+    const open = el("button", { class: "btn yellow", type: "button", "data-lock": "" }, "이어서 코칭하기");
+    open.disabled = !!busyId;
+    open.addEventListener("click", () => setActive(th.id));
+    const del = el("button", { class: "btn text", type: "button", "data-lock": "", "aria-label": "이 코칭 기록 삭제" }, "삭제");
+    del.disabled = !!busyId;
+    del.addEventListener("click", () => removeThread(th.id));
+    const titleRow = el("div", { class: "title-row" }, el("h3", { class: "act-title" }, first?.q || "코칭"));
+    const thumb = th.turns.find((t) => t.attach?.thumb)?.attach.thumb;
+    if (thumb) titleRow.append(el("img", { class: "thumb", src: thumb, alt: "" }));
+    return el("article", { class: "card act past" },
+      el("div", { class: "act-head" }, el("div", { class: "avatar", "aria-hidden": "true" }, nickname ? [...nickname][0].toUpperCase() : "나"),
+        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, nickname || "골프 입문자"), whenLine(kind, lastTs(th)))),
+      titleRow,
+      el("div", { class: "stats" }, ...threadStats(th)),
+      el("p", { class: "clamp" }, preview),
+      el("div", { class: "past-foot" }, del, open));
+  }
+
+  function whenLine(kind, ts) {
+    const icon = el("span", { "aria-hidden": "true", style: "display:inline-flex" });
+    icon.innerHTML = ICON[kind === "photo" ? "camera" : kind];
+    return el("div", { class: "act-when" }, icon, `${KIND_KO[kind]} · ${when(ts)}`);
+  }
+
+  // 카드 숫자: 코칭 전체 요약(질문 수 · 최근 상태 · 최근 자세 판정의 문제 코드 · 최근 응답 시간)
+  function threadStats(th) {
+    const done = th.turns.filter((t) => t.res);
+    const last = done[done.length - 1]?.res;
+    const lastPose = [...done].reverse().find((t) => t.res.data.trace.some((s) => s.step === "pose"));
+    const issues = lastPose ? lastPose.res.data.issue_codes.filter((c) => !c.startsWith("guard_")).length : 0;
+    return [
+      stat("질문", th.turns.length),
+      stat("최근 상태", last ? STATUS_KO[last.data.status] || last.data.status : "—", last?.data.status || ""),
+      stat("문제 코드", issues, issues ? "hot" : ""),
+      stat("응답 시간", last ? last.seconds.toFixed(1) : "—", "", last ? "s" : ""),
+    ];
+  }
+
+  function stat(label, value, cls = "", unit = "") {
+    const v = el("span", { class: "val " + cls }, String(value));
+    if (unit) v.append(el("small", {}, unit));
+    return el("div", { class: "stat" }, el("span", { class: "lbl" }, label), v);
+  }
+
+  function renderTurn(t) {
+    const stack = el("div", { class: "stack" });
+    const player = t.attach?.kind === "video" ? videoPlayer(t.attach) : null;
+    if (player) stack.append(player);
+    else if (t.attach?.thumb) stack.append(el("img", { class: "photo", src: t.attach.thumb, alt: `첨부한 사진 ${t.attach.name || ""}` }));
+    else if (t.attach) stack.append(el("div", { class: "att" }, t.attach.kind === "fixture" ? `관절 좌표 샘플 · ${t.attach.fixture}` : `${t.attach.kind === "video" ? "영상" : "사진"} · ${t.attach.name}`));
+    stack.append(el("div", { class: "bubble-me" }, t.q));
+    const q = el("div", { class: "turn-q" }, el("span", { class: "time" }, clock(t.ts)), stack);
+
+    const avatar = el("div", { class: "avatar coach", "aria-hidden": "true" }); avatar.innerHTML = ICON.mascot;
+    let bubble, label = "";
+    if (t.res) {
+      const d = t.res.data;
+      const coached = d.trace.some((s) => s.step === "coach");
+      label = `${coached ? (modelLabels[d.model] || d.model) : "고정 안내 · 모델 호출 없음"} · ${t.res.seconds.toFixed(1)}초`;
+      bubble = el("div", { class: "bubble-coach" }, answerContent(d));
+      const chart = bubble.querySelector(".achart");
+      if (chart) chart.attach(player && (player.tagName === "VIDEO" ? player : player.querySelector("video, canvas.gif")));
+    } else if (t.error) {
+      bubble = el("div", { class: "bubble-coach err" }, "요청에 실패했어요. ", t.error);
+    } else {
+      bubble = el("div", { class: "bubble-coach" }, el("span", { class: "typing", role: "status", "aria-label": "답변 작성 중" }, el("i"), el("i"), el("i")));
+    }
+    const a = el("div", { class: "turn-a" }, avatar,
+      el("div", { class: "body" }, el("div", { class: "coach-name" }, "골프 코치", label ? el("span", {}, label) : ""), bubble));
+    return [q, a];
+  }
+
+  // 업로드한 스윙 영상 플레이어. 원본은 이 브라우저의 IndexedDB 에 있고, 없으면 미리보기 장면만 보여 줍니다.
+  // GIF 플레이어: <video> 는 GIF 를 틀 수 없어 프레임을 캔버스에 직접 그립니다(자동 재생·반복, 누르면 멈춤/재생).
+  // 재생 위치(currentTime)를 영상처럼 내보내 각도 그래프와 맞춥니다. ImageDecoder 가 없는 브라우저는 <img> 로만 보여 줍니다.
+  function gifPlayer(a) {
+    const canvas = el("canvas", { class: "photo clip gif", tabindex: "0", role: "img", "aria-label": `첨부한 스윙 GIF ${a.name || ""}. 누르면 멈춤 또는 재생` });
+    const box = el("div", { class: "stack" }, canvas);
+    const ctx = canvas.getContext("2d");
+    const frames = [], starts = [];
+    let total = 0, t = 0, paused = false, last = null, shown = false;
+    const at = (time) => { let lo = 0, hi = frames.length - 1; while (lo < hi) { const m = (lo + hi + 1) >> 1; if (starts[m] <= time) lo = m; else hi = m - 1; } return lo; };
+    const draw = () => { if (frames.length) ctx.drawImage(frames[at(t)], 0, 0, canvas.width, canvas.height); };
+    Object.defineProperty(canvas, "currentTime", { get: () => t, set: (v) => { t = total ? Math.min(Math.max(0, v), total - 1e-3) : 0; draw(); } });
+    Object.defineProperty(canvas, "paused", { get: () => paused });
+    const loop = (now) => {
+      if (shown && !canvas.isConnected) return;          // 화면에서 사라지면 멈춤
+      if (canvas.isConnected) shown = true;
+      if (!paused && total && last != null) t = (t + (now - last) / 1000) % total;
+      last = now; draw(); requestAnimationFrame(loop);
+    };
+    const toggle = () => { paused = !paused; };
+    canvas.addEventListener("click", toggle);
+    canvas.addEventListener("keydown", (e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } });
+    const fallback = (blob, why) => {
+      const img = blob ? el("img", { class: "photo clip", src: URL.createObjectURL(blob), alt: `첨부한 스윙 GIF ${a.name || ""}` })
+                       : a.thumb ? el("img", { class: "photo", src: a.thumb, alt: "GIF 미리보기" }) : "";
+      box.replaceChildren(img, el("span", { class: "clip-note" }, why));
+    };
+    (async () => {
+      const blob = mediaBlobs.get(a.mediaId) || (a.mediaId ? await media.get(a.mediaId) : null);
+      if (!blob) return fallback(null, `GIF · ${a.name || ""} (원본이 이 브라우저에 없어 미리보기만 보여요)`);
+      if (!("ImageDecoder" in window)) return fallback(blob, "이 브라우저에서는 GIF 재생 위치를 알 수 없어 각도 그래프와 연동되지 않아요");
+      try {
+        const dec = new ImageDecoder({ data: await blob.arrayBuffer(), type: "image/gif" });
+        await dec.tracks.ready;
+        const n = dec.tracks.selectedTrack.frameCount;
+        for (let i = 0; i < n; i++) {
+          const { image } = await dec.decode({ frameIndex: i });
+          const ms = (image.duration || 0) / 1000;               // 마이크로초 → 밀리초
+          starts.push(total); total += ms <= 10 ? 0.1 : ms / 1000; // 서버(MediaPipeEstimator.gif_delay)와 같은 규칙
+          if (i === 0) {
+            const s = Math.min(1, 360 / image.displayHeight);
+            canvas.width = Math.round(image.displayWidth * s); canvas.height = Math.round(image.displayHeight * s);
+          }
+          frames.push(await createImageBitmap(image, { resizeWidth: canvas.width, resizeHeight: canvas.height }));
+          image.close();
+          if (i === 0) draw();
+        }
+        dec.close();
+        requestAnimationFrame(loop);
+      } catch (e) { fallback(blob, "GIF 를 프레임으로 풀지 못해 그대로 보여 줘요(각도 그래프와 연동되지 않아요)"); }
+    })();
+    return box;
+  }
+
+  function videoPlayer(a) {
+    if (a.gif) return gifPlayer(a);
+    // 자동 재생 + 반복. 브라우저는 소리 없는 영상만 자동 재생을 허용하므로 음소거로 시작합니다(컨트롤에서 소리를 켤 수 있음).
+    const v = el("video", { class: "photo clip", controls: "", playsinline: "", autoplay: "", loop: "", muted: "", preload: "auto", "aria-label": `첨부한 스윙 영상 ${a.name || ""}` });
+    v.muted = true;
+    if (a.thumb) v.poster = a.thumb;
+    const url = a.mediaId && mediaUrls.get(a.mediaId);
+    if (url) { v.src = url; return v; }
+    const box = el("div", { class: "stack" }, v);
+    const fallback = () => {
+      const note = el("span", { class: "clip-note" }, `영상 · ${a.name || ""} (원본이 이 브라우저에 없어 미리보기만 보여요)`);
+      box.replaceChildren(a.thumb ? el("img", { class: "photo", src: a.thumb, alt: "영상 미리보기" }) : "", note);
+    };
+    if (!a.mediaId) { fallback(); return box; }
+    media.get(a.mediaId).then((blob) => {
+      if (!blob) return fallback();
+      const u = URL.createObjectURL(blob);
+      mediaUrls.set(a.mediaId, u);
+      v.src = u;
+    }, fallback);
+    return box;
+  }
+
+  function answerContent(d) {
+    const box = el("div");
+    const badges = el("div", { class: "badges" }, el("span", { class: "badge " + d.status }, STATUS_KO[d.status] || d.status));
+    for (const c of d.issue_codes) badges.append(el("span", { class: "badge issue" }, c));
+    box.append(badges);
+    const g = gauges(d.trace);
+    if (g) box.append(g);
+    if (d.angle_series?.values?.some((v) => v != null)) box.append(angleChart(d.angle_series));
+    const md = el("div", { class: "md" });
+    md.innerHTML = markdown(d.answer);
+    box.append(md);
+    if (d.sources.length) box.append(el("div", { class: "srcs" }, ...d.sources.map((s) => el("span", { class: "src" }, "근거 " + s))));
+    const more = el("div", { class: "more" });
+    if (d.contexts.length) {
+      const det = el("details", {}, el("summary", {}, `근거 문서 ${d.contexts.length}`));
+      for (const c of d.contexts) det.append(el("div", { class: "ctx" }, el("b", {}, c.doc_id), "\n" + c.text));
+      more.append(det);
+    }
+    const ol = el("ol", { class: "trace" });
+    for (const s of d.trace) ol.append(el("li", {}, el("code", {}, s.step), ` ${s.input} → ${s.output}`));
+    more.append(el("details", {}, el("summary", {}, `처리 단계 ${d.trace.length}`), ol));
+    more.append(el("details", {}, el("summary", {}, "응답 JSON"), el("pre", {}, JSON.stringify(d, null, 2))));
+    box.append(more);
+    return box;
+  }
+
+  // ── 영상 각도 그래프 ──
+  // angle_series(프레임별 왼팔 각도)를 시간축 선 그래프로 그리고, 같은 대화의 영상 재생 위치에 맞춰
+  // 세로선(재생 위치)과 현재 각도 숫자를 실시간으로 움직입니다. 그래프를 누르거나 끌면 영상이 그 시각으로 갑니다.
+  function angleChart(s) {
+    const W = 600, H = 190, L = 40, R = 12, T = 14, B = 26;
+    const n = s.values.length;
+    const hasT = Array.isArray(s.t) && s.t.length === n;
+    const xs = hasT ? s.t : s.values.map((_, i) => i);
+    const x0 = xs[0], x1 = Math.max(xs[n - 1], x0 + 1e-6);
+    const valid = s.values.filter((v) => v != null);
+    const yMin = Math.min(90, Math.floor(Math.min(...valid) / 10) * 10), yMax = 180;
+    const X = (x) => L + ((x - x0) / (x1 - x0)) * (W - L - R);
+    const Y = (v) => T + (1 - (v - yMin) / (yMax - yMin)) * (H - T - B);
+    const NS = "http://www.w3.org/2000/svg";
+    const svgEl = (tag, attrs = {}, text) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); if (text != null) e.textContent = text; return e; };
+
+    const apexV = s.values[s.apex_index], apexX = xs[s.apex_index];
+    const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": `왼팔 각도 변화 그래프. 최소 ${Math.min(...valid)}도, 최대 ${Math.max(...valid)}도, 백스윙 정점 ${apexV}도, 기준 ${s.threshold}도 이상` });
+    svg.append(svgEl("rect", { class: "zone", x: L, y: Y(yMax), width: W - L - R, height: Y(s.threshold) - Y(yMax) }));
+    for (let v = Math.ceil(yMin / 30) * 30; v <= yMax; v += 30) {
+      svg.append(svgEl("line", { class: "grid", x1: L, x2: W - R, y1: Y(v), y2: Y(v) }));
+      svg.append(svgEl("text", { class: "axis", x: L - 6, y: Y(v) + 4, "text-anchor": "end" }, `${v}°`));
+    }
+    svg.append(svgEl("line", { class: "thr", x1: L, x2: W - R, y1: Y(s.threshold), y2: Y(s.threshold) }));
+    const ticks = 5;
+    for (let i = 0; i <= ticks; i++) {
+      const xv = x0 + ((x1 - x0) * i) / ticks;
+      svg.append(svgEl("text", { class: "axis", x: X(xv), y: H - 8, "text-anchor": i === 0 ? "start" : i === ticks ? "end" : "middle" },
+        hasT ? `${xv.toFixed(1)}s` : `${Math.round(xv)}`));
+    }
+    // 선: 왼팔이 안 보인 프레임(null)에서는 끊어 그립니다
+    let d = "", pen = false;
+    s.values.forEach((v, i) => { if (v == null) { pen = false; return; } d += `${pen ? "L" : "M"}${X(xs[i]).toFixed(1)},${Y(v).toFixed(1)}`; pen = true; });
+    svg.append(svgEl("path", { class: "line", d }));
+    if (apexV != null) {
+      svg.append(svgEl("circle", { class: "apex", cx: X(apexX), cy: Y(apexV), r: 5 }));
+      const right = X(apexX) > W - 140;
+      svg.append(svgEl("text", { class: "apex-label", x: X(apexX) + (right ? -8 : 8), y: Y(apexV) + (Y(apexV) > H - B - 20 ? -8 : 16), "text-anchor": right ? "end" : "start" }, `정점 ${apexV}°`));
+    }
+    const head = svgEl("line", { class: "head", x1: L, x2: L, y1: T, y2: H - B, visibility: "hidden" });
+    const dot = svgEl("circle", { class: "head-dot", r: 6, cx: L, cy: T, visibility: "hidden" });
+    svg.append(head, dot);
+
+    const num = el("span", { class: "num", "aria-live": "off" }, apexV != null ? `${apexV}°` : "—");
+    const meta = el("span", { class: "meta" }, hasT ? "백스윙 정점" : "백스윙 정점 (프레임 순서)");
+    const box = el("div", { class: "achart" },
+      el("div", { class: "achart-head" },
+        el("div", { class: "achart-title" }, "왼팔 각도 변화", el("small", {}, `초록 구간 = 교육용 기준 ${s.threshold}° 이상 · 빨간 점 = 판정한 백스윙 정점`)),
+        el("div", { class: "achart-live" }, meta, num)),
+      svg);
+    const paint = (v, label) => {
+      num.textContent = v == null ? "—" : `${v.toFixed(1)}°`;
+      num.className = "num " + (v == null ? "" : v >= s.threshold ? "ok" : "out");
+      meta.textContent = label;
+    };
+    paint(apexV, hasT ? `백스윙 정점 · ${apexX.toFixed(1)}s` : "백스윙 정점");
+
+    // 시각 → 가장 가까운(이전) 프레임. 왼팔이 안 보인 프레임이면 가장 가까운 보이는 프레임 값을 씁니다.
+    const at = (time) => {
+      let lo = 0, hi = n - 1;
+      while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (xs[mid] <= time) lo = mid; else hi = mid - 1; }
+      for (let k = 0; k < n; k++) for (const j of [lo - k, lo + k]) if (j >= 0 && j < n && s.values[j] != null) return j;
+      return -1;
+    };
+    box.attach = (video) => {
+      if (!hasT || !video) {
+        box.append(el("div", { class: "achart-note" }, hasT ? "" : "관절 좌표 샘플이라 영상 재생과 맞출 수 없어 프레임 순서로 보여 줍니다."));
+        return;
+      }
+      box.append(el("div", { class: "achart-note" }, "영상 재생 위치에 맞춰 세로선과 숫자가 움직여요. 그래프를 누르면 그 장면으로 이동합니다."));
+      head.setAttribute("visibility", "visible"); dot.setAttribute("visibility", "visible");
+      let last = -1;
+      const tick = () => {
+        if (!box.isConnected) return;               // 화면에서 사라지면 멈춤
+        if (!video.isConnected) { head.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); return; }   // 영상 원본이 없어 미리보기로 바뀐 경우
+        const time = video.currentTime;
+        if (time !== last) {
+          last = time;
+          const j = at(time);
+          const xPos = X(Math.min(Math.max(time, x0), x1));
+          head.setAttribute("x1", xPos); head.setAttribute("x2", xPos);
+          if (j >= 0) { dot.setAttribute("cx", X(xs[j])); dot.setAttribute("cy", Y(s.values[j])); dot.setAttribute("visibility", "visible"); }
+          else dot.setAttribute("visibility", "hidden");
+          paint(j >= 0 ? s.values[j] : null, `현재 ${time.toFixed(1)}s${j === s.apex_index ? " · 정점" : ""}`);
+        }
+        requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      const seek = (ev) => {
+        const r = svg.getBoundingClientRect();
+        const px = ((ev.clientX - r.left) / r.width) * W;
+        const time = x0 + ((Math.min(Math.max(px, L), W - R) - L) / (W - L - R)) * (x1 - x0);
+        if (Number.isFinite(time)) video.currentTime = time;
+      };
+      let dragging = false;
+      svg.addEventListener("pointerdown", (ev) => { dragging = true; svg.setPointerCapture(ev.pointerId); seek(ev); });
+      svg.addEventListener("pointermove", (ev) => { if (dragging) seek(ev); });
+      svg.addEventListener("pointerup", () => { dragging = false; });
+    };
+    return box;
+  }
+
+  // trace 의 pose 단계 출력에서 측정 각도를 읽어 기준 구간 막대로 그립니다.
+  function gauges(trace) {
+    const pose = trace.find((s) => s.step === "pose");
+    if (!pose) return null;
+    const box = el("div", { class: "gauges" });
+    for (const [key, m] of Object.entries(METRICS)) {
+      const hit = pose.output.match(new RegExp(`'${key}': ([\\d.]+)`));
+      if (!hit) continue;
+      const v = parseFloat(hit[1]);
+      const pct = (x) => Math.max(0, Math.min(100, ((x - m.min) / (m.max - m.min)) * 100));
+      const out = v < m.lo || v > m.hi;
+      box.append(el("div", { class: "gauge" },
+        el("span", {}, m.label),
+        el("div", { class: "track", "aria-hidden": "true" },
+          el("span", { class: "band", style: `left:${pct(m.lo)}%;width:${pct(m.hi) - pct(m.lo)}%` }),
+          el("span", { class: "mark", style: `left:${pct(v)}%` })),
+        el("span", { class: "v" + (out ? " out" : ""), "aria-label": `${m.label} ${v}도, ${m.range}${out ? ", 기준 벗어남" : ""}` }, `${v}°`, el("small", {}, m.range))));
+    }
+    return box.childElementCount ? box : null;
+  }
+
+  // ── 프로필·삭제 ──
+  function renderProfile() {
+    const turns = threads.flatMap((th) => th.turns);
+    $("sT").textContent = threads.length;
+    $("sQ").textContent = turns.length;
+    $("sP").textContent = turns.filter((t) => t.res?.data.trace.some((s) => s.step === "pose")).length;
+  }
+  function removeThread(id) {
+    if (busyId || !confirm("이 코칭 기록을 삭제할까요? 이 브라우저에 저장된 대화가 지워집니다.")) return;
+    threads = threads.filter((th) => th.id !== id);
+    if (activeId === id) activeId = null;
+    save(); renderActive(); renderPast(); renderProfile(); pruneMedia();
+  }
+  $("clearAll").addEventListener("click", () => {
+    if (busyId || !threads.length || !confirm("모든 코칭 기록을 지울까요? 이 브라우저에 저장된 대화가 모두 지워집니다.")) return;
+    threads = []; activeId = null; save(); renderActive(); renderPast(); renderProfile(); pruneMedia();
+  });
+
+  // ── 닉네임: 정하면 그 이름으로 장기 기억이 이어짐(다른 기기에서도 같은 닉네임이면 같은 기록) ──
+  const NICK_RE = /^[0-9A-Za-z가-힣_-]{2,20}$/;
+  function renderNick() {
+    $("nickName").textContent = nickname || "닉네임을 정해 주세요";
+    $("nickAvatar").textContent = nickname ? [...nickname][0].toUpperCase() : "나";
+    $("nickBtn").setAttribute("aria-label", nickname ? `닉네임 ${nickname}, 바꾸기` : "닉네임 정하기");
+    $("nickSub").textContent = nickname
+      ? "다른 기기에서도 이 닉네임을 쓰면 판정 기록이 이어져요"
+      : "닉네임을 정하면 다른 기기에서도 판정 기록이 이어져요";
+  }
+  $("nickBtn").addEventListener("click", () => {
+    $("nickBtn").hidden = true; $("nickForm").hidden = false;
+    $("nickInput").value = nickname; $("nickInput").focus(); $("nickErr").textContent = "";
+  });
+  $("nickInput").addEventListener("keydown", (ev) => { if (ev.key === "Escape") { $("nickForm").hidden = true; $("nickBtn").hidden = false; } });
+  $("nickForm").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    const next = $("nickInput").value.trim();
+    if (!NICK_RE.test(next)) { $("nickErr").textContent = "띄어쓰기 없이 한글·영문·숫자·_- 2~20자로 정해 주세요."; return; }
+    if (next !== userId && autoId) {
+      // 지금 이름(또는 이 브라우저 임의 id)에 쌓인 판정 기록이 있으면 새 닉네임으로 옮길지 묻습니다
+      try {
+        const cur = await (await fetch(`/memory/${encodeURIComponent(userId)}`, { cache: "no-store" })).json();
+        if (cur.count > 0 && confirm(`지금까지의 자세 판정 기록 ${cur.count}건을 '${next}'(으)로 옮길까요?\n취소하면 기록은 이전 이름에 남습니다.`)) {
+          await fetch(`/memory/${encodeURIComponent(userId)}/move`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to: next }) });
+        }
+      } catch (e) {}
+    }
+    nickname = next; userId = next;
+    try { localStorage.setItem(NICK_KEY, next); } catch (e) {}
+    $("nickForm").hidden = true; $("nickBtn").hidden = false; $("nickErr").textContent = "";
+    renderNick(); loadMemory(); renderActive(); renderPast();
+  });
+
+  // ── 장기 기억: 서버에 쌓인 내 자세 판정 기록 수와 지우기 ──
+  async function loadMemory() {
+    if (!userId) { $("memRow").hidden = true; return; }
+    try {
+      const r = await fetch(`/memory/${encodeURIComponent(userId)}`, { cache: "no-store" });   // 캐시된 예전 건수를 보이지 않게
+      if (r.ok) $("memCount").textContent = (await r.json()).count;
+    } catch (e) {}
+  }
+  $("clearMem").addEventListener("click", async () => {
+    if (!userId || !confirm("서버에 저장된 내 자세 판정 기록(장기 기억)을 모두 지울까요? 화면의 코칭 기록은 그대로 남습니다.")) return;
+    try { await fetch(`/memory/${encodeURIComponent(userId)}`, { method: "DELETE" }); } catch (e) {}
+    loadMemory();
+  });
+
+  // ── 업로드한 영상 원본 저장소 (IndexedDB: localStorage 에는 영상이 들어가지 않음) ──
+  const mediaUrls = new Map();   // mediaId → 재생용 object URL
+  const mediaBlobs = new Map();  // mediaId → 이번 화면에서 올린 원본(GIF 플레이어가 프레임을 풀 때 씀)
+  const media = (() => {
+    let dbp = null;
+    const open = () => dbp || (dbp = new Promise((resolve, reject) => {
+      try {
+        const req = indexedDB.open("golf-coach-media", 1);
+        req.onupgradeneeded = () => req.result.createObjectStore("videos");
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      } catch (e) { reject(e); }
+    }));
+    const run = (modeRW, fn) => open().then((db) => new Promise((resolve, reject) => {
+      const tx = db.transaction("videos", modeRW);
+      const req = fn(tx.objectStore("videos"));
+      tx.oncomplete = () => resolve(req?.result);
+      tx.onerror = () => reject(tx.error);
+    }));
+    return {
+      put: (id, blob) => run("readwrite", (s) => s.put(blob, id)).catch(() => {}),
+      get: (id) => run("readonly", (s) => s.get(id)).catch(() => null),
+      keys: () => run("readonly", (s) => s.getAllKeys()).catch(() => []),
+      del: (id) => run("readwrite", (s) => s.delete(id)).catch(() => {}),
+    };
+  })();
+  // 지운 코칭의 영상 원본은 저장소에서도 지웁니다.
+  async function pruneMedia() {
+    const used = new Set(threads.flatMap((th) => th.turns.map((t) => t.attach?.mediaId).filter(Boolean)));
+    for (const id of (await media.keys()) || []) if (!used.has(id)) {
+      media.del(id);
+      if (mediaUrls.has(id)) { URL.revokeObjectURL(mediaUrls.get(id)); mediaUrls.delete(id); }
+    }
+  }
+
+  // ── 서버 정보: 모델 목록, 모드, 추천 질문 ──
+  async function loadServerInfo() {
+    try {
+      const [models, info] = await Promise.all([fetch("/models").then((r) => r.json()), fetch("/demo/samples").then((r) => r.json())]);
+      let saved = null;
+      try { saved = localStorage.getItem(MODEL_KEY); } catch (e) {}
+      modelSel.innerHTML = "";
+      for (const m of models.models) { modelLabels[m.id] = m.label; modelSel.append(el("option", { value: m.id }, m.label)); }
+      modelSel.value = models.models.some((m) => m.id === saved) ? saved : models.default;
+      mode = info.mode; demo = info.demo; fixtures = info.fixtures; samples = info.queries;
+      $("mode").textContent = mode === "offline" ? "OFFLINE · 가짜 모델" : "LIVE · Bedrock";
+      $("mode").className = "mode " + mode;
+      if (demo) composer.setFixtures(fixtures);
+      try { mediaSamples = (await (await fetch("/samples/media")).json()).samples || []; } catch (e) { mediaSamples = []; }
+      composer.setMediaSamples(mediaSamples);
+      renderSuggest();
+      if (!busyId) { renderActive(); renderPast(); }   // 모델 이름·추천 칩을 반영해 다시 그림
+    } catch (e) {
+      suggestRow.replaceChildren(el("span", { class: "hint" }, "서버 정보를 불러오지 못했어요: " + e));
+    }
+  }
+  modelSel.addEventListener("change", () => { try { localStorage.setItem(MODEL_KEY, modelSel.value); } catch (e) {} });
+
+  // ── 답변 표시: HTML 을 먼저 모두 이스케이프한 뒤 제목·목록·표·굵게만 살립니다 ──
+  function esc(s) { return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function inline(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
+  const RE_TABLE = /^\s*\|.*\|\s*$/, RE_UL = /^\s*[-*•]\s+/, RE_OL = /^\s*\d+[.)]\s+/, RE_H = /^(#{1,6})\s+(.*)$/, RE_HR = /^\s*(-{3,}|\*{3,})\s*$/;
+  function markdown(text) {
+    const lines = String(text).replace(/\r/g, "").split("\n");
+    let html = "", i = 0;
+    const take = (re) => { const out = []; while (i < lines.length && re.test(lines[i])) out.push(lines[i++]); return out; };
+    while (i < lines.length) {
+      const line = lines[i];
+      if (!line.trim()) { i++; continue; }
+      if (RE_TABLE.test(line)) { html += table(take(RE_TABLE)); continue; }
+      const h = line.match(RE_H);
+      if (h) { html += `<h4>${inline(h[2])}</h4>`; i++; continue; }
+      if (RE_HR.test(line)) { html += "<hr>"; i++; continue; }
+      if (RE_UL.test(line)) { html += "<ul>" + take(RE_UL).map((l) => `<li>${inline(l.replace(RE_UL, ""))}</li>`).join("") + "</ul>"; continue; }
+      if (RE_OL.test(line)) { html += "<ol>" + take(RE_OL).map((l) => `<li>${inline(l.replace(RE_OL, ""))}</li>`).join("") + "</ol>"; continue; }
+      const para = [lines[i++]];
+      while (i < lines.length && lines[i].trim() && ![RE_TABLE, RE_UL, RE_OL, RE_H, RE_HR].some((re) => re.test(lines[i]))) para.push(lines[i++]);
+      html += `<p>${para.map(inline).join("<br>")}</p>`;
+    }
+    return html;
+  }
+  function table(rows) {
+    const cells = (r) => r.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+    const data = rows.map(cells).filter((cs) => !cs.every((c) => /^:?-{2,}:?$/.test(c)));
+    if (!data.length) return "";
+    const [headRow, ...bodyRows] = data;
+    return `<div class="tbl"><table><thead><tr>${headRow.map((c) => `<th>${inline(c)}</th>`).join("")}</tr></thead><tbody>` +
+      bodyRows.map((r) => `<tr>${r.map((c) => `<td>${inline(c)}</td>`).join("")}</tr>`).join("") + "</tbody></table></div>";
+  }
+
+  // ── 작은 도우미 ──
+  function plain(s) { return String(s).replace(/[#*|`>]/g, " ").replace(/^\s*-+\s*$/gm, " ").replace(/\s+/g, " ").trim(); }
+  function clock(ts) { return new Date(ts).toLocaleTimeString("ko-KR", { hour: "numeric", minute: "2-digit" }); }
+  function when(ts) {
+    const d = new Date(ts);
+    return d.toDateString() === new Date().toDateString() ? `오늘 ${clock(ts)}` : `${d.toLocaleDateString("ko-KR", { month: "long", day: "numeric" })} ${clock(ts)}`;
+  }
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
+    for (const c of children) if (c !== "" && c != null) node.append(c instanceof Node ? c : document.createTextNode(String(c)));
+    return node;
+  }
+
+  renderActive(); renderPast(); renderProfile();
+  renderNick(); loadServerInfo(); loadMemory(); pruneMedia();
+})();
+</script>
+<script src="/static/arch.js"></script>
+<script>window.SwingKidArch && SwingKidArch.mount(document.getElementById("archMount"));</script>
+</body>
+</html>

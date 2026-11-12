@@ -1,0 +1,33 @@
+# ── 고정 스택 (Amazon Bedrock · Chroma · SqliteSaver) ──────
+langchain-core>=1.7
+langchain-aws>=1.9
+langchain-chroma>=1.1
+chromadb>=1.5
+langgraph>=1.2
+langgraph-checkpoint-sqlite>=3.1
+python-dotenv>=1.2
+
+# ── 검색 (자동 채점용 BM25 + 한국어 형태소 분석) ──────────
+rank-bm25>=0.2
+kiwipiepy>=0.24
+
+# ── 웹 검색 (골프 정보 agent, 라이브 모드) ─────────────
+# API 키 없이 쓰는 DuckDuckGo 검색. 없거나 실패하면 웹 근거 없음(no_answer)으로 처리합니다.
+ddgs>=9.16
+# 웹 검색은 MCP 도구로 호출합니다: src/mcp_server.py(FastMCP stdio 서버) ↔ langchain-mcp-adapters 클라이언트
+mcp>=1.30
+langchain-mcp-adapters>=0.3
+
+# ── API ────────────────────────────────────────────────────
+fastapi>=0.162
+uvicorn>=0.54
+pydantic>=2.14
+
+# ── 테스트 ─────────────────────────────────────────────────
+pytest>=8.4
+httpx>=0.28
+
+# ── 사진·영상 포즈 추정 (라이브 모드) ─────────────────────
+# mediapipe 1.x(Tasks API)는 Python 3.14 에서 동작을 확인했습니다(2026-11-11). OpenCV(contrib)도 함께 설치됩니다.
+# 포즈 모델 파일은 처음 분석할 때 data/models/ 로 자동으로 내려받습니다. 없어도 자동 채점·테스트는 돌아갑니다.
+mediapipe>=1.2
