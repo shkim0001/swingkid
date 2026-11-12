@@ -19,6 +19,8 @@ checkpoints.sqlite
 checkpoints.sqlite-*
 memory.sqlite
 memory.sqlite-*
+accounts.sqlite
+accounts.sqlite-*
 
 # 라이브 검색 색인(Chroma). 처음 실행할 때 data/docs 로 다시 만듭니다
 chroma_db/

@@ -104,38 +104,57 @@ def test_describe_marks_repeated_problems():
 def client(monkeypatch):
     monkeypatch.setenv("GOLF_MODE", "offline")
     app_module.get_agent.cache_clear()
+    app_module.get_accounts.cache_clear()
     yield TestClient(app_module.app)
     app_module.get_agent.cache_clear()
+    app_module.get_accounts.cache_clear()
 
 
-def test_memory_api_round_trip(client):
-    body = {"question": "어드레스 봐주세요", "fixture": "photo_spine_bad", "user_id": "web-abc123"}
+def _signup(client, username="골프키드", password="swing-1234"):
+    r = client.post("/auth/signup", json={"username": username, "password": password})
+    assert r.status_code == 200, r.text
+    return r
+
+
+def test_memory_api_round_trip_for_logged_in_user(client):
+    _signup(client)
+    body = {"question": "어드레스 봐주세요", "fixture": "photo_spine_bad"}
     assert client.post("/demo/fixture", json=body).status_code == 200
-    listed = client.get("/memory/web-abc123").json()
+    listed = client.get("/memory").json()
     assert listed["count"] == 1 and listed["findings"][0]["issue_codes"] == [config.SPINE_TILT]
-    r = client.post("/query", json={"question": RECALL_Q, "user_id": "web-abc123"}).json()
+    r = client.post("/query", json={"question": RECALL_Q}).json()
     assert r["status"] == "answered" and MEMORY_DOC_ID in r["sources"]
-    assert client.delete("/memory/web-abc123").json()["deleted"] == 1
-    assert client.get("/memory/web-abc123").json()["count"] == 0
+    assert client.delete("/memory").json()["deleted"] == 1
+    assert client.get("/memory").json()["count"] == 0
 
 
-def test_bad_user_id_is_rejected(client):
-    assert client.post("/query", json={"question": "그립", "user_id": "a b"}).status_code == 422
-    assert client.get("/memory/a").status_code == 422
+def test_guest_can_ask_but_has_no_memory(client):
+    body = {"question": "어드레스 봐주세요", "fixture": "photo_spine_bad"}
+    r = client.post("/demo/fixture", json=body).json()
+    assert r["status"] == "answered" and r["issue_codes"] == [config.SPINE_TILT]
+    assert client.get("/memory").status_code == 401
+    assert client.delete("/memory").status_code == 401
+    assert MEMORY_DOC_ID not in client.post("/query", json={"question": RECALL_Q}).json()["sources"]
+
+
+def test_user_id_in_body_is_rejected(client):
+    # 장기 기억 주인은 세션으로만 정합니다. 본문으로 남의 user_id 를 보내는 입구를 막습니다.
+    assert client.post("/query", json={"question": "그립", "user_id": "골프키드"}).status_code == 422
+    body = {"question": "어드레스 봐주세요", "fixture": "photo_spine_bad", "user_id": "골프키드"}
+    assert client.post("/demo/fixture", json=body).status_code == 422
+
+
+def test_memory_is_isolated_between_accounts(client):
+    _signup(client, "alice")
+    client.post("/demo/fixture", json={"question": "어드레스 봐주세요", "fixture": "photo_spine_bad"})
+    client.post("/auth/logout")
+    _signup(client, "bob")
+    assert client.get("/memory").json()["count"] == 0
+    client.post("/auth/logout")
+    client.post("/auth/login", json={"username": "alice", "password": "swing-1234"})
+    assert client.get("/memory").json()["count"] == 1
 
 
 def test_web_search_fixture_is_not_offered_as_pose_sample(client):
     assert "web_search" not in client.get("/demo/samples").json()["fixtures"]
     assert client.post("/demo/fixture", json={"question": "봐주세요", "fixture": "web_search"}).status_code == 404
-
-
-def test_korean_nickname_and_moving_records(client):
-    body = {"question": "어드레스 봐주세요", "fixture": "photo_spine_bad", "user_id": "user-auto123"}
-    assert client.post("/demo/fixture", json=body).status_code == 200
-    moved = client.post("/memory/user-auto123/move", json={"to": "골프키드"}).json()
-    assert moved["moved"] == 1
-    assert client.get("/memory/골프키드").json()["count"] == 1
-    assert client.get("/memory/user-auto123").json()["count"] == 0
-    r = client.post("/query", json={"question": RECALL_Q, "user_id": "골프키드"}).json()
-    assert r["status"] == "answered" and MEMORY_DOC_ID in r["sources"]
-    assert client.post("/memory/골프키드/move", json={"to": "띄어 쓰기"}).status_code == 422

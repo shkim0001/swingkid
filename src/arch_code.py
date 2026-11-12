@@ -37,9 +37,9 @@ LLM_LINE = (r"\.invoke\(", r"ChatBedrockConverse", r"BedrockEmbeddings")
 MODULES: dict[str, Module] = {
     "ui": Module(
         "SwingKid 웹 화면",
-        "질문과 첨부(사진·영상·GIF), 대화방(thread_id)·닉네임(user_id)을 모아 POST /query 로 보내고, 응답을 판정 막대·각도 그래프·근거로 그립니다.",
+        "질문과 첨부(사진·영상·GIF), 대화방(thread_id)을 모아 POST /query 로 보내고(로그인 세션은 쿠키로 함께 감), 응답을 판정 막대·각도 그래프·근거로 그립니다.",
         (Ref("src/static/index.html", "ask() — 질문 보내기", "async function ask(", "  function setBusy(",
-             (r"fetch\(", r"user_id", r"video_base64", r"image_base64")),),
+             (r"fetch\(", r"thread_id", r"video_base64", r"image_base64")),),
     ),
     "api": Module(
         "FastAPI 서버",
@@ -64,7 +64,7 @@ MODULES: dict[str, Module] = {
     ),
     "memory": Module(
         "기억 저장소",
-        "단기: thread_id 별 체크포인터(대화 이력·직전 판정). 장기: user_id(닉네임) 별 Store 에 판정 코드·각도만 저장하고, '지난번 판정' 질문은 이 기록으로 바로 답합니다.",
+        "단기: thread_id 별 체크포인터(대화 이력·직전 판정). 장기: 로그인 계정별 Store 에 판정 코드·각도만 저장하고, '지난번 판정' 질문은 이 기록으로 바로 답합니다.",
         (Ref("src/memory.py", "LongTermMemory.add_finding", highlight=(r"store\.put",)),
          Ref("src/agent.py", "GolfCoachAgent._recall", highlight=(r"describe\(records\)",))),
     ),

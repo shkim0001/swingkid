@@ -8,7 +8,8 @@
 무엇을 저장하나
 - 사진·영상 판정이 끝난 뒤의 결정적 결과만 저장합니다: 날짜, 종류(사진/영상), 문제 코드, 측정 각도.
   LLM 이 만든 문장이나 질문 원문은 저장하지 않습니다(지어낸 내용이 기억으로 굳지 않게, 개인정보도 최소로).
-- user_id 가 없으면 아무것도 저장·조회하지 않습니다. GET/DELETE /memory/{user_id} 로 보고 지울 수 있습니다.
+- user_id 가 없으면(로그인하지 않은 게스트) 아무것도 저장·조회하지 않습니다.
+  user_id 는 API 가 로그인 세션으로 정합니다(src/auth.memory_owner). 본인만 GET/DELETE /memory 로 보고 지울 수 있습니다.
 
 저장소: 오프라인은 InMemoryStore, 라이브는 SqliteStore(config.MEMORY_DB). 생성자에 주입할 수 있습니다.
 """
@@ -30,10 +31,6 @@ CODE_KO = {
     config.KNEE_FLEX: "무릎 각도 기준 벗어남",
     config.BENT_LEAD_ARM: "백스윙 정점 왼팔 굽음",
 }
-
-# user_id: 화면에서 정한 닉네임(한글 가능) 또는 브라우저가 만든 임의 id. 띄어쓰기 없이 2~64자.
-# 로그인이 아니므로 같은 닉네임을 쓰면 같은 사람으로 봅니다.
-USER_ID_PATTERN = r"^[0-9A-Za-z가-힣_-]{2,64}$"
 
 # "지난번 판정이랑 비교", "내 기록", "예전에 올린 사진" 처럼 사용자의 이전 판정을 묻는 질문.
 # 같은 대화 안의 "아까 지적한 …"은 단기 기억(대화방)이 맡으므로 넣지 않습니다.
@@ -74,16 +71,6 @@ class LongTermMemory:
         items = self.store.search(_ns(user_id), limit=1000)
         records = sorted((i.value for i in items), key=lambda r: r["at"], reverse=True)
         return records[:limit]
-
-    def move(self, src: str, dst: str) -> int:
-        """src 의 판정 기록을 dst 로 옮깁니다(닉네임을 정하거나 바꿀 때). 옮긴 건수를 돌려줍니다."""
-        if src == dst:
-            return 0
-        items = self.store.search(_ns(src), limit=1000)
-        for item in items:
-            self.store.put(_ns(dst), item.key, item.value)
-            self.store.delete(_ns(src), item.key)
-        return len(items)
 
     def clear(self, user_id: str) -> int:
         items = self.store.search(_ns(user_id), limit=1000)

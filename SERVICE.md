@@ -47,8 +47,10 @@
   | 정점 검출기 | 스윙 분석 | 영상에서 백스윙 정점 프레임 검출. 임팩트 이전 구간만 보며 라이브 전용 | 순수 함수 (단위 테스트 1개) |
   | 코칭 LLM | 코칭 | 검색 문서와 판정 결과를 받아 교정 설명 작성. Bedrock Claude Sonnet 4.5, 채점에서는 가짜 모델 | `llm=None` 주입 |
   | 대화 기억 (단기) | 세션 | `thread_id` 기준으로 대화 이력 유지 | SqliteSaver (`checkpoints.sqlite`) |
-  | 장기 기억 | 사용자 | `user_id` 기준으로 사진·영상 판정 기록을 저장해, 대화방이 달라도 "지난번보다 나아졌는지"를 이어서 코칭. 조회·이동·삭제 API 제공 | SqliteStore (`memory.sqlite`, `src/memory.py`) |
-  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?, model?, user_id?` / 응답 `status, issue_codes, sources, agents, angle_series, model`<br>기타: `GET /health`, `GET /models`, `GET·DELETE /memory/{user_id}`, `POST /memory/{user_id}/move`, `GET /samples/media`, `POST /demo/fixture`, `GET /architecture` | `src/app.py` POST /query |
+  | 장기 기억 | 사용자 | 로그인 계정 기준으로 사진·영상 판정 기록을 저장해, 대화방이 달라도 "지난번보다 나아졌는지"를 이어서 코칭. 본인만 조회·삭제. 게스트는 저장·조회 안 함 | SqliteStore (`memory.sqlite`, `src/memory.py`) |
+  | 계정 | 사용자 | 아이디·비밀번호 가입·로그인·로그아웃. 비밀번호는 scrypt 해시, 세션 토큰은 SHA-256 만 저장, 세션은 HttpOnly 쿠키(30일). 가입할 때 무작위 캐릭터 아이콘을 정해 저장(`src/avatar.py`, SVG). 관리자 `admin` 은 `.env` 의 `ADMIN_PASSWORD` 로만 생기며 모든 계정의 코칭을 보고 지울 수 있음(이어 쓰기 불가). 표준 라이브러리만 사용 | SQLite (`accounts.sqlite`, `src/auth.py`) |
+  | 코칭 내역 | 사용자 | 로그인 계정별 대화 목록을 서버에 저장해 자기 것만 보이고 기기를 넘어 이어짐. 대화방(thread_id)마다 주인을 정해 다른 계정·게스트는 읽기·덮어쓰기·이어 쓰기 불가(403). 게스트 내역은 브라우저에만, 영상 원본은 브라우저에만 | SQLite (`accounts.sqlite`, `src/history.py`) |
+  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?, model?` (장기 기억 주인은 세션 쿠키) / 응답 `status, issue_codes, sources, agents, angle_series, model`<br>기타: `GET /health`, `GET /models`, `POST /auth/signup·login·logout`, `GET /auth/me`, `GET /auth/avatar.svg`, `GET /admin/threads`, `DELETE /admin/threads/{thread_id}`, `GET·DELETE /memory`, `GET·DELETE /threads`, `PUT·DELETE /threads/{thread_id}`, `GET /samples/media`, `POST /demo/fixture`, `GET /architecture` | `src/app.py` POST /query |
 
 - **데이터 소스**
 

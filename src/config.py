@@ -32,6 +32,9 @@ COLLECTION = "sds_policies"
 CHECKPOINT_DB = "checkpoints.sqlite"
 # 장기 기억(사용자별 자세 판정 기록, LangGraph SqliteStore). 대화방 기억(checkpoints.sqlite)과 따로 둡니다.
 MEMORY_DB = "memory.sqlite"
+# 계정(아이디·비밀번호 해시·세션 토큰 해시, src/auth.py). 라이브 모드에서만 파일로 저장합니다.
+ACCOUNTS_DB = "accounts.sqlite"   # 코칭 내역(src/history.py)도 같은 파일에 저장
+MAX_THREAD_BYTES = 2 * 1024 * 1024   # 코칭 하나(질문·답변·사진 미리보기 JSON)의 최대 크기
 MEMORY_RECENT = 5   # 코칭 때 참고하는 최근 판정 기록 수
 
 # ── 웹 화면에서 고를 수 있는 코칭 모델 (Bedrock, 2026-11-11 호출 확인) ──

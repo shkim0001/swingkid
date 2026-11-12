@@ -55,12 +55,10 @@ button, select, textarea, input { font: inherit; color: inherit; letter-spacing:
 .wordmark { font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -.025em; }
 .wordmark b { color: var(--yellow); font-weight: 700; }
 .avatar.coach svg { width: 100%; height: 100%; display: block; }
-.nick-edit { background: none; border: 0; padding: 2px 8px; margin: 0 auto; font: inherit; color: inherit; cursor: pointer; border-radius: 10px; display: inline-flex; align-items: center; gap: 4px; transition: background .2s var(--ease); }
-.nick-edit:hover, .nick-edit:focus-visible { background: var(--surface-2); }
-.nick-edit .pen { font-size: 12px; color: var(--yellow); }
-.nick-form { display: flex; gap: 6px; justify-content: center; margin-top: 2px; }
-.nick-form input { width: 140px; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--surface-2); color: var(--fg); }
-.nick-form input:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
+.auth-form { display: grid; gap: 6px; max-width: 220px; margin: 6px auto 0; }
+.auth-form input { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--surface-2); color: var(--fg); }
+.auth-form input:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
+.auth-form .auth-btns { display: flex; gap: 6px; justify-content: center; }
 .nick-err { font-size: 11px; color: var(--bad); min-height: 1em; }
 .nav .grow { flex: 1; }
 .nav-field { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
@@ -101,6 +99,34 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .avatar.big { width: 72px; height: 72px; border-radius: 50%; font-size: 28px; margin: 0 auto 12px; background: linear-gradient(180deg, #5ac8fa, #0071e3); }
 .avatar.coach { width: 32px; height: 32px; border-radius: 50%; background: none; overflow: hidden; }
 .avatar svg { width: 20px; height: 20px; }
+.avatar.char { background: none; overflow: hidden; }
+.admin-tag { font-size: 11px; font-weight: 600; vertical-align: middle; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); }
+/* 왼쪽 코칭 목록: 최근순, 카드 안에서만 스크롤 */
+.clist-card { padding: 16px 12px 10px; }
+.clist-head { display: flex; justify-content: space-between; align-items: center; padding: 0 8px 10px; }
+.clist-head h2 { margin: 0; font-family: var(--font-display); font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+.clist-head h2 span { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.clist-head .btn { padding: 5px 12px; font-size: 13px; }
+.clist-tabs { display: flex; gap: 4px; padding: 3px; margin: 0 8px 8px; background: var(--surface-2); border-radius: 10px; }
+.clist-tabs button { flex: 1; border: 0; background: none; border-radius: 8px; padding: 5px 0; font-size: 12px; cursor: pointer; color: var(--muted); }
+.clist-tabs button[aria-selected="true"] { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .08); }
+.clist { list-style: none; margin: 0; padding: 0; max-height: min(46vh, 440px); overflow-y: auto; overscroll-behavior: contain; }
+.clist-item { width: 100%; display: grid; grid-template-columns: 28px minmax(0, 1fr) 8px; gap: 10px; align-items: center; text-align: left; border: 0; background: none; padding: 8px; border-radius: 12px; cursor: pointer; color: var(--fg); transition: background .15s var(--ease); }
+.clist-item:hover, .clist-item:focus-visible { background: var(--surface-2); }
+.clist-item.on { background: color-mix(in srgb, var(--yellow) 12%, transparent); }
+.clist-item:disabled { cursor: progress; opacity: .6; }
+.clist-ico { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); color: var(--muted); overflow: hidden; }
+.clist-ico svg { width: 15px; height: 15px; }
+.clist-ico img { width: 100%; height: 100%; display: block; }
+.clist-text { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.clist-title { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clist-meta { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clist-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.clist-dot.answered { background: var(--ok); } .clist-dot.no_answer { background: var(--info); }
+.clist-dot.blocked { background: var(--warn); } .clist-dot.error { background: var(--bad); }
+.clist-empty { font-size: 12.5px; color: var(--muted); padding: 10px 8px 14px; }
+.readonly-note { font-size: 12px; color: var(--muted); padding: 10px 0 0; border-top: 1px solid var(--line); }
+.avatar.char img { width: 100%; height: 100%; display: block; }
 .profile .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
 .profile .sub { font-size: 12px; color: var(--muted); }
 .pstats { display: grid; grid-template-columns: repeat(3, 1fr); margin: 18px -18px 0; border-top: 1px solid var(--line); }
@@ -244,11 +270,13 @@ canvas.gif { cursor: pointer; }
 details { font-size: 12px; }
 details > summary { cursor: pointer; color: var(--yellow); padding: 4px 0; }
 details[open] { flex-basis: 100%; }
+/* flex 항목은 기본 min-width:auto 라 펼친 응답 JSON 의 가장 긴 줄만큼 넓어져 화면 밖으로 나감 → 카드 폭 안에서 가로 스크롤 */
+.more > details { min-width: 0; max-width: 100%; }
 .ctx { border-left: 2px solid var(--yellow); padding: 2px 12px; margin: 4px 0 8px; white-space: pre-wrap; font-size: 13px; }
 .ctx b { font-family: var(--mono); font-size: 12px; }
 ol.trace { margin: 0 0 8px; padding-left: 20px; }
 ol.trace code { font-family: var(--mono); font-weight: 600; }
-pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius: 10px; overflow-x: auto; font: 11px/1.5 var(--mono); max-height: 300px; }
+pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius: 10px; overflow-x: auto; font: 11px/1.5 var(--mono); max-height: 300px; }
 
 .typing { display: inline-flex; gap: 4px; padding: 4px 2px; }
 .typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
@@ -302,6 +330,19 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
 .past .title-row { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
 .past .act-title { font-size: 19px; }
 .past .thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 14px; flex: none; margin-top: 12px; }
+/* 아래쪽 지난 코칭: 작은 카드 격자 (왼쪽 목록과 함께 씀) */
+.past-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.past.mini { padding: 14px 16px 10px; display: flex; flex-direction: column; }
+.past.mini .act-head { gap: 8px; }
+.past.mini .avatar { width: 26px; height: 26px; font-size: 12px; }
+.past.mini .act-who { font-size: 12.5px; }
+.past.mini .act-when { font-size: 11px; }
+.past.mini .title-row { gap: 10px; }
+.past.mini .act-title { font-size: 15px; margin-top: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.past.mini .thumb { width: 40px; height: 40px; border-radius: 10px; margin-top: 8px; }
+.past.mini .clamp { -webkit-line-clamp: 1; font-size: 12.5px; margin: 4px 0 10px; }
+.past.mini .past-foot { margin: auto -16px 0; padding: 8px 12px 0; }
+.past.mini .past-foot .btn { padding: 5px 12px; font-size: 12.5px; }
 .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; color: var(--muted); font-size: 14px; margin: 2px 0 12px; }
 .past-foot { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); margin: 0 -22px; padding: 10px 22px 0; }
 </style>
@@ -321,20 +362,25 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     <section class="card">
       <div class="profile">
         <div class="avatar big" aria-hidden="true" id="nickAvatar">나</div>
-        <button class="nick-edit name" id="nickBtn" type="button" aria-label="닉네임 정하기"><span id="nickName">닉네임을 정해 주세요</span><span class="pen" aria-hidden="true">✎</span></button>
-        <form class="nick-form" id="nickForm" hidden>
-          <input id="nickInput" maxlength="20" placeholder="예: 골프키드" aria-label="닉네임" autocomplete="nickname">
-          <button class="btn yellow" type="submit">저장</button>
+        <div class="name" id="nickName">게스트</div>
+        <form class="auth-form" id="authForm" hidden>
+          <input id="authUser" maxlength="32" placeholder="아이디" aria-label="아이디" autocomplete="username" required>
+          <input id="authPass" type="password" maxlength="128" placeholder="비밀번호 (8자 이상)" aria-label="비밀번호" autocomplete="current-password" required>
+          <div class="auth-btns">
+            <button class="btn yellow" type="submit" data-action="login">로그인</button>
+            <button class="btn" type="submit" data-action="signup">가입</button>
+          </div>
         </form>
+        <button class="btn text" id="logoutBtn" type="button" hidden>로그아웃</button>
         <div class="nick-err" id="nickErr" role="alert"></div>
-        <div class="sub" id="nickSub">닉네임을 정하면 다른 기기에서도 판정 기록이 이어져요</div>
+        <div class="sub" id="nickSub">로그인하면 다른 기기에서도 판정 기록이 이어져요</div>
         <div class="pstats">
           <div><span class="lbl">코칭</span><span class="val" id="sT">0</span></div>
           <div><span class="lbl">질문</span><span class="val" id="sQ">0</span></div>
           <div><span class="lbl">자세 판정</span><span class="val" id="sP">0</span></div>
         </div>
       </div>
-      <div class="mem" id="memRow">
+      <div class="mem" id="memRow" hidden>
         <span>장기 기억 · 자세 판정 <b id="memCount">0</b>건 <span class="ref-note" style="display:block">코칭이 달라도 지난 판정과 비교해 줘요</span></span>
         <button class="btn text" id="clearMem" type="button">기억 지우기</button>
       </div>
@@ -342,6 +388,18 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
         <span>코칭마다 대화가 이어집니다</span>
         <button class="btn text" id="clearAll" type="button">기록 지우기</button>
       </div>
+    </section>
+
+    <section class="card clist-card" aria-label="코칭 목록">
+      <div class="clist-head">
+        <h2>코칭 목록 <span id="clistCount"></span></h2>
+        <button class="btn" id="clistNew" type="button" data-lock>+ 새 코칭</button>
+      </div>
+      <div class="clist-tabs" id="clistTabs" role="tablist" hidden>
+        <button type="button" role="tab" data-tab="mine">내 코칭</button>
+        <button type="button" role="tab" data-tab="all">모든 사용자</button>
+      </div>
+      <ul class="clist" id="clist"></ul>
     </section>
     <section class="card card-pad">
       <h2>판정 기준과 읽는 법</h2>
@@ -369,7 +427,11 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     </section>
 
     <div class="feed-title" id="pastTitle" hidden><h2>지난 코칭</h2><span id="pastCount"></span></div>
-    <div id="past" class="feed"></div>
+    <div id="past" class="past-grid"></div>
+
+    <div class="feed-title" id="allTitle" hidden><h2>모든 사용자 코칭 <span class="admin-tag">관리자</span></h2><span id="allCount"></span></div>
+    <div id="allThreads" class="past-grid"></div>
+
   </main>
 
 </div>
@@ -391,8 +453,6 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
   const $ = (id) => document.getElementById(id);
   const modelSel = $("model");
   const STORE_KEY = "golf-coach-threads-v2", OLD_KEY = "golf-coach-rooms-v1", ACTIVE_KEY = "golf-coach-active", MODEL_KEY = "golf-coach-model";
-  const NICK_KEY = "golf-coach-nick";   // 사용자가 정한 닉네임. 있으면 이것이 장기 기억 주인(user_id)
-  const USER_KEY = "golf-coach-user";   // 장기 기억 주인(이 브라우저의 사용자 id). 서버는 이 id 로 판정 기록을 대화방을 넘어 쌓습니다
   const MAX_BYTES = 10 * 1024 * 1024;
   const ICON = {
     mascot: '<svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sk-bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2997ff"/><stop offset="1" stop-color="#5e5ce6"/></linearGradient><linearGradient id="sk-sw" x1="9" y1="11" x2="32" y2="37" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".15"/><stop offset=".45" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#sk-bg)"/><path d="M9.5 10.5 C7 27.5 16.5 38.6 32 37.2 C21 33.6 13.8 25.6 9.5 10.5 Z" fill="url(#sk-sw)"/><circle cx="37" cy="34.6" r="4.5" fill="#fff"/><g fill="#c9d6ff"><circle cx="35.7" cy="33.5" r=".65"/><circle cx="38" cy="33.2" r=".65"/><circle cx="36.9" cy="35.8" r=".65"/><circle cx="38.8" cy="35.4" r=".65"/></g></svg>',
@@ -415,21 +475,27 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
   let mode = "live", demo = false, fixtures = [], samples = [], mediaSamples = [];
   const modelLabels = {};
   let busyId = null;              // 답변을 기다리는 코칭 id
-  // 장기 기억 주인(user_id): 닉네임을 정했으면 닉네임, 아니면 이 브라우저가 만든 임의 id. 저장소를 못 쓰면 장기 기억 없이 동작
-  const autoId = (() => {
-    try {
-      let id = localStorage.getItem(USER_KEY);
-      if (!id) { id = "user-" + Math.random().toString(36).slice(2, 12); localStorage.setItem(USER_KEY, id); }
-      return id;
-    } catch (e) { return null; }
-  })();
-  let nickname = (() => { try { return localStorage.getItem(NICK_KEY) || ""; } catch (e) { return ""; } })();
-  let userId = nickname || autoId;
+  // 로그인한 아이디. 장기 기억 주인은 서버가 세션 쿠키로 정하므로 화면은 표시에만 씁니다. 비어 있으면 게스트
+  let nickname = "";
 
   // ── 저장: 코칭 스레드 목록 (브라우저 localStorage, 실패해도 화면은 동작) ──
   // thread = {id, created, turns:[{q, ts, attach?, res?:{data, seconds}, error?}]}
-  let threads = loadThreads();
-  let activeId = loadActive();    // 진행 중인 코칭. null 이면 아직 질문하지 않은 새 코칭
+  // 게스트 내역은 이 브라우저(localStorage)에, 로그인 계정 내역은 서버(/threads)에 둡니다. 계정마다 자기 코칭만 보입니다.
+  let threads = [];
+  let activeId = null;            // 진행 중인 코칭. null 이면 아직 질문하지 않은 새 코칭
+  let synced = new Map();         // 로그인 계정: 코칭 id → 서버에 마지막으로 보낸 JSON (바뀐 것만 다시 보냄)
+  let isAdmin = false;            // 관리자(admin): 모든 계정의 코칭을 보고 지울 수 있음(이어 쓰기는 서버가 막음)
+  let others = [];                // 관리자 화면: 다른 계정의 코칭 [{owner, thread}]
+  let viewing = null;             // 관리자가 읽기 전용으로 연 남의 코칭 {owner, thread}
+  let listTab = "mine";           // 왼쪽 목록 탭: mine | all(관리자)
+  // 내 아이콘: 로그인했으면 가입할 때 정해진 캐릭터(서버가 그린 SVG), 게스트는 '나'
+  const avatarSrc = () => `/auth/avatar.svg?u=${encodeURIComponent(nickname)}`;
+  function myAvatar(big) {
+    const cls = "avatar" + (big ? " big" : "") + (nickname ? " char" : "");
+    if (!nickname) return el("div", { class: cls, "aria-hidden": "true" }, "나");
+    return el("div", { class: cls, "aria-hidden": "true" }, el("img", { src: avatarSrc(), alt: "" }));
+  }
+  const activeKey = () => (nickname ? `${ACTIVE_KEY}:${nickname}` : ACTIVE_KEY);
   function loadThreads() {
     try {
       const v = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
@@ -453,15 +519,41 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     });
   }
   function loadActive() {
-    try { const id = localStorage.getItem(ACTIVE_KEY); return threads.some((t) => t.id === id) ? id : null; } catch (e) { return null; }
+    try { const id = localStorage.getItem(activeKey()); return threads.some((t) => t.id === id) ? id : null; } catch (e) { return null; }
+  }
+  async function loadThreadsFor(name) {
+    if (!name) return loadThreads();
+    try {
+      const r = await fetch("/threads", { cache: "no-store" });
+      if (r.ok) return (await r.json()).threads;
+    } catch (e) {}
+    return [];
   }
   function save() {
-    try { activeId ? localStorage.setItem(ACTIVE_KEY, activeId) : localStorage.removeItem(ACTIVE_KEY); } catch (e) {}
+    try { activeId ? localStorage.setItem(activeKey(), activeId) : localStorage.removeItem(activeKey()); } catch (e) {}
+    if (nickname) { syncServer(); return; }
     try { localStorage.setItem(STORE_KEY, JSON.stringify(threads)); return; } catch (e) {}
     try { // 저장 공간이 모자라면 오래된 사진 미리보기부터 지우고 다시 시도
       for (const th of [...threads].sort((a, b) => a.created - b.created)) for (const t of th.turns) if (t.attach) delete t.attach.thumb;
       localStorage.setItem(STORE_KEY, JSON.stringify(threads));
     } catch (e) {}
+  }
+  // 로그인 계정: 바뀐 코칭만 서버에 저장하고, 화면에서 없어진 코칭은 서버에서도 지웁니다.
+  function syncServer() {
+    const ids = new Set();
+    for (const th of threads) {
+      ids.add(th.id);
+      const body = JSON.stringify(th);
+      if (synced.get(th.id) === body) continue;
+      synced.set(th.id, body);
+      fetch(`/threads/${encodeURIComponent(th.id)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body })
+        .then((r) => { if (!r.ok) synced.delete(th.id); })   // 실패하면 다음 저장 때 다시 보냄
+        .catch(() => synced.delete(th.id));
+    }
+    for (const id of [...synced.keys()]) if (!ids.has(id)) {
+      synced.delete(id);
+      fetch(`/threads/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
+    }
   }
   const newId = () => "web-" + Math.random().toString(36).slice(2, 10);
   const active = () => threads.find((t) => t.id === activeId) || null;
@@ -661,7 +753,7 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     reveal("end");                       // 방금 보낸 질문과 '작성 중' 표시가 보이게
     const started = performance.now();
     try {
-      const body = { question: turn.q, thread_id: th.id, model: modelSel.value || undefined, user_id: userId || undefined };
+      const body = { question: turn.q, thread_id: th.id, model: modelSel.value || undefined };
       let url = "/query";
       if (att?.kind === "fixture") { url = "/demo/fixture"; body.fixture = att.fixture; }
       else if (att?.kind === "video") body.video_base64 = att.b64;
@@ -705,6 +797,8 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
 
   // ── 진행 중 코칭 카드 ──
   function renderActive() {
+    $("composeDock").hidden = !!viewing;
+    if (viewing) { renderViewing(); return; }
     const th = active();
     const newBtn = el("button", { class: "btn", type: "button", "data-lock": "" }, "+ 새 코칭");
     newBtn.disabled = !!busyId;
@@ -724,13 +818,32 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     del.disabled = !!busyId;
     del.addEventListener("click", () => removeThread(th.id));
     $("activeHead").replaceChildren(
-      el("div", { class: "act-head" }, el("div", { class: "avatar", "aria-hidden": "true" }, nickname ? [...nickname][0].toUpperCase() : "나"),
+      el("div", { class: "act-head" }, myAvatar(),
         el("div", { class: "act-meta" }, el("div", { class: "act-who" }, nickname || "골프 입문자"), whenLine(kind, th.created)),
         el("div", { class: "act-actions" }, newBtn, del)),
       el("h3", { class: "act-title" }, th.turns[0].q));
     $("activeStats").hidden = false;
     $("activeStats").replaceChildren(...threadStats(th));
     $("activeThread").replaceChildren(...th.turns.flatMap(renderTurn));
+  }
+
+  // 관리자: 남의 코칭을 읽기 전용으로 보여 줌(입력창 숨김, 이어 쓰기는 서버도 403)
+  function renderViewing() {
+    const { owner, thread: th } = viewing;
+    const back = el("button", { class: "btn", type: "button" }, "내 코칭으로");
+    back.addEventListener("click", () => { viewing = null; renderActive(); renderPast(); });
+    const del = el("button", { class: "btn text", type: "button", "aria-label": `${owner}의 코칭 삭제` }, "삭제");
+    del.addEventListener("click", () => adminDelete(owner, th));
+    const avatar = el("div", { class: "avatar char", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(owner)}.svg`, alt: "" }));
+    $("activeHead").replaceChildren(
+      el("div", { class: "act-head" }, avatar,
+        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, owner, " ", el("span", { class: "admin-tag" }, "읽기 전용")), whenLine(kindOf(th), th.created)),
+        el("div", { class: "act-actions" }, back, del)),
+      el("h3", { class: "act-title" }, th.turns[0]?.q || "코칭"));
+    $("activeStats").hidden = false;
+    $("activeStats").replaceChildren(...threadStats(th));
+    $("activeThread").replaceChildren(...th.turns.flatMap(renderTurn),
+      el("p", { class: "readonly-note" }, `관리자 보기 · ${owner} 님의 코칭은 보기와 삭제만 할 수 있어요.`));
   }
 
   function welcome() {
@@ -752,7 +865,7 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
 
   function startNew() {
     if (busyId) return;
-    activeId = null;
+    activeId = null; viewing = null;
     save();
     renderActive(); renderPast();
     $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -761,7 +874,7 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
 
   function setActive(id) {
     if (busyId) return;
-    activeId = id;
+    activeId = id; viewing = null;
     save();
     renderActive(); renderPast();
     reveal("start");
@@ -769,36 +882,127 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
   }
 
   // ── 지난 코칭 (요약 카드) ──
+  // ── 왼쪽 코칭 목록 (최근순). 관리자는 '모든 사용자' 탭에서 남의 코칭을 읽기 전용으로 엽니다 ──
   function renderPast() {
-    const list = threads.filter((t) => t.id !== activeId).sort((a, b) => lastTs(b) - lastTs(a));
-    $("pastTitle").hidden = !list.length;
-    $("pastCount").textContent = `${list.length}개`;
-    $("past").replaceChildren(...list.map(pastCard));
+    if (!isAdmin) listTab = "mine";
+    $("clistTabs").hidden = !isAdmin;
+    $("clistTabs").querySelectorAll("button").forEach((b) => {
+      b.setAttribute("aria-selected", String(b.dataset.tab === listTab));
+      b.textContent = b.dataset.tab === "all" ? `모든 사용자 ${others.length}` : `내 코칭 ${threads.length}`;
+    });
+    const all = listTab === "all";
+    const items = all
+      ? others.map((o) => listItem(o.thread, o.owner))
+      : [...threads].sort((a, b) => lastTs(b) - lastTs(a)).map((th) => listItem(th));
+    $("clistCount").textContent = items.length ? String(items.length) : "";
+    $("clist").replaceChildren(...(items.length ? items
+      : [el("li", { class: "clist-empty" }, all ? "다른 사용자의 코칭이 없어요." : "아직 코칭이 없어요. 질문을 보내면 여기에 쌓여요.")]));
+    // 아래쪽 지난 코칭(작은 카드): 지금 열린 코칭은 빼고 최근순
+    const past = threads.filter((t) => viewing || t.id !== activeId).sort((a, b) => lastTs(b) - lastTs(a));
+    $("pastTitle").hidden = !past.length;
+    $("pastCount").textContent = `${past.length}개`;
+    $("past").replaceChildren(...past.map(pastCard));
+    // 관리자: 아래쪽에 다른 모든 계정의 코칭(작은 카드). 지금 읽기 전용으로 연 것은 뺌
+    const allList = isAdmin ? others.filter((o) => o.thread.id !== viewing?.thread.id) : [];
+    $("allTitle").hidden = !allList.length;
+    $("allCount").textContent = `${others.length}개`;
+    $("allThreads").replaceChildren(...allList.map(otherCard));
+  }
+
+  function openOther(owner, th) {
+    if (busyId) return;
+    viewing = { owner, thread: th };
+    renderActive(); renderPast(); reveal("start");
+    $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  async function adminDelete(owner, th) {
+    if (!confirm(`${owner} 님의 코칭을 삭제할까요? 되돌릴 수 없습니다.`)) return;
+    try { await fetch(`/admin/threads/${encodeURIComponent(th.id)}`, { method: "DELETE" }); } catch (e) {}
+    if (viewing?.thread.id === th.id) { viewing = null; renderActive(); }
+    loadOthers();
+  }
+
+  function otherCard({ owner, thread: th }) {
+    const kind = kindOf(th);
+    const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
+    const preview = !lastDone ? "답변을 기다리는 중…" : lastDone.error ? "요청 실패" : plain(lastDone.res.data.answer);
+    const view = el("button", { class: "btn yellow", type: "button", "data-lock": "" }, "대화 보기");
+    view.disabled = !!busyId;
+    view.addEventListener("click", () => openOther(owner, th));
+    const del = el("button", { class: "btn text", type: "button", "aria-label": `${owner}의 코칭 삭제` }, "삭제");
+    del.addEventListener("click", () => adminDelete(owner, th));
+    const titleRow = el("div", { class: "title-row" }, el("h3", { class: "act-title" }, th.turns[0]?.q || "코칭"));
+    const thumb = th.turns.find((t) => t.attach?.thumb)?.attach.thumb;
+    if (thumb) titleRow.append(el("img", { class: "thumb", src: thumb, alt: "" }));
+    const avatar = el("div", { class: "avatar char", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(owner)}.svg`, alt: "" }));
+    return el("article", { class: "card act past mini" },
+      el("div", { class: "act-head" }, avatar,
+        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, owner), whenLine(kind, lastTs(th)))),
+      titleRow,
+      el("p", { class: "clamp" }, preview),
+      el("div", { class: "past-foot" }, del, view));
   }
 
   function pastCard(th) {
     const kind = kindOf(th);
-    const first = th.turns[0];
     const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
     const preview = !lastDone ? "답변을 기다리는 중…" : lastDone.error ? "요청 실패" : plain(lastDone.res.data.answer);
-    const open = el("button", { class: "btn yellow", type: "button", "data-lock": "" }, "이어서 코칭하기");
+    const open = el("button", { class: "btn yellow", type: "button", "data-lock": "" }, "이어서 코칭");
     open.disabled = !!busyId;
     open.addEventListener("click", () => setActive(th.id));
     const del = el("button", { class: "btn text", type: "button", "data-lock": "", "aria-label": "이 코칭 기록 삭제" }, "삭제");
     del.disabled = !!busyId;
     del.addEventListener("click", () => removeThread(th.id));
-    const titleRow = el("div", { class: "title-row" }, el("h3", { class: "act-title" }, first?.q || "코칭"));
+    const titleRow = el("div", { class: "title-row" }, el("h3", { class: "act-title" }, th.turns[0]?.q || "코칭"));
     const thumb = th.turns.find((t) => t.attach?.thumb)?.attach.thumb;
     if (thumb) titleRow.append(el("img", { class: "thumb", src: thumb, alt: "" }));
-    return el("article", { class: "card act past" },
-      el("div", { class: "act-head" }, el("div", { class: "avatar", "aria-hidden": "true" }, nickname ? [...nickname][0].toUpperCase() : "나"),
+    return el("article", { class: "card act past mini" },
+      el("div", { class: "act-head" }, myAvatar(),
         el("div", { class: "act-meta" }, el("div", { class: "act-who" }, nickname || "골프 입문자"), whenLine(kind, lastTs(th)))),
       titleRow,
-      el("div", { class: "stats" }, ...threadStats(th)),
       el("p", { class: "clamp" }, preview),
       el("div", { class: "past-foot" }, del, open));
   }
+  function listItem(th, owner) {
+    const kind = kindOf(th);
+    const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
+    const status = !lastDone ? "" : lastDone.error ? "error" : lastDone.res.data.status;
+    const current = owner ? viewing?.thread.id === th.id : !viewing && th.id === activeId;
+    let ico;
+    if (owner) ico = el("span", { class: "clist-ico", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(owner)}.svg`, alt: "" }));
+    else { ico = el("span", { class: "clist-ico", "aria-hidden": "true" }); ico.innerHTML = ICON[kind === "photo" ? "camera" : kind]; }
+    const meta = `${owner ? owner + " · " : ""}${KIND_KO[kind]} · ${th.turns.length}개 · ${when(lastTs(th))}`;
+    const btn = el("button", { class: "clist-item" + (current ? " on" : ""), type: "button", "data-lock": "", title: th.turns[0]?.q || "" },
+      ico, el("span", { class: "clist-text" }, el("span", { class: "clist-title" }, th.turns[0]?.q || "코칭"), el("span", { class: "clist-meta" }, meta)),
+      el("span", { class: "clist-dot " + status, "aria-label": STATUS_KO[status] || (status === "error" ? "요청 실패" : "") }));
+    if (current) btn.setAttribute("aria-current", "true");
+    btn.disabled = !!busyId;
+    btn.addEventListener("click", () => {
+      if (owner) openOther(owner, th);
+      else setActive(th.id);
+      if (matchMedia("(max-width: 760px)").matches) $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return el("li", {}, btn);
+  }
+  $("clistNew").addEventListener("click", startNew);
+  $("clistTabs").addEventListener("click", (ev) => {
+    const tab = ev.target.closest("button")?.dataset.tab;
+    if (tab && tab !== listTab) { listTab = tab; renderPast(); }
+  });
 
+  // ── 관리자: 모든 사용자 코칭 (보기·지우기만) ──
+  async function loadOthers() {
+    others = [];
+    if (isAdmin) {
+      try {
+        const r = await fetch("/admin/threads", { cache: "no-store" });
+        if (r.ok) others = (await r.json()).threads;
+      } catch (e) {}
+    }
+    if (viewing && !others.some((o) => o.thread.id === viewing.thread.id)) { viewing = null; renderActive(); }
+    renderPast();
+  }
   function whenLine(kind, ts) {
     const icon = el("span", { "aria-hidden": "true", style: "display:inline-flex" });
     icon.innerHTML = ICON[kind === "photo" ? "camera" : kind];
@@ -1088,61 +1292,91 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
     $("sP").textContent = turns.filter((t) => t.res?.data.trace.some((s) => s.step === "pose")).length;
   }
   function removeThread(id) {
-    if (busyId || !confirm("이 코칭 기록을 삭제할까요? 이 브라우저에 저장된 대화가 지워집니다.")) return;
+    if (busyId || !confirm("이 코칭 기록을 삭제할까요? 저장된 대화가 지워집니다.")) return;
+    dropMedia(threads.filter((th) => th.id === id));
     threads = threads.filter((th) => th.id !== id);
     if (activeId === id) activeId = null;
-    save(); renderActive(); renderPast(); renderProfile(); pruneMedia();
+    save(); renderActive(); renderPast(); renderProfile();
   }
   $("clearAll").addEventListener("click", () => {
-    if (busyId || !threads.length || !confirm("모든 코칭 기록을 지울까요? 이 브라우저에 저장된 대화가 모두 지워집니다.")) return;
-    threads = []; activeId = null; save(); renderActive(); renderPast(); renderProfile(); pruneMedia();
+    if (busyId || !threads.length || !confirm(nickname ? `${nickname} 계정의 코칭 기록을 모두 지울까요?` : "게스트 코칭 기록을 모두 지울까요? 이 브라우저에 저장된 대화가 지워집니다.")) return;
+    dropMedia(threads);
+    threads = []; activeId = null; save(); renderActive(); renderPast(); renderProfile();
   });
 
-  // ── 닉네임: 정하면 그 이름으로 장기 기억이 이어짐(다른 기기에서도 같은 닉네임이면 같은 기록) ──
-  const NICK_RE = /^[0-9A-Za-z가-힣_-]{2,20}$/;
+  // ── 계정: 로그인하면 그 계정으로 장기 기억이 이어짐(게스트는 질문·판정만, 기록은 남지 않음) ──
   function renderNick() {
-    $("nickName").textContent = nickname || "닉네임을 정해 주세요";
-    $("nickAvatar").textContent = nickname ? [...nickname][0].toUpperCase() : "나";
-    $("nickBtn").setAttribute("aria-label", nickname ? `닉네임 ${nickname}, 바꾸기` : "닉네임 정하기");
-    $("nickSub").textContent = nickname
-      ? "다른 기기에서도 이 닉네임을 쓰면 판정 기록이 이어져요"
-      : "닉네임을 정하면 다른 기기에서도 판정 기록이 이어져요";
+    $("nickName").textContent = nickname || "게스트";
+    $("nickAvatar").replaceWith(Object.assign(myAvatar(true), { id: "nickAvatar" }));
+    $("authForm").hidden = !!nickname;
+    $("logoutBtn").hidden = !nickname;
+    $("memRow").hidden = !nickname;
+    $("nickSub").textContent = isAdmin ? "관리자 계정 · 모든 사용자의 코칭을 보고 지울 수 있어요" : nickname
+      ? "다른 기기에서도 이 계정으로 로그인하면 판정 기록이 이어져요"
+      : "로그인하면 다른 기기에서도 판정 기록이 이어져요";
   }
-  $("nickBtn").addEventListener("click", () => {
-    $("nickBtn").hidden = true; $("nickForm").hidden = false;
-    $("nickInput").value = nickname; $("nickInput").focus(); $("nickErr").textContent = "";
-  });
-  $("nickInput").addEventListener("keydown", (ev) => { if (ev.key === "Escape") { $("nickForm").hidden = true; $("nickBtn").hidden = false; } });
-  $("nickForm").addEventListener("submit", async (ev) => {
+  // 계정이 바뀌면 그 계정의 코칭 내역으로 바꿔 보여 줍니다(게스트는 이 브라우저의 내역).
+  async function setUser(name, admin = false) {
+    nickname = name || "";
+    isAdmin = !!nickname && !!admin;
+    viewing = null; others = [];
+    loadOthers();
+    $("nickErr").textContent = "";
+    renderNick(); loadMemory();
+    threads = []; activeId = null; synced = new Map();
+    renderActive(); renderPast(); renderProfile();
+    const owner = nickname;
+    const list = await loadThreadsFor(owner);
+    if (owner !== nickname) return;   // 불러오는 사이 계정이 또 바뀜
+    threads = list;
+    if (nickname) synced = new Map(threads.map((th) => [th.id, JSON.stringify(th)]));
+    activeId = loadActive();
+    renderActive(); renderPast(); renderProfile();
+  }
+  async function loadMe() {
+    let name = "", admin = false;
+    try {
+      const r = await fetch("/auth/me", { cache: "no-store" });
+      if (r.ok) { const me = await r.json(); name = me.username || ""; admin = !!me.admin; }
+    } catch (e) {}
+    setUser(name, admin);
+  }
+  $("authForm").addEventListener("submit", async (ev) => {
     ev.preventDefault();
-    const next = $("nickInput").value.trim();
-    if (!NICK_RE.test(next)) { $("nickErr").textContent = "띄어쓰기 없이 한글·영문·숫자·_- 2~20자로 정해 주세요."; return; }
-    if (next !== userId && autoId) {
-      // 지금 이름(또는 이 브라우저 임의 id)에 쌓인 판정 기록이 있으면 새 닉네임으로 옮길지 묻습니다
-      try {
-        const cur = await (await fetch(`/memory/${encodeURIComponent(userId)}`, { cache: "no-store" })).json();
-        if (cur.count > 0 && confirm(`지금까지의 자세 판정 기록 ${cur.count}건을 '${next}'(으)로 옮길까요?\n취소하면 기록은 이전 이름에 남습니다.`)) {
-          await fetch(`/memory/${encodeURIComponent(userId)}/move`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ to: next }) });
-        }
-      } catch (e) {}
-    }
-    nickname = next; userId = next;
-    try { localStorage.setItem(NICK_KEY, next); } catch (e) {}
-    $("nickForm").hidden = true; $("nickBtn").hidden = false; $("nickErr").textContent = "";
-    renderNick(); loadMemory(); renderActive(); renderPast();
+    if (busyId) { $("nickErr").textContent = "답변을 받은 뒤에 로그인해 주세요."; return; }
+    const action = ev.submitter?.dataset.action === "signup" ? "signup" : "login";
+    const body = { username: $("authUser").value.trim(), password: $("authPass").value };
+    $("nickErr").textContent = "";
+    try {
+      const r = await fetch(`/auth/${action}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        const d = data.detail;
+        $("nickErr").textContent = typeof d === "string" ? d : (action === "signup" ? "가입하지 못했습니다. 아이디·비밀번호 규칙을 확인해 주세요." : "로그인하지 못했습니다.");
+        return;
+      }
+      $("authPass").value = "";
+      setUser(data.username, data.admin);
+    } catch (e) { $("nickErr").textContent = "서버에 연결할 수 없습니다."; }
+  });
+  $("logoutBtn").addEventListener("click", async () => {
+    if (busyId) return;
+    try { await fetch("/auth/logout", { method: "POST" }); } catch (e) {}
+    setUser("");
   });
 
-  // ── 장기 기억: 서버에 쌓인 내 자세 판정 기록 수와 지우기 ──
+  // ── 장기 기억: 서버에 쌓인 내 자세 판정 기록 수와 지우기 (로그인한 본인만) ──
   async function loadMemory() {
-    if (!userId) { $("memRow").hidden = true; return; }
+    if (!nickname) { $("memRow").hidden = true; return; }
     try {
-      const r = await fetch(`/memory/${encodeURIComponent(userId)}`, { cache: "no-store" });   // 캐시된 예전 건수를 보이지 않게
+      const r = await fetch("/memory", { cache: "no-store" });   // 캐시된 예전 건수를 보이지 않게
+      if (r.status === 401) { setUser(""); return; }               // 세션이 만료됨
       if (r.ok) $("memCount").textContent = (await r.json()).count;
     } catch (e) {}
   }
   $("clearMem").addEventListener("click", async () => {
-    if (!userId || !confirm("서버에 저장된 내 자세 판정 기록(장기 기억)을 모두 지울까요? 화면의 코칭 기록은 그대로 남습니다.")) return;
-    try { await fetch(`/memory/${encodeURIComponent(userId)}`, { method: "DELETE" }); } catch (e) {}
+    if (!nickname || !confirm("서버에 저장된 내 자세 판정 기록(장기 기억)을 모두 지울까요? 화면의 코칭 기록은 그대로 남습니다.")) return;
+    try { await fetch("/memory", { method: "DELETE" }); } catch (e) {}
     loadMemory();
   });
 
@@ -1172,10 +1406,12 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
       del: (id) => run("readwrite", (s) => s.delete(id)).catch(() => {}),
     };
   })();
-  // 지운 코칭의 영상 원본은 저장소에서도 지웁니다.
-  async function pruneMedia() {
-    const used = new Set(threads.flatMap((th) => th.turns.map((t) => t.attach?.mediaId).filter(Boolean)));
-    for (const id of (await media.keys()) || []) if (!used.has(id)) {
+  // 지운 코칭의 영상 원본은 저장소에서도 지웁니다. 이 브라우저의 영상 저장소는 게스트·여러 계정이 함께 쓰므로
+  // '지금 목록에 없는 것'을 지우지 않고, 지운 코칭에 딸린 것만 지웁니다.
+  function dropMedia(removed) {
+    for (const th of removed) for (const t of th.turns) {
+      const id = t.attach?.mediaId;
+      if (!id) continue;
       media.del(id);
       if (mediaUrls.has(id)) { URL.revokeObjectURL(mediaUrls.get(id)); mediaUrls.delete(id); }
     }
@@ -1251,7 +1487,7 @@ pre { margin: 0 0 8px; padding: 10px; background: var(--surface); border-radius:
   }
 
   renderActive(); renderPast(); renderProfile();
-  renderNick(); loadServerInfo(); loadMemory(); pruneMedia();
+  renderNick(); loadServerInfo(); loadMe();
 })();
 </script>
 <script src="/static/arch.js"></script>
