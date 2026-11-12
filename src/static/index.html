@@ -274,6 +274,16 @@ canvas.gif { cursor: pointer; }
 
 .srcs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .src { font-size: 12px; font-family: var(--mono); color: var(--muted); background: var(--surface); border-radius: 999px; padding: 2px 10px; }
+/* 웹 출처: 제목 한 줄 + 사이트 주소, 새 탭으로 열기 (긴 URL 을 그대로 보이지 않음) */
+.webs { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; min-width: 0; }
+.webs-lbl { font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.web-src { display: grid; grid-template-columns: 28px minmax(0, 1fr) 14px; gap: 10px; align-items: center; padding: 8px 10px; border-radius: 12px; background: var(--surface); color: var(--fg); text-decoration: none; box-shadow: inset 0 0 0 1px var(--line); transition: box-shadow .15s var(--ease); }
+.web-src:hover, .web-src:focus-visible { box-shadow: inset 0 0 0 1px var(--yellow); }
+.web-src .wico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--surface-2); color: var(--yellow); font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.web-src .wbody { min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.web-src .wtitle { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.web-src .whost { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.web-src .warrow { color: var(--muted); font-size: 13px; }
 .more { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
 details { font-size: 12px; }
 details > summary { cursor: pointer; color: var(--yellow); padding: 4px 0; }
@@ -1238,6 +1248,28 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     return box;
   }
 
+  // ── 웹 출처 ──
+  const isWebUrl = (s) => /^https?:\/\//i.test(s);
+  function readableUrl(u) {
+    try {
+      const url = new URL(u);
+      const host = url.hostname.replace(/^www\./, "");
+      const path = decodeURIComponent(url.pathname).replace(/\/+$/, "").split("/").filter(Boolean);
+      const last = (path[path.length - 1] || "").replace(/\.(html?|php|aspx?)$/i, "").replace(/[-_]+/g, " ");
+      return { host, last };
+    } catch (e) { return { host: u, last: "" }; }
+  }
+  // 제목은 그 URL 의 근거 문서(contexts) 첫 줄에서 가져오고, 없으면 주소의 마지막 부분을 읽기 좋게 보여 줍니다
+  function webSource(u, contexts) {
+    const { host, last } = readableUrl(u);
+    const ctx = contexts.find((c) => c.doc_id === u);
+    const title = (ctx?.text.split("\n")[0] || "").replace(/^\[[^\]]*\]\s*/, "").trim() || last || host;
+    return el("a", { class: "web-src", href: u, target: "_blank", rel: "noopener noreferrer", title: u },
+      el("span", { class: "wico", "aria-hidden": "true" }, [...host][0] || "W"),
+      el("span", { class: "wbody" }, el("span", { class: "wtitle" }, title), el("span", { class: "whost" }, host + (last && last !== title ? " · " + last : ""))),
+      el("span", { class: "warrow", "aria-hidden": "true" }, "↗"));
+  }
+
   function answerContent(d) {
     const box = el("div");
     const badges = el("div", { class: "badges" }, el("span", { class: "badge " + d.status }, STATUS_KO[d.status] || d.status));
@@ -1249,7 +1281,9 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     const md = el("div", { class: "md" });
     md.innerHTML = markdown(d.answer);
     box.append(md);
-    if (d.sources.length) box.append(el("div", { class: "srcs" }, ...d.sources.map((s) => el("span", { class: "src" }, "근거 " + s))));
+    const webSrcs = d.sources.filter(isWebUrl), docSrcs = d.sources.filter((s) => !isWebUrl(s));
+    if (docSrcs.length) box.append(el("div", { class: "srcs" }, ...docSrcs.map((s) => el("span", { class: "src" }, "근거 " + s))));
+    if (webSrcs.length) box.append(el("div", { class: "webs" }, el("span", { class: "webs-lbl" }, `웹 출처 ${webSrcs.length}`), ...webSrcs.map((u) => webSource(u, d.contexts))));
     const more = el("div", { class: "more" });
     if (d.contexts.length) {
       const det = el("details", {}, el("summary", {}, `근거 문서 ${d.contexts.length}`));
