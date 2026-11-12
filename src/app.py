@@ -7,7 +7,8 @@ API 표준 규약
 이 서비스의 추가 필드 (표준 필드는 그대로 두고 덧붙입니다)
     요청:  image_base64(측면 어드레스 사진), video_base64(정면 스윙 영상), thread_id(대화 이어가기),
            model(코칭 모델 ID, GET /models 목록 중 하나) — 모두 선택
-    응답:  status(answered|no_answer|blocked), issue_codes, sources, agents(부른 sub-agent), model(코칭에 쓴 모델)
+    응답:  status(answered|no_answer|blocked), issue_codes, sources, agents(부른 sub-agent), model(코칭에 쓴 모델),
+           training_added(이번 판정으로 새로 추천된 연습 항목, 로그인했을 때만)
 
 계정 (아이디·비밀번호, 세션은 HttpOnly 쿠키)
     POST /auth/signup  {"username", "password"}  가입하고 바로 로그인
@@ -30,6 +31,15 @@ API 표준 규약
     DELETE /threads/{thread_id}  하나 지우기 · DELETE /threads 모두 지우기
     대화방(thread_id)은 처음 쓴 계정이 주인입니다. 다른 계정·게스트가 그 thread_id 로 /query 를 보내면 403.
 
+훈련 관리 (로그인 계정별 연습 항목·기록, src/training.py) — 로그인하지 않으면 401, 남의 것은 403, 없으면 404
+    GET    /training                         진행 중 항목과 집계(이번 주 연습일·연속 연습일·누적), 최근 기록
+    POST   /training/drills                  {"title", "unit": 회|분|개, "target"} 직접 추가
+    DELETE /training/drills/{id}             목록에서 내리기(기록은 남김)
+    POST   /training/drills/{id}/logs        {"count", "day"?: YYYY-MM-DD(없으면 오늘), "memo"?} 기록
+    DELETE /training/logs/{id}               기록 지우기
+    사진·영상 판정에서 문제 코드가 나오면 규칙으로 연습 항목을 추천해 넣습니다(응답 training_added).
+    관리자: GET /admin/training · DELETE /admin/training/drills/{id} · DELETE /admin/training/logs/{id}
+
 입력 검사
     - 모르는 필드(예: 채점용 pose_fixture)가 오면 422 로 거부합니다. fixture 는 함수 주입으로만 받습니다.
     - base64 를 풀 수 없으면 422, 디코딩 후 10MB 를 넘으면 413 입니다.
@@ -45,6 +55,7 @@ from __future__ import annotations
 import base64
 import binascii
 import csv
+import datetime
 import json
 import os
 import threading
@@ -58,6 +69,7 @@ from src import config
 from src.agent import GolfCoachAgent, build_agent
 from src.auth import AccountStore, AuthError, is_admin, memory_owner
 from src.history import THREAD_ID_PATTERN, HistoryStore, ThreadOwnedByOther
+from src.training import TrainingError, TrainingStore
 
 
 def _allowed_model(value: str | None) -> str | None:
@@ -105,6 +117,10 @@ class QueryResponse(BaseModel):
         description="영상 판정일 때 프레임별 왼팔 각도 {metric, t(초 또는 null), values, apex_index, threshold}",
     )
     model: str
+    training_added: list[dict] = Field(
+        default_factory=list,
+        description="이번 판정으로 새로 추천된 연습 항목 [{id, title}] (로그인했고 문제 코드가 나왔을 때만)",
+    )
 
 
 app = FastAPI(title="SwingKid · 골프 입문 코치", version="0.1.0")
@@ -160,7 +176,7 @@ def query(req: QueryRequest, request: Request) -> dict:
     _check_media(req.video_base64, "영상")
     _check_thread(request, req.thread_id)
     try:
-        return get_agent().ask(
+        result = get_agent().ask(
             req.question,
             image_base64=req.image_base64,
             video_base64=req.video_base64,
@@ -168,6 +184,7 @@ def query(req: QueryRequest, request: Request) -> dict:
             model=req.model,
             user_id=_memory_owner(request),
         )
+        return _with_training(request, result)
     except ModuleNotFoundError as exc:
         # 사진·영상 분석에 필요한 MediaPipe·OpenCV 가 없는 환경(예: Python 3.14, 오프라인 모드)
         raise HTTPException(
@@ -372,9 +389,10 @@ def demo_fixture(req: DemoFixtureRequest, request: Request) -> dict:
     fixture = json.loads(path.read_text(encoding="utf-8"))
     _check_thread(request, req.thread_id)
     try:
-        return get_agent().ask(
+        result = get_agent().ask(
             req.question, thread_id=req.thread_id, pose_fixture=fixture, model=req.model, user_id=_memory_owner(request)
         )
+        return _with_training(request, result)
     except Exception as exc:
         raise _bedrock_http_error(exc) from exc
 
@@ -411,9 +429,19 @@ def get_history() -> HistoryStore:
     return _history_for(_mode())
 
 
-def _clear_account_caches() -> None:   # 테스트에서 계정·코칭 내역을 비울 때 씀
+@lru_cache(maxsize=2)
+def _training_for(mode: str) -> TrainingStore:
+    return TrainingStore(config.ACCOUNTS_DB if mode == "live" else ":memory:")
+
+
+def get_training() -> TrainingStore:
+    return _training_for(_mode())
+
+
+def _clear_account_caches() -> None:   # 테스트에서 계정·코칭 내역·훈련을 비울 때 씀
     _accounts_for.cache_clear()
     _history_for.cache_clear()
+    _training_for.cache_clear()
 
 
 get_accounts.cache_clear = _clear_account_caches
@@ -627,3 +655,109 @@ def admin_avatar(username: str, request: Request) -> Response:
         raise HTTPException(status_code=404, detail="없는 계정입니다.")
     return Response(render_svg(avatar), media_type="image/svg+xml", headers={"Cache-Control": "private, max-age=86400"})
 
+
+
+# ── 훈련 관리 (SERVICE.md 6장, src/training.py) ───────────────
+# 로그인한 본인 것만. 남의 항목·기록은 403, 없는 것은 404. 판정에서 문제 코드가 나오면 연습 항목을 규칙으로 추천합니다.
+
+
+def _with_training(request: Request, result: dict) -> dict:
+    """로그인한 사용자의 사진·영상 판정이면 문제 코드에 맞는 연습 항목을 추천해 넣고, 새로 넣은 것을 응답에 적습니다."""
+    username = _current_user(request)
+    if not username or result.get("status") != "answered":
+        return result
+    if not any(step.get("step") == "pose" for step in result.get("trace", [])):
+        return result
+    added = get_training().recommend(username, result.get("issue_codes", []))
+    return {**result, "training_added": [{"id": d["id"], "title": d["title"]} for d in added]}
+
+
+def _check_training_owner(owner: str | None, username: str, what: str) -> None:
+    if owner is None:
+        raise HTTPException(status_code=404, detail=f"없는 {what}입니다.")
+    if owner != username:
+        raise HTTPException(status_code=403, detail=f"다른 계정의 {what}입니다.")
+
+
+class DrillCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str = Field(max_length=100)
+    unit: str = Field(max_length=4)
+    target: int
+
+
+class LogCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    day: datetime.date | None = Field(default=None, description="연습한 날(YYYY-MM-DD). 없으면 오늘")
+    count: int
+    memo: str = Field(default="", max_length=1000)
+
+
+def _training_view(username: str) -> dict:
+    store = get_training()
+    return {"username": username, **store.summary(username), "logs": store.logs(username, limit=100)}
+
+
+@app.get("/training")
+def training_get(request: Request, response: Response) -> dict:
+    """내 훈련: 진행 중 항목과 집계(이번 주 연습일·연속 연습일·누적), 최근 기록."""
+    username = _require_user(request)
+    response.headers["Cache-Control"] = "no-store"
+    return _training_view(username)
+
+
+@app.post("/training/drills")
+def training_add_drill(req: DrillCreateRequest, request: Request) -> dict:
+    username = _require_user(request)
+    try:
+        return get_training().add_custom(username, req.title, req.unit, req.target)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.delete("/training/drills/{drill_id}")
+def training_archive_drill(drill_id: str, request: Request) -> dict:
+    """항목을 목록에서 내립니다(기록은 남김)."""
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.drill_owner(drill_id), username, "훈련 항목")
+    return {"id": drill_id, "archived": store.archive(username, drill_id)}
+
+
+@app.post("/training/drills/{drill_id}/logs")
+def training_add_log(drill_id: str, req: LogCreateRequest, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.drill_owner(drill_id), username, "훈련 항목")
+    try:
+        return store.add_log(username, drill_id, req.day or datetime.date.today(), req.count, req.memo)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.delete("/training/logs/{log_id}")
+def training_delete_log(log_id: str, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.log_owner(log_id), username, "훈련 기록")
+    return {"id": log_id, "deleted": store.delete_log(username, log_id)}
+
+
+@app.get("/admin/training")
+def admin_training(request: Request, response: Response) -> dict:
+    """[관리자] 진행 중 항목이 있는 모든 계정의 훈련 [{username, 집계, 최근 기록}]."""
+    _require_admin(request)
+    response.headers["Cache-Control"] = "no-store"
+    return {"users": [_training_view(owner) for owner in get_training().owners()]}
+
+
+@app.delete("/admin/training/drills/{drill_id}")
+def admin_training_archive_drill(drill_id: str, request: Request) -> dict:
+    _require_admin(request)
+    return {"id": drill_id, "archived": get_training().archive_any(drill_id)}
+
+
+@app.delete("/admin/training/logs/{log_id}")
+def admin_training_delete_log(log_id: str, request: Request) -> dict:
+    _require_admin(request)
+    return {"id": log_id, "deleted": get_training().delete_log_any(log_id)}

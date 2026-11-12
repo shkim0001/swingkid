@@ -136,6 +136,32 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .clist-dot.answered { background: var(--ok); } .clist-dot.no_answer { background: var(--info); }
 .clist-dot.blocked { background: var(--warn); } .clist-dot.error { background: var(--bad); }
 .clist-empty { font-size: 12.5px; color: var(--muted); padding: 10px 8px 14px; }
+/* 훈련 카드(왼쪽)와 훈련 상세(가운데) */
+.field { font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 12px; border: 1px solid transparent; background: var(--surface-2); color: var(--fg); min-width: 0; width: 100%; box-sizing: border-box; }
+.field:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
+.tr-card { padding: 16px 12px 10px; }
+.tr-card #trWeek { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.tr-add { display: grid; gap: 6px; padding: 0 8px 10px; }
+.tr-add-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px auto; gap: 6px; }
+.tr-list { max-height: none; }
+.tr-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
+.tr-open { border: 0; background: none; text-align: left; padding: 8px; border-radius: 12px; cursor: pointer; color: var(--fg); display: flex; flex-direction: column; gap: 1px; min-width: 0; font: inherit; }
+.tr-open:hover, .tr-open:focus-visible { background: var(--surface-2); }
+.tr-open.on { background: color-mix(in srgb, var(--yellow) 12%, transparent); }
+.tr-quick { padding: 5px 10px; font-size: 12px; margin-right: 4px; }
+.tr-quick.done { background: var(--ok-soft); color: var(--ok); }
+.tr-log { display: grid; grid-template-columns: 150px 110px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 14px 0; }
+.tr-log .cnt { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.tr-log .nick-err { grid-column: 1 / -1; min-height: 0; }
+.tr-logs { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.tr-logs li { display: grid; grid-template-columns: 92px 70px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+.tr-logs .day { color: var(--muted); font-variant-numeric: tabular-nums; }
+.tr-logs .n { font-weight: 600; }
+.tr-logs .memo { color: var(--muted); overflow-wrap: anywhere; }
+.tr-logs .empty { display: block; color: var(--muted); border: 0; }
+.tr-added { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding: 8px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--fg); font-size: 13px; }
+.tr-added b { color: var(--ok); }
+.tr-added .btn { padding: 4px 10px; font-size: 12px; margin-left: auto; }
 .readonly-note { font-size: 12px; color: var(--muted); padding: 10px 0 0; border-top: 1px solid var(--line); }
 .avatar.char img { width: 100%; height: 100%; display: block; }
 .profile .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
@@ -437,6 +463,12 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   .composer > .send svg { display: block; width: 20px; height: 20px; }
   .dock textarea { min-height: 40px; max-height: 120px; padding: 9px 14px; border-radius: 20px; font-size: 16px; }
 }
+@media (max-width: 760px) {
+  .field, .tr-log .field { font-size: 16px; }   /* iOS 입력 확대 방지 */
+  .tr-log { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .tr-log .memo-in, .tr-log button { grid-column: 1 / -1; }
+  .tr-logs li { grid-template-columns: 84px 60px minmax(0, 1fr) auto; gap: 8px; font-size: 13px; }
+}
 </style>
 </head>
 <body>
@@ -509,6 +541,23 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
         <button type="button" role="tab" data-tab="all">모든 사용자</button>
       </div>
       <ul class="clist" id="clist"></ul>
+    </section>
+
+    <section class="card tr-card" id="trCard" aria-label="훈련">
+      <div class="clist-head">
+        <h2>훈련 <span id="trWeek"></span></h2>
+        <button class="btn" id="trAddBtn" type="button" aria-expanded="false" hidden>+ 추가</button>
+      </div>
+      <form class="tr-add" id="trAdd" hidden>
+        <input class="field" id="trTitle" maxlength="40" placeholder="항목 이름 (예: 1m 퍼팅)" aria-label="항목 이름" required>
+        <div class="tr-add-row">
+          <input class="field" id="trTarget" type="number" min="1" max="1000" value="10" aria-label="1회 목표" required>
+          <select class="field" id="trUnit" aria-label="단위"><option>회</option><option>분</option><option>개</option></select>
+          <button class="btn yellow" type="submit">추가</button>
+        </div>
+        <div class="nick-err" id="trErr" role="alert"></div>
+      </form>
+      <ul class="clist tr-list" id="trList"></ul>
     </section>
     <section class="card card-pad">
       <h2>판정 기준과 읽는 법</h2>
@@ -597,6 +646,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   let others = [];                // 관리자 화면: 다른 계정의 코칭 [{owner, thread}]
   let viewing = null;             // 관리자가 읽기 전용으로 연 남의 코칭 {owner, thread}
   let listTab = "mine";           // 왼쪽 목록 탭: mine | all(관리자)
+  let training = null;            // GET /training 결과(로그인했을 때)
+  let trainingView = null;        // 가운데에 연 훈련 항목 id
   // 내 아이콘: 로그인했으면 가입할 때 정해진 캐릭터(서버가 그린 SVG), 게스트는 '나'
   const avatarSrc = () => `/auth/avatar.svg?u=${encodeURIComponent(nickname)}`;
   function myAvatar(big) {
@@ -892,6 +943,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     setBusy(null);
     renderActive(); renderPast(); renderProfile();
     if (turn.res?.data.trace.some((s) => s.step === "memory")) loadMemory();
+    if (turn.res?.data.training_added?.length) loadTraining();
     if (activeId === th.id) reveal("start");   // 답변 첫머리부터 읽을 수 있게
   }
 
@@ -918,8 +970,9 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   // ── 진행 중 코칭 카드 ──
   function renderActive() {
-    $("composeDock").hidden = !!viewing;
+    $("composeDock").hidden = !!(viewing || trainingView);
     $("composeDock").classList.toggle("has-thread", !!(viewing || active()));   // 모바일: 대화 중엔 추천 칩 숨김
+    if (trainingView && renderTrainingView()) return;
     if (viewing) { renderViewing(); return; }
     const th = active();
     const newBtn = el("button", { class: "btn", type: "button", "data-lock": "" }, "+ 새 코칭");
@@ -988,6 +1041,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function startNew() {
     if (busyId) return;
     closeDrawer();
+    if (trainingView) { trainingView = null; renderTraining(); }
     activeId = null; viewing = null;
     save();
     renderActive(); renderPast();
@@ -998,6 +1052,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function setActive(id) {
     if (busyId) return;
     closeDrawer();
+    if (trainingView) { trainingView = null; renderTraining(); }
     activeId = id; viewing = null;
     save();
     renderActive(); renderPast();
@@ -1036,6 +1091,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function openOther(owner, th) {
     if (busyId) return;
     closeDrawer();
+    if (trainingView) { trainingView = null; renderTraining(); }
     viewing = { owner, thread: th };
     renderActive(); renderPast(); reveal("start");
     $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1093,7 +1149,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     const kind = kindOf(th);
     const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
     const status = !lastDone ? "" : lastDone.error ? "error" : lastDone.res.data.status;
-    const current = owner ? viewing?.thread.id === th.id : !viewing && th.id === activeId;
+    const current = owner ? !trainingView && viewing?.thread.id === th.id : !viewing && !trainingView && th.id === activeId;
     let ico;
     if (owner) ico = el("span", { class: "clist-ico", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(owner)}.svg`, alt: "" }));
     else { ico = el("span", { class: "clist-ico", "aria-hidden": "true" }); ico.innerHTML = ICON[kind === "photo" ? "camera" : kind]; }
@@ -1305,9 +1361,144 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     for (const s of d.trace) ol.append(el("li", {}, el("code", {}, s.step), ` ${s.input} → ${s.output}`));
     more.append(el("details", {}, el("summary", {}, `처리 단계 ${d.trace.length}`), ol));
     more.append(el("details", {}, el("summary", {}, "응답 JSON"), el("pre", {}, JSON.stringify(d, null, 2))));
+    if (d.training_added?.length) {
+      const note = el("div", { class: "tr-added" }, el("b", {}, "연습 항목이 추가됐어요"), el("span", {}, d.training_added.map((x) => x.title).join(" · ")));
+      const first = d.training_added[0].id;
+      if (training?.drills.some((x) => x.id === first)) {
+        const go = el("button", { class: "btn", type: "button" }, "훈련 보기");
+        go.addEventListener("click", () => openTraining(first));
+        note.append(go);
+      }
+      box.append(note);
+    }
     box.append(more);
     return box;
   }
+
+  // ── 훈련: 왼쪽 카드(항목·이번 주 달성·오늘 기록·직접 추가)와 가운데 상세(기록·메모) ──
+  const todayStr = () => { const n = new Date(); return new Date(n.getTime() - n.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  async function loadTraining() {
+    const owner = nickname;
+    let data = null;
+    if (owner) {
+      try {
+        const r = await fetch("/training", { cache: "no-store" });
+        if (r.ok) data = await r.json();
+      } catch (e) {}
+    }
+    if (owner !== nickname) return;   // 불러오는 사이 계정이 바뀜
+    training = data;
+    if (trainingView && !training?.drills.some((x) => x.id === trainingView)) trainingView = null;
+    renderTraining();
+    renderActive();
+  }
+  function renderTraining() {
+    $("trAddBtn").hidden = !nickname;
+    if (!nickname) {
+      $("trWeek").textContent = ""; $("trAdd").hidden = true;
+      $("trList").replaceChildren(el("li", { class: "clist-empty" }, "로그인하면 연습 항목과 기록을 관리할 수 있어요. 사진·영상 판정에서 고칠 점이 나오면 연습 항목이 자동으로 추가돼요."));
+      return;
+    }
+    if (!training) { $("trWeek").textContent = ""; $("trList").replaceChildren(el("li", { class: "clist-empty" }, "불러오는 중…")); return; }
+    $("trWeek").textContent = `이번 주 ${training.week_days}/${training.week_target_days}일` + (training.streak ? ` · 연속 ${training.streak}일` : "");
+    const items = training.drills.map(trItem);
+    $("trList").replaceChildren(...(items.length ? items
+      : [el("li", { class: "clist-empty" }, "아직 연습 항목이 없어요. 판정에서 고칠 점이 나오면 자동으로 추가되고, '+ 추가'로 직접 만들 수도 있어요.")]));
+  }
+  function trItem(d) {
+    const meta = `${d.source === "auto" ? "추천 · " : ""}1회 ${d.target}${d.unit} · 이번 주 ${d.week_days}일` + (d.today_count ? ` · 오늘 ${d.today_count}${d.unit}` : "");
+    const open = el("button", { class: "tr-open" + (trainingView === d.id ? " on" : ""), type: "button" },
+      el("span", { class: "clist-title" }, d.title), el("span", { class: "clist-meta" }, meta));
+    if (trainingView === d.id) open.setAttribute("aria-current", "true");
+    open.addEventListener("click", () => openTraining(d.id));
+    const done = d.today_count >= d.target;
+    const quick = el("button", { class: "btn tr-quick" + (done ? " done" : ""), type: "button", "aria-label": `${d.title} 오늘 ${d.target}${d.unit} 기록` },
+      done ? `✓ +${d.target}` : `+${d.target}${d.unit}`);
+    quick.addEventListener("click", async () => { quick.disabled = true; await logTraining(d.id, { count: d.target, day: todayStr() }); quick.disabled = false; });
+    return el("li", { class: "tr-item" }, open, quick);
+  }
+  async function logTraining(drillId, body) {
+    try {
+      const r = await fetch(`/training/drills/${encodeURIComponent(drillId)}/logs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (!r.ok) { const dd = await r.json().catch(() => ({})); return typeof dd.detail === "string" ? dd.detail : "기록하지 못했어요."; }
+    } catch (e) { return "서버에 연결할 수 없습니다."; }
+    await loadTraining();
+    return null;
+  }
+  function openTraining(id) {
+    if (busyId) return;
+    closeDrawer();
+    trainingView = id; viewing = null;
+    renderActive(); renderPast(); renderTraining();
+    $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function closeTraining() { trainingView = null; renderActive(); renderPast(); renderTraining(); }
+  // 가운데 훈련 상세. 항목이 없어졌으면 false 를 돌려 코칭 화면으로 돌아갑니다
+  function renderTrainingView() {
+    const d = training?.drills.find((x) => x.id === trainingView);
+    if (!d) { trainingView = null; $("composeDock").hidden = !!viewing; return false; }
+    const icon = el("div", { class: "avatar coach", "aria-hidden": "true" }); icon.innerHTML = ICON.mascot;
+    const back = el("button", { class: "btn", type: "button" }, "코칭으로");
+    back.addEventListener("click", closeTraining);
+    const archive = el("button", { class: "btn text", type: "button" }, "목록에서 내리기");
+    archive.addEventListener("click", async () => {
+      if (!confirm(`'${d.title}' 항목을 목록에서 내릴까요? 남긴 기록은 지워지지 않습니다.`)) return;
+      try { await fetch(`/training/drills/${encodeURIComponent(d.id)}`, { method: "DELETE" }); } catch (e) {}
+      trainingView = null; loadTraining();
+    });
+    $("activeHead").replaceChildren(
+      el("div", { class: "act-head" }, icon,
+        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, "훈련"),
+          el("div", { class: "act-when" }, d.source === "auto" ? `판정 추천 · 근거 ${d.doc_id}` : "직접 추가한 항목")),
+        el("div", { class: "act-actions" }, back, archive)),
+      el("h3", { class: "act-title" }, d.title));
+    $("activeStats").hidden = false;
+    $("activeStats").replaceChildren(
+      stat("이번 주", `${d.week_days}/${training.week_target_days}`, d.week_days >= training.week_target_days ? "answered" : "", "일"),
+      stat("오늘", d.today_count, "", d.unit), stat("연속", d.streak, "", "일"), stat("누적", d.total_count, "", d.unit));
+
+    const day = el("input", { class: "field", type: "date", value: todayStr(), max: todayStr(), "aria-label": "연습한 날", required: "" });
+    const count = el("input", { class: "field", type: "number", min: "1", max: "10000", value: String(d.target), "aria-label": `횟수(${d.unit})`, required: "" });
+    const memo = el("input", { class: "field memo-in", maxlength: "300", placeholder: "메모 (선택) 예: 왼손 리드 의식", "aria-label": "메모" });
+    const err = el("div", { class: "nick-err", role: "alert" });
+    const form = el("form", { class: "tr-log" }, day, el("label", { class: "cnt" }, count, d.unit), memo, el("button", { class: "btn yellow", type: "submit" }, "기록"), err);
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      err.textContent = "";
+      const msg = await logTraining(d.id, { day: day.value, count: Number(count.value), memo: memo.value });
+      if (msg) err.textContent = msg;
+    });
+    const logs = training.logs.filter((l) => l.drill_id === d.id);
+    const list = el("ul", { class: "tr-logs", "aria-label": "기록" }, ...(logs.length ? logs.map((l) => {
+      const del = el("button", { class: "btn text", type: "button", "aria-label": `${l.day} 기록 삭제` }, "삭제");
+      del.addEventListener("click", async () => {
+        if (!confirm(`${l.day} ${l.count}${d.unit} 기록을 지울까요?`)) return;
+        try { await fetch(`/training/logs/${encodeURIComponent(l.id)}`, { method: "DELETE" }); } catch (e) {}
+        loadTraining();
+      });
+      return el("li", {}, el("span", { class: "day" }, l.day.slice(5).replace("-", "/")), el("span", { class: "n" }, `${l.count}${d.unit}`), el("span", { class: "memo" }, l.memo || ""), del);
+    }) : [el("li", { class: "empty" }, "아직 기록이 없어요. 연습한 뒤 위에서 기록해 보세요.")]));
+    $("activeThread").replaceChildren(form, list);
+    return true;
+  }
+  $("trAddBtn").addEventListener("click", () => {
+    const open = $("trAdd").hidden;
+    $("trAdd").hidden = !open; $("trAddBtn").setAttribute("aria-expanded", String(open));
+    $("trErr").textContent = "";
+    if (open) $("trTitle").focus();
+  });
+  $("trAdd").addEventListener("submit", async (ev) => {
+    ev.preventDefault();
+    $("trErr").textContent = "";
+    const body = { title: $("trTitle").value.trim(), unit: $("trUnit").value, target: Number($("trTarget").value) };
+    try {
+      const r = await fetch("/training/drills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) { $("trErr").textContent = typeof data.detail === "string" ? data.detail : "추가하지 못했어요. 이름·목표를 확인해 주세요."; return; }
+      $("trTitle").value = ""; $("trAdd").hidden = true; $("trAddBtn").setAttribute("aria-expanded", "false");
+      await loadTraining();
+    } catch (e) { $("trErr").textContent = "서버에 연결할 수 없습니다."; }
+  });
 
   // ── 영상 각도 그래프 ──
   // angle_series(프레임별 왼팔 각도)를 시간축 선 그래프로 그리고, 같은 대화의 영상 재생 위치에 맞춰
@@ -1470,7 +1661,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     nickname = name || "";
     isAdmin = !!nickname && !!admin;
     viewing = null; others = [];
-    loadOthers();
+    trainingView = null; training = null;
+    loadOthers(); loadTraining();
     $("nickErr").textContent = "";
     renderNick(); loadMemory();
     threads = []; activeId = null; synced = new Map();
