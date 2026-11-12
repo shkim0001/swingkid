@@ -235,6 +235,28 @@ def architecture_script() -> FileResponse:
     return FileResponse(STATIC_DIR / "arch.js", media_type="text/javascript")
 
 
+# 웹앱 설치(PWA) 파일. Cloudflare 배포에서는 Worker 가 src/static 을 직접 내려주고, 여기는 로컬 실행용입니다.
+@app.get("/manifest.webmanifest", include_in_schema=False)
+def web_manifest() -> FileResponse:
+    return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")
+
+
+@app.get("/sw.js", include_in_schema=False)
+def service_worker() -> FileResponse:
+    return FileResponse(STATIC_DIR / "sw.js", media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+
+
+APP_ICONS = {p.name: p for p in (STATIC_DIR / "icons").glob("*") if p.suffix in {".png", ".svg"}}
+
+
+@app.get("/icons/{name}", include_in_schema=False)
+def app_icon(name: str) -> FileResponse:
+    path = APP_ICONS.get(name)
+    if path is None:
+        raise HTTPException(status_code=404, detail="없는 아이콘입니다.")
+    return FileResponse(path)
+
+
 @app.get("/architecture/code/{module}")
 def architecture_code(module: str) -> dict:
     """다이어그램에서 누른 모듈의 중요 코드(실제 소스 파일에서 함수 단위로 잘라 줄 번호와 함께)."""
