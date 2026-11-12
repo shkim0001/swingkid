@@ -50,6 +50,7 @@ from langgraph.graph import END, START, StateGraph
 from src import config
 from src.guard import blocked_answer, check
 from src.memory import MEMORY_DOC_ID, LongTermMemory, describe, is_recall_question
+from src.training import PRACTICE_DOC_ID, is_practice_question
 from src.retriever import BM25Retriever, load_doc_text, needs_fresh_info
 from src.subagents import InfoAgent, KnowledgeAgent, SwingAgent, _step
 
@@ -68,7 +69,8 @@ SYSTEM_PROMPT = """당신은 골프를 시작한 지 0~3개월 된 입문자를 
    근거가 골프 규칙 문서이면 몇 년판 규칙 기준인지(예: 2023년판 골프 규칙 기준) 답변에 밝힙니다.
 6. '이전 기록'(이 사용자의 지난 자세 판정)이 있으면 이번 판정과 비교해 좋아진 점이나 반복되는 문제를 한 문장으로 짚습니다.
    기록에 없는 날짜·수치는 만들지 않습니다.
-7. 답변은 5문장 이내로 짧게 씁니다."""
+7. '연습 기록'(이 사용자의 훈련 기록, 코드가 집계)이 있으면 그 수치만 사용해 연습 상황을 짚고, 기록에 없는 연습·날짜는 만들지 않습니다.
+8. 답변은 5문장 이내로 짧게 씁니다."""
 
 METRIC_LABELS = {
     "spine_tilt": ("척추 앞기울기", config.SPINE_TILT_RANGE),
@@ -91,6 +93,7 @@ class AgentState(TypedDict, total=False):
     model: str | None          # 이번 요청의 코칭 모델 ID (없으면 기본 모델)
     served_model: str | None   # 실제로 답한 모델 (대체 경로로 다른 모델이 답했을 수 있음)
     user_id: str | None        # 장기 기억 주인. 없으면 장기 기억을 쓰지 않음
+    practice: str | None       # 이 사용자의 연습 요약(src/training.py 가 집계). None=게스트, ''=기록 없음
     # 이번 요청 결과 (start 노드에서 매번 초기화)
     status: str
     answer: str
@@ -252,7 +255,10 @@ class GolfCoachAgent:
 
     def _guard(self, state: AgentState) -> dict:
         # 같은 thread 에서 이미 코칭 답변을 주고받았다면 이어지는 질문으로 봅니다(골프와 무관 차단만 완화).
-        result = check(state["question"], has_media=_has_media(state), in_conversation=bool(state.get("history")))
+        # 로그인한 사용자의 연습 현황 질문('요즘 연습 어때?')은 골프 단어가 없어도 이 서비스의 훈련 기록을 묻는 것이라
+        # 같은 방식으로 '골프와 무관' 판정만 완화합니다(의학·구매·인젝션 차단은 그대로).
+        practice_q = state.get("practice") is not None and is_practice_question(state["question"])
+        result = check(state["question"], has_media=_has_media(state), in_conversation=bool(state.get("history")) or practice_q)
         trace = _step(state, "guard", state["question"], result.code or ("통과" if result.golf else result.reason))
         if not result.golf:
             # 골프와 무관한 질문: 차단하지 않고, 검색·LLM 없이 no_answer 로 끝냅니다.
@@ -289,6 +295,8 @@ class GolfCoachAgent:
                 "trace": _step(state, "supervisor", question, f"{agent} ← {reason}"),
             }
 
+        if not called and not _has_media(state) and state.get("practice") is not None and is_practice_question(question):
+            return self._practice(state)
         if not called and not _has_media(state) and state.get("user_id") and is_recall_question(question):
             return self._recall(state)
 
@@ -327,6 +335,26 @@ class GolfCoachAgent:
         return {
             "next": "coach",
             "trace": _step(state, "memory", question, f"이전 판정 기록 {len(records)}건 사용"),
+            "contexts": contexts,
+        }
+
+    def _practice(self, state: AgentState) -> dict:
+        """'요즘 연습 어때?' 같은 질문: 코드가 집계한 연습 요약(과 판정 기록)을 근거로 답변을 씁니다."""
+        question = state["question"]
+        if not state.get("practice"):
+            return {
+                "next": "end",
+                "trace": _step(state, "practice", question, "연습 기록 없음"),
+                "status": config.STATUS_NO_ANSWER,
+                "answer": f"{config.NO_ANSWER_TEXT} {config.PRACTICE_EMPTY_TEXT}",
+                "contexts": [],
+            }
+        contexts = [{"doc_id": PRACTICE_DOC_ID, "text": state["practice"]}]
+        if state.get("memory"):   # 연습 효과를 물으면 판정 각도 변화도 함께 볼 수 있게
+            contexts.append({"doc_id": MEMORY_DOC_ID, "text": describe(state["memory"])})
+        return {
+            "next": "coach",
+            "trace": _step(state, "practice", question, "연습 요약 사용" + (" + 이전 판정 기록" if state.get("memory") else "")),
             "contexts": contexts,
         }
 
@@ -373,6 +401,8 @@ class GolfCoachAgent:
             lines.append(f"판정: {', '.join(codes)} | " + ", ".join(measured))
             if state.get("memory"):   # 새 판정이면 이전 기록과 비교할 수 있게 함께 줍니다
                 lines.append("이전 기록: " + describe(state["memory"]))
+            if state.get("practice"):   # 새 판정이면 그동안의 연습도 함께 짚을 수 있게
+                lines.append("연습 기록: " + state["practice"].replace("\n", " / "))
         elif self._continues_finding(state):
             # 같은 대화의 직전 판정에 이어지는 질문: 판정 내용과 '무엇을 쟀는지'를 다시 알려 줍니다.
             lines.append(_last_finding_line(state))
@@ -431,12 +461,14 @@ class GolfCoachAgent:
         pose_fixture: dict | None = None,
         model: str | None = None,
         user_id: str | None = None,
+        practice: str | None = None,
     ) -> dict:
         """질문 하나를 처리해 응답 dict 를 돌려줍니다.
 
         pose_fixture 는 테스트·채점 러너만 넣는 값입니다. HTTP API(app.py)는 이 필드를 받지 않습니다.
         model 은 코칭 모델 ID 입니다. 허용 목록 검사는 app.py 가 합니다.
         user_id 를 주면 장기 기억(대화방을 넘어 남는 사용자별 판정 기록)을 읽고 씁니다.
+        practice 는 로그인한 사용자의 연습 요약(src/training.practice_summary, 없으면 '')입니다. 게스트는 None.
         """
         config_ = {"configurable": {"thread_id": thread_id or uuid.uuid4().hex}}
         state = self.graph.invoke(
@@ -448,6 +480,7 @@ class GolfCoachAgent:
                 "model": model,
                 "served_model": None,   # 이전 턴 값이 체크포인트에 남아 섞이지 않게 매번 비웁니다
                 "user_id": user_id,
+                "practice": practice,   # 매번 넣어 이전 턴 값이 체크포인트에 남아 섞이지 않게
             },
             config_,
         )

@@ -21,6 +21,6 @@ class FakeCoachLLM:
         self.last_messages = messages
         prompt = messages[-1].content if messages else ""
         # 프롬프트 안의 '근거 문서:' 줄과 '판정:' 줄을 그대로 옮겨, 어떤 근거로 답했는지 보이게 합니다.
-        lines = [ln for ln in str(prompt).splitlines() if ln.startswith(("근거 문서:", "판정:", "이전 기록:"))]
+        lines = [ln for ln in str(prompt).splitlines() if ln.startswith(("근거 문서:", "판정:", "이전 기록:", "연습 기록:"))]
         summary = " / ".join(lines) if lines else "근거 문서를 바탕으로"
         return AIMessage(content=f"[오프라인 가짜 모델 응답] {summary} 내용을 정리해 안내합니다.")

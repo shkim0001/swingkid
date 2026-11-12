@@ -8,7 +8,7 @@ API 표준 규약
     요청:  image_base64(측면 어드레스 사진), video_base64(정면 스윙 영상), thread_id(대화 이어가기),
            model(코칭 모델 ID, GET /models 목록 중 하나) — 모두 선택
     응답:  status(answered|no_answer|blocked), issue_codes, sources, agents(부른 sub-agent), model(코칭에 쓴 모델),
-           training_added(이번 판정으로 새로 추천된 연습 항목, 로그인했을 때만)
+           training_proposal(이번 판정으로 만든 2주 연습 플랜 제안, 로그인했을 때만)
 
 계정 (아이디·비밀번호, 세션은 HttpOnly 쿠키)
     POST /auth/signup  {"username", "password"}  가입하고 바로 로그인
@@ -31,13 +31,21 @@ API 표준 규약
     DELETE /threads/{thread_id}  하나 지우기 · DELETE /threads 모두 지우기
     대화방(thread_id)은 처음 쓴 계정이 주인입니다. 다른 계정·게스트가 그 thread_id 로 /query 를 보내면 403.
 
-훈련 관리 (로그인 계정별 연습 항목·기록, src/training.py) — 로그인하지 않으면 401, 남의 것은 403, 없으면 404
-    GET    /training                         진행 중 항목과 집계(이번 주 연습일·연속 연습일·누적), 최근 기록
+훈련 관리 (SERVICE.md 6장, src/training.py) — 라이브러리 조회 말고는 로그인 필요(401), 남의 것은 403, 없으면 404
+    GET    /training/library                 훈련 라이브러리(분야·항목). 게스트도 볼 수 있음
+    GET    /training                         내 항목과 집계, 최근 기록, 오늘 계획(today_plan), 받을지 기다리는 제안(proposals)
     POST   /training/drills                  {"title", "unit": 회|분|개, "target"} 직접 추가
-    DELETE /training/drills/{id}             목록에서 내리기(기록은 남김)
+    POST   /training/drills/from-library     {"key"} 라이브러리 항목을 내 항목에(이미 있으면 그대로)
+    DELETE /training/drills/{id}             목록에서 내리기(기록은 남김, 일정에서도 빠짐)
     POST   /training/drills/{id}/logs        {"count", "day"?: YYYY-MM-DD(없으면 오늘), "memo"?} 기록
     DELETE /training/logs/{id}               기록 지우기
-    사진·영상 판정에서 문제 코드가 나오면 규칙으로 연습 항목을 추천해 넣습니다(응답 training_added).
+    POST   /training/plans                   {"drill_id", "day"} 날짜에 배치 · DELETE /training/plans/{id}
+    POST   /training/routines                {"drill_id", "weekdays": [0=월..6=일], "start", "end"} 요일 루틴
+    DELETE /training/routines/{id}           루틴 지우기 · POST /training/routines/{id}/skip {"day"} 하루 빼기
+    GET    /training/drills/{id}/trend       판정과 연결된 항목의 각도 변화(내 판정 기록)와 기준 구간
+    GET    /training/calendar?year=&month=   월 달력(날마다 완료·오늘·지남·예정)과 이번 주·이번 달 달성률
+    POST   /training/proposals/{id}/accept   추천 플랜 받기(루틴 생성) · POST /training/proposals/{id}/dismiss 닫기
+    사진·영상 판정에서 문제 코드가 나오면 규칙으로 2주 플랜(월·수·금)을 제안합니다(응답 training_proposal).
     관리자: GET /admin/training · DELETE /admin/training/drills/{id} · DELETE /admin/training/logs/{id}
 
 입력 검사
@@ -117,9 +125,10 @@ class QueryResponse(BaseModel):
         description="영상 판정일 때 프레임별 왼팔 각도 {metric, t(초 또는 null), values, apex_index, threshold}",
     )
     model: str
-    training_added: list[dict] = Field(
-        default_factory=list,
-        description="이번 판정으로 새로 추천된 연습 항목 [{id, title}] (로그인했고 문제 코드가 나왔을 때만)",
+    training_proposal: dict | None = Field(
+        default=None,
+        description="이번 판정으로 만든 2주 연습 플랜 제안 {id, issue_codes, drills, weekdays, start, end, sessions} "
+        "(로그인했고 문제 코드가 나왔을 때만, 같은 문제로 진행 중인 제안·플랜이 있으면 null)",
     )
 
 
@@ -183,6 +192,7 @@ def query(req: QueryRequest, request: Request) -> dict:
             thread_id=req.thread_id,
             model=req.model,
             user_id=_memory_owner(request),
+            practice=_practice_for(request),
         )
         return _with_training(request, result)
     except ModuleNotFoundError as exc:
@@ -390,7 +400,8 @@ def demo_fixture(req: DemoFixtureRequest, request: Request) -> dict:
     _check_thread(request, req.thread_id)
     try:
         result = get_agent().ask(
-            req.question, thread_id=req.thread_id, pose_fixture=fixture, model=req.model, user_id=_memory_owner(request)
+            req.question, thread_id=req.thread_id, pose_fixture=fixture, model=req.model, user_id=_memory_owner(request),
+            practice=_practice_for(request),
         )
         return _with_training(request, result)
     except Exception as exc:
@@ -658,18 +669,26 @@ def admin_avatar(username: str, request: Request) -> Response:
 
 
 # ── 훈련 관리 (SERVICE.md 6장, src/training.py) ───────────────
-# 로그인한 본인 것만. 남의 항목·기록은 403, 없는 것은 404. 판정에서 문제 코드가 나오면 연습 항목을 규칙으로 추천합니다.
+# 로그인한 본인 것만. 남의 것은 403, 없는 것은 404. 판정에서 문제 코드가 나오면 2주 플랜을 규칙으로 제안합니다.
 
 
 def _with_training(request: Request, result: dict) -> dict:
-    """로그인한 사용자의 사진·영상 판정이면 문제 코드에 맞는 연습 항목을 추천해 넣고, 새로 넣은 것을 응답에 적습니다."""
+    """로그인한 사용자의 사진·영상 판정이면 문제 코드에 맞는 2주 연습 플랜을 제안하고 응답에 붙입니다."""
     username = _current_user(request)
     if not username or result.get("status") != "answered":
         return result
     if not any(step.get("step") == "pose" for step in result.get("trace", [])):
         return result
-    added = get_training().recommend(username, result.get("issue_codes", []))
-    return {**result, "training_added": [{"id": d["id"], "title": d["title"]} for d in added]}
+    proposal = get_training().propose(username, result.get("issue_codes", []))
+    return {**result, "training_proposal": proposal}
+
+
+def _practice_for(request: Request) -> str | None:
+    """코칭 근거로 넘길 연습 요약. 게스트는 None, 로그인했지만 기록이 없으면 ''."""
+    from src.training import practice_summary
+
+    username = _current_user(request)
+    return practice_summary(get_training(), username) if username else None
 
 
 def _check_training_owner(owner: str | None, username: str, what: str) -> None:
@@ -695,7 +714,10 @@ class LogCreateRequest(BaseModel):
 
 def _training_view(username: str) -> dict:
     store = get_training()
-    return {"username": username, **store.summary(username), "logs": store.logs(username, limit=100)}
+    return {
+        "username": username, **store.summary(username), "logs": store.logs(username, limit=100),
+        "today_plan": store.day_plan(username, datetime.date.today()), "proposals": store.proposals(username),
+    }
 
 
 @app.get("/training")
@@ -743,12 +765,170 @@ def training_delete_log(log_id: str, request: Request) -> dict:
     return {"id": log_id, "deleted": store.delete_log(username, log_id)}
 
 
+@app.get("/training/drills/{drill_id}/trend")
+def training_trend(drill_id: str, request: Request, response: Response) -> dict:
+    """판정과 연결된 항목의 각도 변화(내 장기 기억 판정 기록, 오래된 순)와 교육용 기준 구간."""
+    from src.training import angle_trend
+
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.drill_owner(drill_id), username, "훈련 항목")
+    drill = next((d for d in store.drills(username, include_archived=True) if d["id"] == drill_id), None)
+    if not drill or not drill["metric"]:
+        raise HTTPException(status_code=422, detail="판정 각도와 연결된 항목이 아닙니다.")
+    response.headers["Cache-Control"] = "no-store"
+    records = get_agent().memory.findings(memory_owner(username), limit=100)
+    return angle_trend(records, drill["metric"])
+
+
+@app.get("/training/library")
+def training_library() -> dict:
+    """훈련 라이브러리(골프 지식 문서의 연습 방법에서 정리한 항목, 교육용 더미 데이터). 게스트도 볼 수 있습니다."""
+    from src.training import LEVELS, LIBRARY, LOCATIONS
+
+    return {"categories": LIBRARY["categories"], "locations": list(LOCATIONS), "levels": LEVELS, "items": LIBRARY["items"]}
+
+
+class FromLibraryRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    key: str = Field(max_length=64)
+
+
+@app.post("/training/drills/from-library")
+def training_from_library(req: FromLibraryRequest, request: Request) -> dict:
+    username = _require_user(request)
+    try:
+        return get_training().add_from_library(username, req.key)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+class PlanCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    drill_id: str = Field(max_length=64)
+    day: datetime.date
+
+
+@app.post("/training/plans")
+def training_add_plan(req: PlanCreateRequest, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.drill_owner(req.drill_id), username, "훈련 항목")
+    try:
+        return store.add_plan(username, req.drill_id, req.day)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.delete("/training/plans/{plan_id}")
+def training_delete_plan(plan_id: str, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.plan_owner(plan_id), username, "계획")
+    return {"id": plan_id, "deleted": store.delete_plan(username, plan_id)}
+
+
+class RoutineCreateRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    drill_id: str = Field(max_length=64)
+    weekdays: list[int] = Field(max_length=7, description="0=월 ~ 6=일")
+    start: datetime.date
+    end: datetime.date
+
+
+@app.post("/training/routines")
+def training_add_routine(req: RoutineCreateRequest, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.drill_owner(req.drill_id), username, "훈련 항목")
+    try:
+        return store.add_routine(username, req.drill_id, req.weekdays, req.start, req.end)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.delete("/training/routines/{routine_id}")
+def training_delete_routine(routine_id: str, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.routine_owner(routine_id), username, "루틴")
+    return {"id": routine_id, "deleted": store.delete_routine(username, routine_id)}
+
+
+class SkipRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    day: datetime.date
+
+
+@app.post("/training/routines/{routine_id}/skip")
+def training_skip_routine_day(routine_id: str, req: SkipRequest, request: Request) -> dict:
+    """루틴에서 그 날 하루만 뺍니다."""
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.routine_owner(routine_id), username, "루틴")
+    return {"id": routine_id, "day": req.day.isoformat(), "skipped": store.skip_routine_day(username, routine_id, req.day)}
+
+
+@app.get("/training/calendar")
+def training_calendar(request: Request, response: Response, year: int | None = None, month: int | None = None) -> dict:
+    """월 달력(월요일 시작 주). 날마다 계획 항목의 완료·오늘·지남·예정과 계획 밖 연습, 이번 주·이번 달 달성률."""
+    username = _require_user(request)
+    today = datetime.date.today()
+    year, month = year or today.year, month or today.month
+    if not (2000 <= year <= 2100 and 1 <= month <= 12):
+        raise HTTPException(status_code=422, detail="year 는 2000~2100, month 는 1~12 입니다.")
+    response.headers["Cache-Control"] = "no-store"
+    return get_training().calendar(username, year, month, today=today)
+
+
+@app.post("/training/proposals/{proposal_id}/accept")
+def training_accept_proposal(proposal_id: str, request: Request) -> dict:
+    """추천 플랜을 받아 항목을 내 항목에 넣고 요일 루틴을 만듭니다."""
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.proposal_owner(proposal_id), username, "제안")
+    try:
+        return store.accept_proposal(username, proposal_id)
+    except TrainingError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+
+@app.post("/training/proposals/{proposal_id}/dismiss")
+def training_dismiss_proposal(proposal_id: str, request: Request) -> dict:
+    username = _require_user(request)
+    store = get_training()
+    _check_training_owner(store.proposal_owner(proposal_id), username, "제안")
+    return {"id": proposal_id, "dismissed": store.dismiss_proposal(username, proposal_id)}
+
+
 @app.get("/admin/training")
 def admin_training(request: Request, response: Response) -> dict:
-    """[관리자] 진행 중 항목이 있는 모든 계정의 훈련 [{username, 집계, 최근 기록}]."""
+    """[관리자] 진행 중 항목이 있는 모든 계정의 훈련 요약(항목 수·이번 주 연습일·연속·이번 주/달 달성률·마지막 연습일)."""
     _require_admin(request)
     response.headers["Cache-Control"] = "no-store"
-    return {"users": [_training_view(owner) for owner in get_training().owners()]}
+    store = get_training()
+    return {"users": [store.overview(owner) for owner in store.owners()]}
+
+
+@app.get("/admin/training/{username}")
+def admin_training_user(username: str, request: Request, response: Response, year: int | None = None, month: int | None = None) -> dict:
+    """[관리자] 한 사용자의 훈련(항목·집계·최근 기록·제안)과 월 달력. 읽기 전용."""
+    _require_admin(request)
+    today = datetime.date.today()
+    year, month = year or today.year, month or today.month
+    if not (2000 <= year <= 2100 and 1 <= month <= 12):
+        raise HTTPException(status_code=422, detail="year 는 2000~2100, month 는 1~12 입니다.")
+    store = get_training()
+    if username not in store.owners():
+        raise HTTPException(status_code=404, detail="훈련 항목이 있는 사용자가 아닙니다.")
+    response.headers["Cache-Control"] = "no-store"
+    return {**_training_view(username), "calendar": store.calendar(username, year, month, today=today)}
+
+
+@app.delete("/admin/training/routines/{routine_id}")
+def admin_training_delete_routine(routine_id: str, request: Request) -> dict:
+    _require_admin(request)
+    return {"id": routine_id, "deleted": get_training().delete_routine_any(routine_id)}
 
 
 @app.delete("/admin/training/drills/{drill_id}")

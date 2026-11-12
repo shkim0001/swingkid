@@ -29,7 +29,7 @@ def store():
 def test_recommend_adds_catalog_drills_for_issue_codes(store):
     added = store.recommend("alice", [config.BENT_LEAD_ARM])
     keys = {d["key"] for d in added}
-    expected = {c["key"] for c in CATALOG if c["issue_code"] == config.BENT_LEAD_ARM}
+    expected = {c["key"] for c in CATALOG if config.BENT_LEAD_ARM in c["issue_codes"]}
     assert keys == expected and len(expected) == 2
     assert all(d["source"] == "auto" and d["doc_id"] == "backswing.md" and d["metric"] == "lead_arm" for d in added)
 

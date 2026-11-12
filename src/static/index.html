@@ -141,8 +141,6 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .field:focus { outline: none; border-color: var(--yellow); box-shadow: 0 0 0 4px rgb(0 113 227 / .18); }
 .tr-card { padding: 16px 12px 10px; }
 .tr-card #trWeek { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; }
-.tr-add { display: grid; gap: 6px; padding: 0 8px 10px; }
-.tr-add-row { display: grid; grid-template-columns: minmax(0, 1fr) 72px auto; gap: 6px; }
 .tr-list { max-height: none; }
 .tr-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; align-items: center; }
 .tr-open { border: 0; background: none; text-align: left; padding: 8px; border-radius: 12px; cursor: pointer; color: var(--fg); display: flex; flex-direction: column; gap: 1px; min-width: 0; font: inherit; }
@@ -150,18 +148,178 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .tr-open.on { background: color-mix(in srgb, var(--yellow) 12%, transparent); }
 .tr-quick { padding: 5px 10px; font-size: 12px; margin-right: 4px; }
 .tr-quick.done { background: var(--ok-soft); color: var(--ok); }
-.tr-log { display: grid; grid-template-columns: 150px 110px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 14px 0; }
-.tr-log .cnt { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
-.tr-log .nick-err { grid-column: 1 / -1; min-height: 0; }
 .tr-logs { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
 .tr-logs li { display: grid; grid-template-columns: 92px 70px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13.5px; }
 .tr-logs .day { color: var(--muted); font-variant-numeric: tabular-nums; }
 .tr-logs .n { font-weight: 600; }
 .tr-logs .memo { color: var(--muted); overflow-wrap: anywhere; }
 .tr-logs .empty { display: block; color: var(--muted); border: 0; }
+.tr-item .st { margin-left: 8px; }
+.tr-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 8px 4px; border-top: 1px solid var(--line); margin-top: 6px; font-size: 12px; color: var(--muted); }
+.tr-added.plan { background: var(--yellow-soft); }
+.tr-added.plan b { color: var(--yellow); }
 .tr-added { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; padding: 8px 12px; border-radius: 12px; background: var(--ok-soft); color: var(--fg); font-size: 13px; }
 .tr-added b { color: var(--ok); }
 .tr-added .btn { padding: 4px 10px; font-size: 12px; margin-left: auto; }
+/* ── 상단 '코칭 | 훈련' 전환 ── */
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface-2); border-radius: 10px; margin-left: 6px; }
+.seg button { border: 0; background: none; padding: 5px 14px; border-radius: 8px; font: inherit; font-size: 14px; color: var(--muted); cursor: pointer; }
+.seg button[aria-selected="true"] { background: var(--surface); color: var(--fg); font-weight: 600; box-shadow: 0 1px 2px rgb(0 0 0 / .1); }
+[hidden] { display: none !important; }   /* display 를 지정한 요소도 hidden 이면 숨김 */
+
+/* ── 훈련 화면 ── */
+.tv { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.tv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap; padding: 4px 4px 0; }
+.tv-head h1 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -.03em; }
+.tv-sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 460px; }
+.tv-rates { display: flex; gap: 10px; }
+.rate { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 10px 14px; min-width: 96px; }
+.rate .lbl { font-size: 11.5px; color: var(--muted); }
+.rate .v { font-family: var(--font-display); font-size: 24px; font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
+.rate .v small { font-size: 13px; font-weight: 600; margin-left: 1px; }
+.rate .s { font-size: 11px; color: var(--muted); }
+.rate .bar { height: 4px; border-radius: 4px; background: var(--surface-2); margin-top: 6px; overflow: hidden; }
+.rate .bar i { display: block; height: 100%; border-radius: 4px; background: var(--ok); }
+.tv-proposals { display: flex; flex-direction: column; gap: 10px; }
+.tv-proposals:empty { display: none; }
+.proposal { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 18px; align-items: center; padding: 16px 18px; border-radius: 18px;
+            background: linear-gradient(135deg, var(--yellow-soft), var(--surface) 80%); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--yellow) 30%, transparent); }
+.proposal .p-kick { font-size: 11.5px; font-weight: 700; color: var(--yellow); letter-spacing: .02em; }
+.proposal b { display: block; font-size: 16px; margin-top: 2px; }
+.proposal ul { margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+.proposal .p-meta { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+.proposal .p-act { display: flex; gap: 6px; }
+.tv-guest h2 { margin: 0 0 6px; }
+.tv-guest p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+.tv-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.tv-grid[hidden] { display: none; }
+.tv-cal, .tv-day, .tv-mine, .tv-lib { padding: 18px; }
+.cal-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.cal-head h2 { margin: 0 auto 0 2px; font-family: var(--font-display); font-size: 19px; letter-spacing: -.02em; }
+.cal-today { padding: 5px 12px; font-size: 13px; }
+.cal-nav { width: 32px; height: 32px; border-radius: 50%; border: 0; background: var(--surface-2); color: var(--fg); cursor: pointer; font-size: 18px; line-height: 1; }
+.cal-nav:hover { background: var(--yellow-soft); color: var(--yellow); }
+.cal-wd, .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-wd span { text-align: center; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 2px 0 4px; }
+.cal-wd span:nth-child(6) { color: var(--info); }
+.cal-wd span:nth-child(7) { color: var(--bad); }
+.cal-cell { position: relative; aspect-ratio: 1 / .9; min-height: 46px; border: 0; border-radius: 12px; padding: 6px 7px; background: var(--surface-2); color: var(--fg);
+            display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; cursor: pointer; font: inherit; text-align: left; transition: box-shadow .15s var(--ease), background .15s var(--ease); }
+.cal-cell:hover { box-shadow: inset 0 0 0 1px var(--yellow); }
+.cal-cell.out { opacity: .38; }
+.cal-cell.all-done { background: var(--ok-soft); }
+.cal-cell.sel { background: var(--surface); box-shadow: inset 0 0 0 2px var(--yellow); }
+.cal-cell .n { font-size: 13px; font-weight: 600; width: 22px; height: 22px; display: grid; place-items: center; margin: -2px 0 0 -3px; border-radius: 50%; }
+.cal-cell.today .n { background: var(--yellow); color: var(--on-yellow); }
+.cal-cell .frac { position: absolute; top: 7px; right: 8px; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cal-cell .dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
+.dot.done { background: var(--ok); }
+.dot.today { background: var(--yellow); }
+.dot.missed { background: var(--bad); }
+.dot.upcoming { background: color-mix(in srgb, var(--muted) 50%, transparent); }
+.dot.extra { background: none; box-shadow: inset 0 0 0 1.5px var(--ok); }
+.cal-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.day-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.day-head h2 { margin: 0; font-family: var(--font-display); font-size: 19px; letter-spacing: -.02em; }
+.day-head .sum { font-size: 12.5px; color: var(--muted); }
+.day-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.plan-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; padding: 11px 0; border-top: 1px solid var(--line); }
+.plan-row .t { font-size: 14px; font-weight: 500; }
+.plan-row .m { font-size: 12px; color: var(--muted); }
+.plan-acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.plan-acts .btn { padding: 5px 10px; font-size: 12px; }
+.st { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+.st.done { background: var(--ok-soft); color: var(--ok); }
+.st.today { background: var(--yellow-soft); color: var(--yellow); }
+.st.missed { background: var(--bad-soft); color: var(--bad); }
+.st.upcoming, .st.extra { background: var(--surface-2); color: var(--muted); }
+.inline-log { grid-column: 1 / -1; display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 6px; }
+.inline-log[hidden] { display: none; }
+.day-empty { color: var(--muted); font-size: 13px; padding: 14px 0 4px; border-top: 1px solid var(--line); margin-top: 10px; }
+.day-add { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px; margin-top: 14px; }
+.tv-sec-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.tv-sec-head h2 { margin: 0; font-family: var(--font-display); font-size: 19px; letter-spacing: -.02em; }
+.tv-sec-head h2 span, .tv-note { font-size: 12px; font-weight: 500; color: var(--muted); }
+.mine-add { display: grid; grid-template-columns: minmax(0, 1fr) 80px 72px auto; gap: 6px; margin-bottom: 8px; }
+.mine-add[hidden] { display: none; }
+.mine-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.mine-row .t { font-size: 14.5px; font-weight: 600; }
+.mine-row .m { font-size: 12px; color: var(--muted); }
+.mine-acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.mine-acts .btn { padding: 5px 10px; font-size: 12px; }
+.tag { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); margin-left: 6px; vertical-align: 1px; }
+.tag.auto { background: var(--yellow-soft); color: var(--yellow); }
+.tag.lv1 { background: var(--ok-soft); color: var(--ok); }
+.tag.lv2 { background: var(--info-soft); color: var(--info); }
+.tag.lv3 { background: var(--warn-soft); color: var(--warn); }
+.routine-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; background: var(--surface-2); border-radius: 999px; padding: 3px 4px 3px 10px; margin: 6px 6px 0 0; }
+.routine-chip button { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1; padding: 0 5px; border-radius: 50%; }
+.routine-chip button:hover { color: var(--bad); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.chips button { border: 0; background: var(--surface-2); border-radius: 999px; padding: 6px 13px; font: inherit; font-size: 13px; cursor: pointer; color: var(--fg); }
+.chips button[aria-pressed="true"] { background: var(--fg); color: var(--surface); }
+.chips.small button { font-size: 12px; padding: 4px 10px; }
+.lib-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: 12px; margin-top: 8px; }
+.lib-card { border-radius: 16px; background: var(--surface-2); padding: 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lib-card .cat { font-size: 11.5px; font-weight: 700; color: var(--yellow); display: flex; justify-content: space-between; align-items: center; }
+.lib-card .cat .tag { margin: 0; }
+.lib-card h3 { margin: 0; font-size: 15px; line-height: 1.35; letter-spacing: -.01em; }
+.lib-card p { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.lib-card.open p { -webkit-line-clamp: unset; }
+.lib-card .meta { font-size: 12px; color: var(--muted); }
+.lib-card .eq { font-size: 11.5px; color: var(--muted); }
+.lib-card .acts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 6px; }
+.lib-card .acts .btn { padding: 5px 10px; font-size: 12px; }
+.lib-card .more { border: 0; background: none; padding: 0; color: var(--yellow); font-size: 12px; cursor: pointer; align-self: flex-start; }
+dialog.sheet { border: 0; padding: 0; width: min(520px, 92vw); max-height: 88vh; border-radius: 22px; background: var(--surface); color: var(--fg); box-shadow: 0 20px 60px rgb(0 0 0 / .3); overflow: auto; }
+dialog.sheet::backdrop { background: rgb(0 0 0 / .4); }
+.sheet-in { padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 12px; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sheet-head h2 { margin: 0; font-family: var(--font-display); font-size: 19px; letter-spacing: -.02em; }
+.sheet-head .sub { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.sheet-x { border: 0; background: var(--surface-2); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: var(--fg); font-size: 16px; flex: none; }
+.sheet-foot { display: flex; justify-content: flex-end; gap: 6px; }
+.sheet .how { font-size: 13.5px; line-height: 1.55; background: var(--surface-2); border-radius: 14px; padding: 12px 14px; margin: 0; }
+.wd-pick { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.wd-pick button { border: 0; background: var(--surface-2); border-radius: 10px; padding: 9px 0; font: inherit; font-size: 13px; cursor: pointer; color: var(--fg); }
+.wd-pick button[aria-pressed="true"] { background: var(--yellow); color: var(--on-yellow); font-weight: 600; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.presets button { border: 0; background: var(--surface-2); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12px; cursor: pointer; color: var(--fg); }
+.lbl-sm { font-size: 12px; font-weight: 600; color: var(--muted); }
+.sheet .err { color: var(--bad); font-size: 12.5px; min-height: 1em; }
+.sheet .stats { margin-top: 0; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 60; background: var(--fg); color: var(--surface);
+         padding: 10px 16px; border-radius: 999px; font-size: 13.5px; box-shadow: 0 8px 30px rgb(0 0 0 / .25); max-width: calc(100vw - 32px); }
+.linkish { border: 0; background: none; padding: 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.linkish:hover { color: var(--yellow); }
+/* 각도 변화 그래프(항목 상세) */
+.trend { background: var(--surface-2); border-radius: 14px; padding: 12px 14px 10px; }
+.trend h3 { margin: 0; font-size: 14px; }
+.trend .sum { font-size: 12.5px; color: var(--muted); margin: 2px 0 6px; }
+.trend .sum b.ok { color: var(--ok); } .trend .sum b.bad { color: var(--bad); }
+.trend svg { width: 100%; height: auto; display: block; overflow: visible; }
+.trend .empty { font-size: 12.5px; color: var(--muted); margin: 4px 0 2px; }
+/* 관리자: 사용자 훈련 현황 */
+.tv-scope { margin: 10px 0 0; }
+.tv-admin { display: flex; flex-direction: column; gap: 18px; }
+.tv-users { padding: 18px; }
+.users-list { display: flex; flex-direction: column; }
+.user-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 12px; align-items: center; width: 100%; padding: 10px 8px; border: 0; border-top: 1px solid var(--line);
+            background: none; color: var(--fg); font: inherit; text-align: left; cursor: pointer; border-radius: 12px; }
+.user-row:hover, .user-row:focus-visible { background: var(--surface-2); }
+.user-row.on { background: color-mix(in srgb, var(--yellow) 12%, transparent); }
+.user-row .avatar { width: 38px; height: 38px; }
+.user-row .t { font-size: 14.5px; font-weight: 600; }
+.user-row .m { font-size: 12px; color: var(--muted); }
+.user-rates { display: flex; gap: 14px; text-align: right; }
+.user-rates b { display: block; font-family: var(--font-display); font-size: 18px; }
+.user-rates span { font-size: 11px; color: var(--muted); }
+.admin-logs { list-style: none; margin: 6px 0 0; padding: 0; }
+.admin-logs li { display: grid; grid-template-columns: 52px 64px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; }
+.admin-logs .memo { color: var(--muted); overflow-wrap: anywhere; }
 .readonly-note { font-size: 12px; color: var(--muted); padding: 10px 0 0; border-top: 1px solid var(--line); }
 .avatar.char img { width: 100%; height: 100%; display: block; }
 .profile .name { font-family: var(--font-display); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
@@ -464,10 +622,33 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   .dock textarea { min-height: 40px; max-height: 120px; padding: 9px 14px; border-radius: 20px; font-size: 16px; }
 }
 @media (max-width: 760px) {
-  .field, .tr-log .field { font-size: 16px; }   /* iOS 입력 확대 방지 */
-  .tr-log { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  .tr-log .memo-in, .tr-log button { grid-column: 1 / -1; }
+  .field { font-size: 16px; }   /* iOS 입력 확대 방지 */
   .tr-logs li { grid-template-columns: 84px 60px minmax(0, 1fr) auto; gap: 8px; font-size: 13px; }
+}
+@media (max-width: 760px) {
+  .seg { margin-left: auto; }
+  .seg button { padding: 5px 11px; font-size: 13.5px; }
+  .tv { gap: 14px; }
+  .tv-head h1 { font-size: 26px; }
+  .tv-sub { font-size: 12.5px; }
+  .tv-rates { width: 100%; }
+  .rate { flex: 1; min-width: 0; padding: 9px 11px; }
+  .rate .v { font-size: 20px; }
+  .tv-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .tv-cal, .tv-day, .tv-mine, .tv-lib { padding: 14px; }
+  .cal-wd, .cal-grid { gap: 3px; }
+  .cal-cell { aspect-ratio: auto; min-height: 50px; border-radius: 10px; padding: 4px 5px; }
+  .cal-cell .frac { display: none; }
+  .cal-cell .dot { width: 6px; height: 6px; }
+  .proposal { grid-template-columns: minmax(0, 1fr); }
+  .proposal .p-act .btn { flex: 1; justify-content: center; }
+  .lib-grid { grid-template-columns: minmax(0, 1fr); }
+  .mine-add { grid-template-columns: minmax(0, 1fr) 72px 64px; }
+  .mine-add .btn { grid-column: 1 / -1; justify-content: center; }
+  .plan-row { grid-template-columns: auto minmax(0, 1fr); }
+  .plan-acts { grid-column: 1 / -1; justify-content: flex-start; }
+  dialog.sheet { width: 100%; max-width: 100%; margin: auto 0 0; border-radius: 22px 22px 0 0; max-height: 92vh; }
+  .sheet-in { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
 </style>
 </head>
@@ -478,6 +659,10 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
     </button>
     <span class="brand"><span class="brand-mark logo" data-icon="mascot" aria-hidden="true"></span><span class="wordmark" aria-label="SwingKid">Swing<b>Kid</b></span><small>골프 입문 코치</small></span>
+    <div class="seg" id="modeSeg" role="tablist" aria-label="화면 전환">
+      <button type="button" role="tab" data-view="coach" aria-selected="true">코칭</button>
+      <button type="button" role="tab" data-view="train" aria-selected="false">훈련</button>
+    </div>
     <span class="grow"></span>
     <span class="nav-right" id="navRight">
       <span id="mode" class="mode">확인 중</span>
@@ -543,20 +728,11 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       <ul class="clist" id="clist"></ul>
     </section>
 
-    <section class="card tr-card" id="trCard" aria-label="훈련">
+    <section class="card tr-card" id="trCard" aria-label="오늘의 훈련">
       <div class="clist-head">
-        <h2>훈련 <span id="trWeek"></span></h2>
-        <button class="btn" id="trAddBtn" type="button" aria-expanded="false" hidden>+ 추가</button>
+        <h2>오늘의 훈련 <span id="trWeek"></span></h2>
+        <button class="btn" id="trGo" type="button">훈련 화면</button>
       </div>
-      <form class="tr-add" id="trAdd" hidden>
-        <input class="field" id="trTitle" maxlength="40" placeholder="항목 이름 (예: 1m 퍼팅)" aria-label="항목 이름" required>
-        <div class="tr-add-row">
-          <input class="field" id="trTarget" type="number" min="1" max="1000" value="10" aria-label="1회 목표" required>
-          <select class="field" id="trUnit" aria-label="단위"><option>회</option><option>분</option><option>개</option></select>
-          <button class="btn yellow" type="submit">추가</button>
-        </div>
-        <div class="nick-err" id="trErr" role="alert"></div>
-      </form>
       <ul class="clist tr-list" id="trList"></ul>
     </section>
     <section class="card card-pad">
@@ -576,7 +752,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     </section>
   </aside>
 
-  <main class="feed" aria-label="코칭">
+  <main class="feed" id="coachView" aria-label="코칭">
     <section class="card act active-card" id="activeCard" aria-label="진행 중인 코칭">
       <div id="activeHead"></div>
       <div class="stats" id="activeStats" hidden></div>
@@ -592,7 +768,68 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   </main>
 
+  <main class="tv" id="trainView" aria-label="훈련" hidden>
+    <section class="tv-head">
+      <div>
+        <h1>훈련</h1>
+        <div class="seg tv-scope" id="tvScope" role="tablist" aria-label="관리자 보기 전환" hidden>
+          <button type="button" role="tab" data-scope="mine" aria-selected="true">내 훈련</button>
+          <button type="button" role="tab" data-scope="users" aria-selected="false">사용자 훈련</button>
+        </div>
+        <p class="tv-sub">달력에서 연습 일정을 잡고, 한 날은 체크해요. 판정에서 고칠 점이 나오면 2주 플랜을 추천해요.</p>
+      </div>
+      <div class="tv-rates" id="tvRates"></div>
+    </section>
+    <div class="tv-proposals" id="tvProposals"></div>
+    <section class="card card-pad tv-guest" id="tvGuest" hidden>
+      <h2>로그인하면 훈련 달력을 쓸 수 있어요</h2>
+      <p>연습 일정을 날짜·요일로 잡고, 완료를 체크하고, 이번 주·이번 달 달성률을 볼 수 있어요. 아래 라이브러리는 로그인 없이도 둘러볼 수 있어요.</p>
+      <button class="btn yellow" id="tvLogin" type="button">로그인하기</button>
+    </section>
+    <div class="tv-grid" id="tvGrid">
+      <section class="card tv-cal" aria-label="달력">
+        <div class="cal-head">
+          <h2 id="calTitle"></h2>
+          <button class="btn cal-today" id="calToday" type="button">오늘</button>
+          <button class="cal-nav" id="calPrev" type="button" aria-label="이전 달">‹</button>
+          <button class="cal-nav" id="calNext" type="button" aria-label="다음 달">›</button>
+        </div>
+        <div class="cal-wd" aria-hidden="true"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span><span>일</span></div>
+        <div class="cal-grid" id="calGrid" role="grid"></div>
+        <div class="cal-legend" aria-hidden="true">
+          <span><i class="dot done"></i>완료</span><span><i class="dot today"></i>오늘</span><span><i class="dot missed"></i>지남</span>
+          <span><i class="dot upcoming"></i>예정</span><span><i class="dot extra"></i>계획 밖 연습</span>
+        </div>
+      </section>
+      <section class="card tv-day" id="tvDay" aria-label="선택한 날" aria-live="polite"></section>
+    </div>
+    <section class="card tv-mine" id="tvMine" aria-label="내 훈련 항목"></section>
+    <div class="tv-admin" id="tvAdmin" hidden>
+      <section class="card tv-users" aria-label="사용자 훈련 현황">
+        <div class="tv-sec-head">
+          <h2>사용자 훈련 현황 <span id="tvUsersCount"></span></h2>
+          <span class="tv-note">관리자 · 읽기 전용(지우기만 가능)</span>
+        </div>
+        <div class="users-list" id="tvUsers"></div>
+      </section>
+      <div id="tvUserDetail"></div>
+    </div>
+    <section class="card tv-lib" id="tvLib" aria-label="훈련 라이브러리">
+      <div class="tv-sec-head">
+        <h2>훈련 라이브러리 <span id="tvLibCount"></span></h2>
+        <span class="tv-note">골프 문서의 연습 방법을 정리한 교육용 항목</span>
+      </div>
+      <div class="chips" id="tvLibCats" role="group" aria-label="분야"></div>
+      <div class="chips small" id="tvLibLocs" role="group" aria-label="장소"></div>
+      <div class="lib-grid" id="tvLibGrid"></div>
+    </section>
+  </main>
+
 </div>
+
+<dialog class="sheet" id="schedDlg" aria-labelledby="schedTitle"></dialog>
+<dialog class="sheet" id="drillDlg" aria-labelledby="drillTitle"></dialog>
+<div class="toast" id="toast" role="status" hidden></div>
 
 <section class="arch-wrap" id="architecture" aria-labelledby="archTitle">
   <div class="card card-pad">
@@ -647,7 +884,6 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   let viewing = null;             // 관리자가 읽기 전용으로 연 남의 코칭 {owner, thread}
   let listTab = "mine";           // 왼쪽 목록 탭: mine | all(관리자)
   let training = null;            // GET /training 결과(로그인했을 때)
-  let trainingView = null;        // 가운데에 연 훈련 항목 id
   // 내 아이콘: 로그인했으면 가입할 때 정해진 캐릭터(서버가 그린 SVG), 게스트는 '나'
   const avatarSrc = () => `/auth/avatar.svg?u=${encodeURIComponent(nickname)}`;
   function myAvatar(big) {
@@ -943,7 +1179,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     setBusy(null);
     renderActive(); renderPast(); renderProfile();
     if (turn.res?.data.trace.some((s) => s.step === "memory")) loadMemory();
-    if (turn.res?.data.training_added?.length) loadTraining();
+    if (turn.res?.data.training_proposal) loadTraining();   // 판정 추천 플랜이 생겼으면 훈련 다시
     if (activeId === th.id) reveal("start");   // 답변 첫머리부터 읽을 수 있게
   }
 
@@ -970,9 +1206,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
 
   // ── 진행 중 코칭 카드 ──
   function renderActive() {
-    $("composeDock").hidden = !!(viewing || trainingView);
+    $("composeDock").hidden = !!viewing;
     $("composeDock").classList.toggle("has-thread", !!(viewing || active()));   // 모바일: 대화 중엔 추천 칩 숨김
-    if (trainingView && renderTrainingView()) return;
     if (viewing) { renderViewing(); return; }
     const th = active();
     const newBtn = el("button", { class: "btn", type: "button", "data-lock": "" }, "+ 새 코칭");
@@ -1041,7 +1276,6 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function startNew() {
     if (busyId) return;
     closeDrawer();
-    if (trainingView) { trainingView = null; renderTraining(); }
     activeId = null; viewing = null;
     save();
     renderActive(); renderPast();
@@ -1052,7 +1286,6 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function setActive(id) {
     if (busyId) return;
     closeDrawer();
-    if (trainingView) { trainingView = null; renderTraining(); }
     activeId = id; viewing = null;
     save();
     renderActive(); renderPast();
@@ -1091,7 +1324,6 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   function openOther(owner, th) {
     if (busyId) return;
     closeDrawer();
-    if (trainingView) { trainingView = null; renderTraining(); }
     viewing = { owner, thread: th };
     renderActive(); renderPast(); reveal("start");
     $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -1149,7 +1381,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     const kind = kindOf(th);
     const lastDone = [...th.turns].reverse().find((t) => t.res || t.error);
     const status = !lastDone ? "" : lastDone.error ? "error" : lastDone.res.data.status;
-    const current = owner ? !trainingView && viewing?.thread.id === th.id : !viewing && !trainingView && th.id === activeId;
+    const current = owner ? viewing?.thread.id === th.id : !viewing && th.id === activeId;
     let ico;
     if (owner) ico = el("span", { class: "clist-ico", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(owner)}.svg`, alt: "" }));
     else { ico = el("span", { class: "clist-ico", "aria-hidden": "true" }); ico.innerHTML = ICON[kind === "photo" ? "camera" : kind]; }
@@ -1361,21 +1593,18 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     for (const s of d.trace) ol.append(el("li", {}, el("code", {}, s.step), ` ${s.input} → ${s.output}`));
     more.append(el("details", {}, el("summary", {}, `처리 단계 ${d.trace.length}`), ol));
     more.append(el("details", {}, el("summary", {}, "응답 JSON"), el("pre", {}, JSON.stringify(d, null, 2))));
-    if (d.training_added?.length) {
-      const note = el("div", { class: "tr-added" }, el("b", {}, "연습 항목이 추가됐어요"), el("span", {}, d.training_added.map((x) => x.title).join(" · ")));
-      const first = d.training_added[0].id;
-      if (training?.drills.some((x) => x.id === first)) {
-        const go = el("button", { class: "btn", type: "button" }, "훈련 보기");
-        go.addEventListener("click", () => openTraining(first));
-        note.append(go);
-      }
-      box.append(note);
+    if (d.training_proposal) {
+      const p = d.training_proposal;
+      const go = el("button", { class: "btn", type: "button" }, "훈련 화면에서 보기");
+      go.addEventListener("click", () => setView("train"));
+      box.append(el("div", { class: "tr-added plan" }, el("b", {}, "2주 연습 플랜을 추천해요"),
+        el("span", {}, `${p.drills.map((x) => x.title).join(" · ")} · ${wdText(p.weekdays)} ${p.sessions}번`), go));
     }
     box.append(more);
     return box;
   }
 
-  // ── 훈련: 왼쪽 카드(항목·이번 주 달성·오늘 기록·직접 추가)와 가운데 상세(기록·메모) ──
+  // ── 오늘의 훈련(코칭 화면 왼쪽 요약): 오늘 계획·완료 체크·훈련 화면으로 ──
   const todayStr = () => { const n = new Date(); return new Date(n.getTime() - n.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
   async function loadTraining() {
     const owner = nickname;
@@ -1388,117 +1617,42 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     }
     if (owner !== nickname) return;   // 불러오는 사이 계정이 바뀜
     training = data;
-    if (trainingView && !training?.drills.some((x) => x.id === trainingView)) trainingView = null;
     renderTraining();
-    renderActive();
+    renderTrainScreen();
   }
   function renderTraining() {
-    $("trAddBtn").hidden = !nickname;
-    if (!nickname) {
-      $("trWeek").textContent = ""; $("trAdd").hidden = true;
-      $("trList").replaceChildren(el("li", { class: "clist-empty" }, "로그인하면 연습 항목과 기록을 관리할 수 있어요. 사진·영상 판정에서 고칠 점이 나오면 연습 항목이 자동으로 추가돼요."));
-      return;
-    }
-    if (!training) { $("trWeek").textContent = ""; $("trList").replaceChildren(el("li", { class: "clist-empty" }, "불러오는 중…")); return; }
-    $("trWeek").textContent = `이번 주 ${training.week_days}/${training.week_target_days}일` + (training.streak ? ` · 연속 ${training.streak}일` : "");
-    const items = training.drills.map(trItem);
-    $("trList").replaceChildren(...(items.length ? items
-      : [el("li", { class: "clist-empty" }, "아직 연습 항목이 없어요. 판정에서 고칠 점이 나오면 자동으로 추가되고, '+ 추가'로 직접 만들 수도 있어요.")]));
-  }
-  function trItem(d) {
-    const meta = `${d.source === "auto" ? "추천 · " : ""}1회 ${d.target}${d.unit} · 이번 주 ${d.week_days}일` + (d.today_count ? ` · 오늘 ${d.today_count}${d.unit}` : "");
-    const open = el("button", { class: "tr-open" + (trainingView === d.id ? " on" : ""), type: "button" },
-      el("span", { class: "clist-title" }, d.title), el("span", { class: "clist-meta" }, meta));
-    if (trainingView === d.id) open.setAttribute("aria-current", "true");
-    open.addEventListener("click", () => openTraining(d.id));
-    const done = d.today_count >= d.target;
-    const quick = el("button", { class: "btn tr-quick" + (done ? " done" : ""), type: "button", "aria-label": `${d.title} 오늘 ${d.target}${d.unit} 기록` },
-      done ? `✓ +${d.target}` : `+${d.target}${d.unit}`);
-    quick.addEventListener("click", async () => { quick.disabled = true; await logTraining(d.id, { count: d.target, day: todayStr() }); quick.disabled = false; });
-    return el("li", { class: "tr-item" }, open, quick);
-  }
-  async function logTraining(drillId, body) {
-    try {
-      const r = await fetch(`/training/drills/${encodeURIComponent(drillId)}/logs`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      if (!r.ok) { const dd = await r.json().catch(() => ({})); return typeof dd.detail === "string" ? dd.detail : "기록하지 못했어요."; }
-    } catch (e) { return "서버에 연결할 수 없습니다."; }
-    await loadTraining();
-    return null;
-  }
-  function openTraining(id) {
-    if (busyId) return;
-    closeDrawer();
-    trainingView = id; viewing = null;
-    renderActive(); renderPast(); renderTraining();
-    $("activeCard").scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  function closeTraining() { trainingView = null; renderActive(); renderPast(); renderTraining(); }
-  // 가운데 훈련 상세. 항목이 없어졌으면 false 를 돌려 코칭 화면으로 돌아갑니다
-  function renderTrainingView() {
-    const d = training?.drills.find((x) => x.id === trainingView);
-    if (!d) { trainingView = null; $("composeDock").hidden = !!viewing; return false; }
-    const icon = el("div", { class: "avatar coach", "aria-hidden": "true" }); icon.innerHTML = ICON.mascot;
-    const back = el("button", { class: "btn", type: "button" }, "코칭으로");
-    back.addEventListener("click", closeTraining);
-    const archive = el("button", { class: "btn text", type: "button" }, "목록에서 내리기");
-    archive.addEventListener("click", async () => {
-      if (!confirm(`'${d.title}' 항목을 목록에서 내릴까요? 남긴 기록은 지워지지 않습니다.`)) return;
-      try { await fetch(`/training/drills/${encodeURIComponent(d.id)}`, { method: "DELETE" }); } catch (e) {}
-      trainingView = null; loadTraining();
+    const empty = (text) => $("trList").replaceChildren(el("li", { class: "clist-empty" }, text));
+    if (!nickname) { $("trWeek").textContent = ""; empty("로그인하면 연습 일정을 잡고 체크할 수 있어요. '훈련 화면'에서 라이브러리를 둘러보세요."); return; }
+    if (!training) { $("trWeek").textContent = ""; empty("불러오는 중…"); return; }
+    const plan = training.today_plan || { planned: [], extra: [] };
+    $("trWeek").textContent = plan.total ? `${plan.done}/${plan.total}` : "";
+    const rows = plan.planned.map((p) => {
+      const open = el("button", { class: "tr-open", type: "button" },
+        el("span", { class: "clist-title" }, p.title),
+        el("span", { class: "clist-meta" }, `1회 ${p.target}${p.unit}` + (p.count ? ` · 기록 ${p.count}${p.unit}` : "") + (p.routine_id ? " · 루틴" : "")));
+      open.addEventListener("click", () => openDrill(p.drill_id));
+      let right;
+      if (p.status === "done") right = el("span", { class: "st done" }, "완료");
+      else {
+        right = el("button", { class: "btn tr-quick", type: "button", "aria-label": `${p.title} 오늘 ${p.target}${p.unit} 완료 기록` }, `완료 +${p.target}`);
+        right.addEventListener("click", () => {
+          right.disabled = true;
+          act(() => api("POST", `/training/drills/${p.drill_id}/logs`, { day: todayStr(), count: p.target }), "완료로 기록했어요");
+        });
+      }
+      return el("li", { class: "tr-item" }, open, right);
     });
-    $("activeHead").replaceChildren(
-      el("div", { class: "act-head" }, icon,
-        el("div", { class: "act-meta" }, el("div", { class: "act-who" }, "훈련"),
-          el("div", { class: "act-when" }, d.source === "auto" ? `판정 추천 · 근거 ${d.doc_id}` : "직접 추가한 항목")),
-        el("div", { class: "act-actions" }, back, archive)),
-      el("h3", { class: "act-title" }, d.title));
-    $("activeStats").hidden = false;
-    $("activeStats").replaceChildren(
-      stat("이번 주", `${d.week_days}/${training.week_target_days}`, d.week_days >= training.week_target_days ? "answered" : "", "일"),
-      stat("오늘", d.today_count, "", d.unit), stat("연속", d.streak, "", "일"), stat("누적", d.total_count, "", d.unit));
-
-    const day = el("input", { class: "field", type: "date", value: todayStr(), max: todayStr(), "aria-label": "연습한 날", required: "" });
-    const count = el("input", { class: "field", type: "number", min: "1", max: "10000", value: String(d.target), "aria-label": `횟수(${d.unit})`, required: "" });
-    const memo = el("input", { class: "field memo-in", maxlength: "300", placeholder: "메모 (선택) 예: 왼손 리드 의식", "aria-label": "메모" });
-    const err = el("div", { class: "nick-err", role: "alert" });
-    const form = el("form", { class: "tr-log" }, day, el("label", { class: "cnt" }, count, d.unit), memo, el("button", { class: "btn yellow", type: "submit" }, "기록"), err);
-    form.addEventListener("submit", async (ev) => {
-      ev.preventDefault();
-      err.textContent = "";
-      const msg = await logTraining(d.id, { day: day.value, count: Number(count.value), memo: memo.value });
-      if (msg) err.textContent = msg;
-    });
-    const logs = training.logs.filter((l) => l.drill_id === d.id);
-    const list = el("ul", { class: "tr-logs", "aria-label": "기록" }, ...(logs.length ? logs.map((l) => {
-      const del = el("button", { class: "btn text", type: "button", "aria-label": `${l.day} 기록 삭제` }, "삭제");
-      del.addEventListener("click", async () => {
-        if (!confirm(`${l.day} ${l.count}${d.unit} 기록을 지울까요?`)) return;
-        try { await fetch(`/training/logs/${encodeURIComponent(l.id)}`, { method: "DELETE" }); } catch (e) {}
-        loadTraining();
-      });
-      return el("li", {}, el("span", { class: "day" }, l.day.slice(5).replace("-", "/")), el("span", { class: "n" }, `${l.count}${d.unit}`), el("span", { class: "memo" }, l.memo || ""), del);
-    }) : [el("li", { class: "empty" }, "아직 기록이 없어요. 연습한 뒤 위에서 기록해 보세요.")]));
-    $("activeThread").replaceChildren(form, list);
-    return true;
+    const extras = plan.extra.map((x) => el("li", { class: "tr-item" },
+      el("span", { class: "tr-open" }, el("span", { class: "clist-title" }, x.title), el("span", { class: "clist-meta" }, `계획 밖 연습 · ${x.count}${x.unit}`)),
+      el("span", { class: "st done" }, "기록")));
+    const pending = training.proposals?.length || 0;
+    const foot = el("li", { class: "tr-foot" },
+      el("span", {}, `이번 주 ${training.week_days}일 연습` + (training.streak ? ` · 연속 ${training.streak}일` : "") + (pending ? ` · 추천 플랜 ${pending}개` : "")));
+    if (rows.length || extras.length) $("trList").replaceChildren(...rows, ...extras, foot);
+    else $("trList").replaceChildren(el("li", { class: "clist-empty" },
+      training.drills.length ? "오늘은 계획이 없어요. 훈련 화면 달력에서 일정을 잡아 보세요." : "아직 연습 항목이 없어요. 훈련 화면의 라이브러리에서 골라 일정을 잡아 보세요."), foot);
   }
-  $("trAddBtn").addEventListener("click", () => {
-    const open = $("trAdd").hidden;
-    $("trAdd").hidden = !open; $("trAddBtn").setAttribute("aria-expanded", String(open));
-    $("trErr").textContent = "";
-    if (open) $("trTitle").focus();
-  });
-  $("trAdd").addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    $("trErr").textContent = "";
-    const body = { title: $("trTitle").value.trim(), unit: $("trUnit").value, target: Number($("trTarget").value) };
-    try {
-      const r = await fetch("/training/drills", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-      const data = await r.json().catch(() => ({}));
-      if (!r.ok) { $("trErr").textContent = typeof data.detail === "string" ? data.detail : "추가하지 못했어요. 이름·목표를 확인해 주세요."; return; }
-      $("trTitle").value = ""; $("trAdd").hidden = true; $("trAddBtn").setAttribute("aria-expanded", "false");
-      await loadTraining();
-    } catch (e) { $("trErr").textContent = "서버에 연결할 수 없습니다."; }
-  });
+  $("trGo").addEventListener("click", () => setView("train"));
 
   // ── 영상 각도 그래프 ──
   // angle_series(프레임별 왼팔 각도)를 시간축 선 그래프로 그리고, 같은 대화의 영상 재생 위치에 맞춰
@@ -1661,8 +1815,8 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     nickname = name || "";
     isAdmin = !!nickname && !!admin;
     viewing = null; others = [];
-    trainingView = null; training = null;
-    loadOthers(); loadTraining();
+    training = null;
+    loadOthers(); loadTraining(); resetTrainScreen();
     $("nickErr").textContent = "";
     renderNick(); loadMemory();
     threads = []; activeId = null; synced = new Map();
@@ -1856,6 +2010,555 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     for (const c of children) if (c !== "" && c != null) node.append(c instanceof Node ? c : document.createTextNode(String(c)));
     return node;
   }
+
+  // ═══════════ 훈련 화면: 상단 '코칭 | 훈련' 전환, 월간 달력·선택한 날·내 항목·라이브러리 ═══════════
+  let view = "coach";
+  let cal = null, calYM = null, selDay = null, library = null, libCat = "전체", libLoc = "전체";
+  let drillDlgId = null;
+  const WD_KO = ["월", "화", "수", "목", "금", "토", "일"];
+  const ST_KO = { done: "완료", today: "오늘", missed: "지남", upcoming: "예정" };
+  const LV_KO = { 1: "입문", 2: "기본", 3: "도전" };
+  const SRC_KO = { auto: "판정 추천", library: "라이브러리", custom: "직접 추가" };
+  const CODE_KO_TR = { spine_tilt_out_of_range: "척추 기울기", knee_flex_out_of_range: "무릎 각도", bent_lead_arm: "백스윙 왼팔" };
+  const isoAdd = (iso, days) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + days); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+  const md = (iso) => `${Number(iso.slice(5, 7))}/${Number(iso.slice(8, 10))}`;
+  const wdOf = (iso) => (new Date(iso + "T00:00:00").getDay() + 6) % 7;   // 0=월
+  const dayTitle = (iso) => `${Number(iso.slice(5, 7))}월 ${Number(iso.slice(8, 10))}일 (${WD_KO[wdOf(iso)]})`;
+  const wdText = (wd) => wd.length === 7 ? "매일" : wd.map((w) => WD_KO[w]).join("·");
+  const pct = (r) => (r && r.rate != null ? Math.round(r.rate * 100) : null);
+
+  function toast(msg) {
+    const t = $("toast"); t.textContent = msg; t.hidden = false;
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => (t.hidden = true), 2600);
+  }
+  async function api(method, url, body) {
+    const r = await fetch(url, { method, cache: "no-store", headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(typeof data.detail === "string" ? data.detail : `요청을 처리하지 못했어요 (${r.status})`);
+    return data;
+  }
+  async function act(fn, okMsg) {   // 바꾼 뒤 훈련 데이터를 다시 불러옴. 실패하면 알림
+    try { await fn(); if (okMsg) toast(okMsg); } catch (e) { toast(e.message || String(e)); }
+    await refreshTraining();
+  }
+
+  function setView(v, push = true) {
+    view = v === "train" ? "train" : "coach";
+    $("coachView").hidden = view !== "coach";
+    $("trainView").hidden = view !== "train";
+    $("modeSeg").querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === view)));
+    if (push) history.replaceState(null, "", view === "train" ? "#training" : location.pathname + location.search);
+    closeDrawer();
+    if (view === "train") { loadTrainScreen(); scrollTo({ top: 0 }); }
+  }
+  $("modeSeg").addEventListener("click", (e) => { const b = e.target.closest("button[data-view]"); if (b && !busyId) setView(b.dataset.view); });
+  addEventListener("hashchange", () => setView(location.hash === "#training" ? "train" : "coach", false));
+  $("tvLogin").addEventListener("click", () => {
+    if (mqMobile.matches) openDrawer(); else { $("authUser").scrollIntoView({ behavior: "smooth", block: "center" }); $("authUser").focus({ preventScroll: true }); }
+  });
+
+  async function loadLibrary() {
+    if (library) return;
+    try { library = await api("GET", "/training/library"); } catch (e) { library = { categories: [], locations: [], levels: {}, items: [] }; }
+  }
+  async function loadCalendar() {
+    if (!nickname) { cal = null; return; }
+    const owner = nickname;
+    const [y, m] = calYM || [Number(todayStr().slice(0, 4)), Number(todayStr().slice(5, 7))];
+    try { const c = await api("GET", `/training/calendar?year=${y}&month=${m}`); if (owner === nickname) { cal = c; calYM = [y, m]; } } catch (e) { cal = null; }
+  }
+  async function loadTrainScreen() {
+    selDay = selDay || todayStr();
+    await Promise.all([loadLibrary(), loadCalendar(), nickname ? loadTraining() : null]);
+    renderTrainScreen();
+  }
+  async function refreshTraining() {
+    await Promise.all([loadTraining(), loadCalendar()]);
+    renderTrainScreen();
+    if (drillDlgId && $("drillDlg").open) renderDrillDialog();
+  }
+  function resetTrainScreen() {
+    cal = null; calYM = null; selDay = null;
+    tvScope = "mine"; adminUsers = null; adminSel = null; adminData = null; adminYM = null; adminDay = null;
+    if (view === "train") loadTrainScreen();
+  }
+
+  function renderTrainScreen() {
+    if (view !== "train") return;
+    if (!isAdmin) tvScope = "mine";
+    $("tvScope").hidden = !isAdmin;
+    $("tvScope").querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.scope === tvScope)));
+    const users = tvScope === "users";
+    $("tvAdmin").hidden = !users;
+    $("tvLib").hidden = users;
+    $("tvRates").hidden = users;
+    if (users) {
+      for (const id of ["tvGuest", "tvGrid", "tvMine", "tvProposals"]) $(id).hidden = true;
+      renderAdmin();
+      return;
+    }
+    $("tvProposals").hidden = false;
+    const guest = !nickname;
+    $("tvGuest").hidden = !guest;
+    $("tvGrid").hidden = guest;
+    $("tvMine").hidden = guest;
+    if (guest) { $("tvRates").replaceChildren(); $("tvProposals").replaceChildren(); }
+    else { renderRates(); renderProposals(); renderCalendar(); renderDay(); renderMine(); }
+    renderLibrary();
+  }
+
+  // ── 관리자: 사용자 훈련 현황(목록) → 사용자 하나의 달력·날짜별 상태·항목·루틴·기록. 읽기 전용, 지우기만 ──
+  let tvScope = "mine", adminUsers = null, adminSel = null, adminData = null, adminYM = null, adminDay = null;
+  $("tvScope").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-scope]");
+    if (!b || b.dataset.scope === tvScope) return;
+    tvScope = b.dataset.scope;
+    if (tvScope === "users") loadAdminUsers(); else renderTrainScreen();
+  });
+  async function loadAdminUsers() {
+    try { adminUsers = (await api("GET", "/admin/training")).users; } catch (e) { adminUsers = []; toast(e.message); }
+    if (adminSel && !adminUsers.some((u) => u.username === adminSel)) { adminSel = null; adminData = null; }
+    renderTrainScreen();
+  }
+  async function loadAdminUser(name, ym) {
+    const [y, m] = ym || [Number(todayStr().slice(0, 4)), Number(todayStr().slice(5, 7))];
+    try {
+      adminData = await api("GET", `/admin/training/${encodeURIComponent(name)}?year=${y}&month=${m}`);
+      adminSel = name; adminYM = [y, m];
+      if (!adminDay || adminDay.slice(0, 7) !== `${y}-${String(m).padStart(2, "0")}`) adminDay = adminData.calendar.today.slice(0, 7) === `${y}-${String(m).padStart(2, "0")}` ? adminData.calendar.today : `${y}-${String(m).padStart(2, "0")}-01`;
+    } catch (e) { toast(e.message); adminData = null; }
+    renderTrainScreen();
+  }
+  async function adminAct(fn, okMsg) {
+    try { await fn(); if (okMsg) toast(okMsg); } catch (e) { toast(e.message); }
+    try { adminUsers = (await api("GET", "/admin/training")).users; } catch (e) {}
+    if (adminSel && adminUsers?.some((u) => u.username === adminSel)) await loadAdminUser(adminSel, adminYM);
+    else { adminSel = null; adminData = null; renderTrainScreen(); }
+  }
+  function renderAdmin() {
+    if (!adminUsers) { $("tvUsers").replaceChildren(el("div", { class: "day-empty" }, "불러오는 중…")); $("tvUserDetail").replaceChildren(); return; }
+    $("tvUsersCount").textContent = `${adminUsers.length}명`;
+    $("tvUsers").replaceChildren(...(adminUsers.length ? adminUsers.map((u) => {
+      const avatar = el("div", { class: "avatar char", "aria-hidden": "true" }, el("img", { src: `/admin/avatars/${encodeURIComponent(u.username)}.svg`, alt: "" }));
+      const meta = `항목 ${u.drills}개 · 이번 주 ${u.week_days}일 연습` + (u.streak ? ` · 연속 ${u.streak}일` : "")
+        + (u.last_day ? ` · 마지막 ${md(u.last_day)}` : " · 기록 없음") + (u.proposals ? ` · 받지 않은 추천 ${u.proposals}` : "");
+      const wk = pct(u.week_rate), mo = pct(u.month_rate);
+      const b = el("button", { class: "user-row" + (u.username === adminSel ? " on" : ""), type: "button" }, avatar,
+        el("div", {}, el("div", { class: "t" }, u.username), el("div", { class: "m" }, meta)),
+        el("div", { class: "user-rates" },
+          el("div", {}, el("b", {}, wk == null ? "—" : `${wk}%`), el("span", {}, "이번 주")),
+          el("div", {}, el("b", {}, mo == null ? "—" : `${mo}%`), el("span", {}, "이번 달"))));
+      b.addEventListener("click", () => { adminDay = null; loadAdminUser(u.username); });
+      return b;
+    }) : [el("div", { class: "day-empty" }, "아직 훈련 항목이 있는 사용자가 없어요.")]));
+    if (!adminSel || !adminData) { $("tvUserDetail").replaceChildren(); return; }
+    const d = adminData, c = d.calendar;
+    // 달력
+    const prev = el("button", { class: "cal-nav", type: "button", "aria-label": "이전 달" }, "‹");
+    const next = el("button", { class: "cal-nav", type: "button", "aria-label": "다음 달" }, "›");
+    const shift = (delta) => { const t = new Date(c.year, c.month - 1 + delta, 1); adminDay = null; loadAdminUser(adminSel, [t.getFullYear(), t.getMonth() + 1]); };
+    prev.addEventListener("click", () => shift(-1)); next.addEventListener("click", () => shift(1));
+    const calCard = el("section", { class: "card tv-cal", "aria-label": `${adminSel} 달력` },
+      el("div", { class: "cal-head" }, el("h2", {}, `${adminSel} · ${c.year}년 ${c.month}월`), prev, next),
+      el("div", { class: "cal-wd", "aria-hidden": "true" }, ...WD_KO.map((w) => el("span", {}, w))),
+      el("div", { class: "cal-grid", role: "grid" }, ...calCells(c, adminDay, (iso) => {
+        if (iso.slice(0, 7) !== `${c.year}-${String(c.month).padStart(2, "0")}`) { adminDay = iso; loadAdminUser(adminSel, [Number(iso.slice(0, 4)), Number(iso.slice(5, 7))]); }
+        else { adminDay = iso; renderAdmin(); }
+      })),
+      el("div", { class: "cal-legend" }, `이번 주 달성 ${pct(c.week_rate) ?? "—"}${pct(c.week_rate) == null ? "" : "%"} · 이번 달 달성 ${pct(c.month_rate) ?? "—"}${pct(c.month_rate) == null ? "" : "%"}`));
+    // 고른 날
+    const day = c.weeks.flat().find((x) => x.date === adminDay);
+    const dayRows = day ? [...day.planned.map((p) => el("li", { class: "plan-row" }, el("span", { class: "st " + p.status }, ST_KO[p.status]),
+        el("div", {}, el("div", { class: "t" }, p.title), el("div", { class: "m" }, `1회 ${p.target}${p.unit}` + (p.count ? ` · 기록 ${p.count}${p.unit}` : "") + (p.routine_id ? " · 루틴" : ""))), el("span"))),
+      ...day.extra.map((x) => el("li", { class: "plan-row" }, el("span", { class: "st extra" }, "계획 밖"),
+        el("div", {}, el("div", { class: "t" }, x.title), el("div", { class: "m" }, `기록 ${x.count}${x.unit}`)), el("span")))] : [];
+    const dayCard = el("section", { class: "card tv-day", "aria-live": "polite" },
+      el("div", { class: "day-head" }, el("h2", {}, day ? dayTitle(day.date) : "날짜를 골라 주세요"), el("span", { class: "sum" }, day && day.total ? `계획 ${day.total} · 완료 ${day.done}` : "")),
+      dayRows.length ? el("ul", { class: "day-list" }, ...dayRows) : el("div", { class: "day-empty" }, "이 날은 계획도 기록도 없어요."));
+    // 항목·루틴·기록 (지우기만)
+    const drillRows = d.drills.map((x) => {
+      const chips = c.routines.filter((r) => r.drill_id === x.id).map((r) => {
+        const del = el("button", { type: "button", "aria-label": "루틴 지우기" }, "×");
+        del.addEventListener("click", () => { if (confirm(`${adminSel} 님의 '${x.title}' ${wdText(r.weekdays)} 루틴을 지울까요?`)) adminAct(() => api("DELETE", `/admin/training/routines/${r.id}`), "루틴을 지웠어요"); });
+        return el("span", { class: "routine-chip" }, `${wdText(r.weekdays)} · ${md(r.start)}~${md(r.end)}`, del);
+      });
+      const logs = d.logs.filter((l) => l.drill_id === x.id).slice(0, 8).map((l) => {
+        const del = el("button", { class: "btn text", type: "button", "aria-label": `${l.day} 기록 삭제` }, "삭제");
+        del.addEventListener("click", () => { if (confirm(`${adminSel} 님의 ${l.day} ${l.count}${x.unit} 기록을 지울까요?`)) adminAct(() => api("DELETE", `/admin/training/logs/${l.id}`), "기록을 지웠어요"); });
+        return el("li", {}, el("span", {}, md(l.day)), el("b", {}, `${l.count}${x.unit}`), el("span", { class: "memo" }, l.memo || ""), del);
+      });
+      const archive = el("button", { class: "btn text", type: "button" }, "항목 내리기");
+      archive.addEventListener("click", () => { if (confirm(`${adminSel} 님의 '${x.title}' 항목을 내릴까요? 기록은 남고 일정에서 빠집니다.`)) adminAct(() => api("DELETE", `/admin/training/drills/${x.id}`), "항목을 내렸어요"); });
+      return el("div", { class: "mine-row" },
+        el("div", {}, el("div", { class: "t" }, x.title, el("span", { class: "tag" + (x.source === "auto" ? " auto" : "") }, SRC_KO[x.source] || x.source)),
+          el("div", { class: "m" }, `1회 ${x.target}${x.unit} · 이번 주 ${x.week_days}일 · 누적 ${x.total_count}${x.unit}` + (x.streak ? ` · 연속 ${x.streak}일` : "")),
+          chips.length ? el("div", {}, ...chips) : "",
+          logs.length ? el("ul", { class: "admin-logs", "aria-label": "최근 기록" }, ...logs) : el("div", { class: "m" }, "기록 없음")),
+        el("div", { class: "mine-acts" }, archive));
+    });
+    const drillsCard = el("section", { class: "card tv-mine", "aria-label": `${adminSel} 훈련 항목` },
+      el("div", { class: "tv-sec-head" }, el("h2", {}, `${adminSel} 님의 훈련 항목 `, el("span", {}, `${d.drills.length}개`))), ...drillRows);
+    $("tvUserDetail").replaceChildren(el("div", { class: "tv-admin" }, el("div", { class: "tv-grid" }, calCard, dayCard), drillsCard));
+  }
+
+  function rateBox(label, r, extra) {
+    const v = pct(r);
+    const bar = el("div", { class: "bar" }, el("i", { style: `width:${v ?? 0}%` }));
+    return el("div", { class: "rate" }, el("div", { class: "lbl" }, label),
+      el("div", { class: "v" }, v == null ? "—" : String(v), v == null ? "" : el("small", {}, "%")),
+      el("div", { class: "s" }, extra || (r?.planned ? `${r.done}/${r.planned}회 완료` : "계획 없음")), bar);
+  }
+  function renderRates() {
+    const streak = training?.streak || 0;
+    const streakBox = el("div", { class: "rate" }, el("div", { class: "lbl" }, "연속 연습"),
+      el("div", { class: "v" }, String(streak), el("small", {}, "일")),
+      el("div", { class: "s" }, `이번 주 ${training?.week_days ?? 0}일 연습`));
+    $("tvRates").replaceChildren(rateBox("이번 주 달성", cal?.week_rate), rateBox("이번 달 달성", cal?.month_rate), streakBox);
+  }
+
+  function renderProposals() {
+    const list = training?.proposals || [];
+    $("tvProposals").replaceChildren(...list.map((p) => {
+      const accept = el("button", { class: "btn yellow", type: "button" }, "플랜 받기");
+      accept.addEventListener("click", () => act(() => api("POST", `/training/proposals/${p.id}/accept`), "플랜을 달력에 넣었어요"));
+      const dismiss = el("button", { class: "btn", type: "button" }, "닫기");
+      dismiss.addEventListener("click", () => act(() => api("POST", `/training/proposals/${p.id}/dismiss`)));
+      const codes = p.issue_codes.map((c) => CODE_KO_TR[c] || c).join(" · ");
+      return el("article", { class: "proposal" },
+        el("div", {}, el("div", { class: "p-kick" }, `판정 추천 · ${codes}`), el("b", {}, "2주 연습 플랜을 추천해요"),
+          el("ul", {}, ...p.drills.map((d) => el("li", {}, `${d.title} · 1회 ${d.target}${d.unit}`))),
+          el("div", { class: "p-meta" }, `${wdText(p.weekdays)} · ${md(p.start)}~${md(p.end)} · 모두 ${p.sessions}번 · 근거 ${[...new Set(p.drills.map((d) => d.doc_id))].join(", ")}`)),
+        el("div", { class: "p-act" }, dismiss, accept));
+    }));
+  }
+
+  function calDays() { return cal ? cal.weeks.flat() : []; }
+  function calCells(c, selected, onPick) {
+    return c.weeks.flat().map((d) => {
+      const cls = ["cal-cell"];
+      if (!d.in_month) cls.push("out");
+      if (d.is_today) cls.push("today");
+      if (d.date === selected) cls.push("sel");
+      if (d.total && d.done === d.total) cls.push("all-done");
+      const dots = el("span", { class: "dots" }, ...d.planned.map((p) => el("i", { class: "dot " + p.status })), ...d.extra.map(() => el("i", { class: "dot extra" })));
+      const label = `${dayTitle(d.date)}${d.total ? `, 계획 ${d.total}개 중 ${d.done}개 완료` : ""}${d.extra.length ? `, 계획 밖 연습 ${d.extra.length}개` : ""}`;
+      const b = el("button", { class: cls.join(" "), type: "button", role: "gridcell", "aria-label": label, "aria-selected": String(d.date === selected) },
+        el("span", { class: "n" }, String(Number(d.date.slice(8, 10)))), d.total ? el("span", { class: "frac" }, `${d.done}/${d.total}`) : "", dots);
+      b.addEventListener("click", () => onPick(d.date));
+      return b;
+    });
+  }
+  function renderCalendar() {
+    if (!cal) { $("calTitle").textContent = "불러오는 중…"; $("calGrid").replaceChildren(); return; }
+    $("calTitle").textContent = `${cal.year}년 ${cal.month}월`;
+    $("calGrid").replaceChildren(...calCells(cal, selDay, selectDay));
+  }
+  async function selectDay(iso) {
+    selDay = iso;
+    const ym = [Number(iso.slice(0, 4)), Number(iso.slice(5, 7))];
+    if (!calYM || ym[0] !== calYM[0] || ym[1] !== calYM[1]) { calYM = ym; await loadCalendar(); }
+    renderCalendar(); renderDay();
+    if (mqMobile.matches) $("tvDay").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function moveMonth(delta) {
+    const [y, m] = calYM || [Number(todayStr().slice(0, 4)), Number(todayStr().slice(5, 7))];
+    const d = new Date(y, m - 1 + delta, 1);
+    calYM = [d.getFullYear(), d.getMonth() + 1];
+    loadCalendar().then(renderTrainScreen);
+  }
+  $("calPrev").addEventListener("click", () => moveMonth(-1));
+  $("calNext").addEventListener("click", () => moveMonth(1));
+  $("calToday").addEventListener("click", () => selectDay(todayStr()));
+
+  function renderDay() {
+    const box = $("tvDay");
+    const d = calDays().find((x) => x.date === selDay);
+    if (!d) { box.replaceChildren(el("div", { class: "day-empty" }, "달력에서 날짜를 골라 주세요.")); return; }
+    const past = d.date <= todayStr();
+    const head = el("div", { class: "day-head" }, el("h2", {}, dayTitle(d.date) + (d.is_today ? " · 오늘" : "")),
+      el("span", { class: "sum" }, d.total ? `계획 ${d.total} · 완료 ${d.done}` : "계획 없음"));
+    const rows = d.planned.map((p) => {
+      const acts = el("div", { class: "plan-acts" });
+      const form = el("form", { class: "inline-log", hidden: "" });
+      if (past && p.status !== "done") {
+        const check = el("button", { class: "btn yellow", type: "button" }, `완료 +${p.target}${p.unit}`);
+        check.addEventListener("click", () => act(() => api("POST", `/training/drills/${p.drill_id}/logs`, { day: d.date, count: p.target }), "완료로 기록했어요"));
+        acts.append(check);
+      }
+      if (past) {
+        const more = el("button", { class: "btn", type: "button" }, "기록·메모");
+        more.addEventListener("click", () => { form.hidden = !form.hidden; if (!form.hidden) form.querySelector("input").focus(); });
+        acts.append(more);
+        const cnt = el("input", { class: "field", type: "number", min: "1", max: "10000", value: String(p.target), "aria-label": `횟수(${p.unit})`, required: "" });
+        const memo = el("input", { class: "field", maxlength: "300", placeholder: "메모 (선택)", "aria-label": "메모" });
+        form.append(cnt, memo, el("button", { class: "btn yellow", type: "submit" }, "저장"));
+        form.addEventListener("submit", (ev) => { ev.preventDefault(); act(() => api("POST", `/training/drills/${p.drill_id}/logs`, { day: d.date, count: Number(cnt.value), memo: memo.value }), "기록했어요"); });
+      }
+      const remove = el("button", { class: "btn text", type: "button" }, "빼기");
+      remove.addEventListener("click", () => {
+        if (!confirm(p.routine_id ? `${dayTitle(d.date)} 하루만 루틴에서 뺄까요? 다른 날 루틴은 그대로예요.` : `${dayTitle(d.date)} 계획에서 뺄까요?`)) return;
+        act(async () => {
+          if (p.plan_id) await api("DELETE", `/training/plans/${p.plan_id}`);
+          if (p.routine_id) await api("POST", `/training/routines/${p.routine_id}/skip`, { day: d.date });
+        });
+      });
+      acts.append(remove);
+      const meta = `1회 ${p.target}${p.unit}` + (p.count ? ` · 기록 ${p.count}${p.unit}` : "") + (p.routine_id ? " · 루틴" : "");
+      const title = el("button", { class: "linkish t", type: "button" }, p.title);
+      title.addEventListener("click", () => openDrill(p.drill_id));
+      return el("li", { class: "plan-row" }, el("span", { class: "st " + p.status }, ST_KO[p.status]),
+        el("div", {}, title, el("div", { class: "m" }, meta)), acts, form);
+    });
+    const extras = d.extra.map((x) => el("li", { class: "plan-row" }, el("span", { class: "st extra" }, "계획 밖"),
+      el("div", {}, el("div", { class: "t" }, x.title), el("div", { class: "m" }, `기록 ${x.count}${x.unit}`)), el("span")));
+    const list = rows.length || extras.length ? el("ul", { class: "day-list" }, ...rows, ...extras)
+      : el("div", { class: "day-empty" }, past && d.date !== todayStr() ? "이 날은 계획도 기록도 없어요." : "아직 계획이 없어요. 아래에서 내 항목을 넣거나, 라이브러리에서 골라 보세요.");
+    const drills = training?.drills || [];
+    const nodes = [head, list];
+    if (drills.length) {
+      const sel = el("select", { class: "field", "aria-label": "넣을 항목" }, ...drills.map((x) => el("option", { value: x.id }, x.title)));
+      const add = el("button", { class: "btn", type: "button" }, "이 날에 넣기");
+      add.addEventListener("click", () => act(() => api("POST", "/training/plans", { drill_id: sel.value, day: d.date }), `${md(d.date)} 계획에 넣었어요`));
+      nodes.push(el("div", { class: "day-add" }, sel, add));
+    }
+    box.replaceChildren(...nodes);
+  }
+
+  function renderMine() {
+    const drills = training?.drills || [];
+    const routines = cal?.routines || [];
+    const addBtn = el("button", { class: "btn", type: "button" }, "+ 직접 만들기");
+    const title = el("input", { class: "field", maxlength: "40", placeholder: "항목 이름 (예: 50cm 퍼팅)", "aria-label": "항목 이름", required: "" });
+    const target = el("input", { class: "field", type: "number", min: "1", max: "1000", value: "10", "aria-label": "1회 목표", required: "" });
+    const unit = el("select", { class: "field", "aria-label": "단위" }, el("option", {}, "회"), el("option", {}, "분"), el("option", {}, "개"));
+    const form = el("form", { class: "mine-add", hidden: "" }, title, target, unit, el("button", { class: "btn yellow", type: "submit" }, "만들기"));
+    addBtn.addEventListener("click", () => { form.hidden = !form.hidden; if (!form.hidden) title.focus(); });
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      act(() => api("POST", "/training/drills", { title: title.value.trim(), unit: unit.value, target: Number(target.value) }), "내 항목을 만들었어요");
+    });
+    const rows = drills.map((d) => {
+      const tags = [el("span", { class: "tag" + (d.source === "auto" ? " auto" : "") }, SRC_KO[d.source] || d.source)];
+      const chips = routines.filter((r) => r.drill_id === d.id).map((r) => {
+        const x = el("button", { type: "button", "aria-label": "루틴 지우기" }, "×");
+        x.addEventListener("click", () => { if (confirm(`'${d.title}' ${wdText(r.weekdays)} 루틴을 지울까요? 남긴 기록은 그대로예요.`)) act(() => api("DELETE", `/training/routines/${r.id}`), "루틴을 지웠어요"); });
+        return el("span", { class: "routine-chip" }, `${wdText(r.weekdays)} · ${md(r.start)}~${md(r.end)}`, x);
+      });
+      const sched = el("button", { class: "btn yellow", type: "button" }, "일정 잡기");
+      sched.addEventListener("click", () => openSchedule(d));
+      const logs = el("button", { class: "btn", type: "button" }, "기록 보기");
+      logs.addEventListener("click", () => openDrill(d.id));
+      return el("div", { class: "mine-row" },
+        el("div", {}, el("div", { class: "t" }, d.title, ...tags),
+          el("div", { class: "m" }, `1회 ${d.target}${d.unit} · 이번 주 ${d.week_days}일 · 누적 ${d.total_count}${d.unit}` + (d.streak ? ` · 연속 ${d.streak}일` : "")),
+          chips.length ? el("div", {}, ...chips) : ""),
+        el("div", { class: "mine-acts" }, logs, sched));
+    });
+    $("tvMine").replaceChildren(
+      el("div", { class: "tv-sec-head" }, el("h2", {}, "내 훈련 항목 ", el("span", {}, drills.length ? `${drills.length}개` : "")), addBtn),
+      form,
+      ...(rows.length ? rows : [el("div", { class: "day-empty" }, "아직 내 항목이 없어요. 아래 라이브러리에서 고르거나 직접 만들어 보세요.")]));
+  }
+
+  function renderLibrary() {
+    if (!library) return;
+    const mine = new Set((training?.drills || []).map((d) => d.key).filter(Boolean));
+    const chip = (label, current, onPick) => {
+      const b = el("button", { type: "button", "aria-pressed": String(label === current) }, label);
+      b.addEventListener("click", () => onPick(label));
+      return b;
+    };
+    $("tvLibCats").replaceChildren(...["전체", ...library.categories].map((c) => chip(c, libCat, (v) => { libCat = v; renderLibrary(); })));
+    $("tvLibLocs").replaceChildren(...["전체", ...library.locations].map((c) => chip(c === "전체" ? "장소 전체" : c, libLoc === "전체" ? "장소 전체" : libLoc,
+      (v) => { libLoc = v === "장소 전체" ? "전체" : v; renderLibrary(); })));
+    const items = library.items.filter((it) => (libCat === "전체" || it.category === libCat) && (libLoc === "전체" || it.location === libLoc));
+    $("tvLibCount").textContent = `${items.length}개`;
+    $("tvLibGrid").replaceChildren(...items.map((it) => {
+      const card = el("article", { class: "lib-card" });
+      const more = el("button", { class: "more", type: "button" }, "자세히");
+      more.addEventListener("click", () => { card.classList.toggle("open"); more.textContent = card.classList.contains("open") ? "접기" : "자세히"; });
+      const acts = el("div", { class: "acts" });
+      if (!nickname) acts.append(el("span", { class: "eq" }, "로그인하면 일정에 넣을 수 있어요"));
+      else {
+        const sched = el("button", { class: "btn yellow", type: "button" }, "일정에 넣기");
+        sched.addEventListener("click", async () => {
+          try { const d = await api("POST", "/training/drills/from-library", { key: it.key }); await refreshTraining(); openSchedule(d); }
+          catch (e) { toast(e.message); }
+        });
+        acts.append(sched);
+        if (mine.has(it.key)) acts.append(el("span", { class: "tag" }, "내 항목 ✓"));
+        else {
+          const add = el("button", { class: "btn", type: "button" }, "내 항목에 추가");
+          add.addEventListener("click", () => act(() => api("POST", "/training/drills/from-library", { key: it.key }), "내 항목에 추가했어요"));
+          acts.append(add);
+        }
+      }
+      card.append(
+        el("div", { class: "cat" }, it.category, el("span", { class: `tag lv${it.level}` }, LV_KO[it.level] || "")),
+        el("h3", {}, it.title), el("p", {}, it.how), more,
+        el("div", { class: "meta" }, `${it.location} · ${it.minutes}분 · 1회 ${it.target}${it.unit}` + (it.issue_codes.length ? " · 판정 연결" : "")),
+        el("div", { class: "eq" }, (it.equipment.length ? `준비물 ${it.equipment.join(", ")} · ` : "") + `근거 ${it.doc_id}`),
+        acts);
+      return card;
+    }));
+  }
+
+  // ── 일정 잡기 대화상자: 하루 배치 또는 요일 반복 루틴 ──
+  function openSchedule(drill) {
+    const dlg = $("schedDlg");
+    let mode = "routine";
+    const today = todayStr();
+    const day = el("input", { class: "field", type: "date", value: selDay && selDay >= today ? selDay : today, "aria-label": "날짜" });
+    const picked = new Set([0, 2, 4]);
+    const wdBox = el("div", { class: "wd-pick", role: "group", "aria-label": "요일" }, ...WD_KO.map((w, i) => {
+      const b = el("button", { type: "button", "aria-pressed": String(picked.has(i)) }, w);
+      b.addEventListener("click", () => { picked.has(i) ? picked.delete(i) : picked.add(i); b.setAttribute("aria-pressed", String(picked.has(i))); });
+      return b;
+    }));
+    const start = el("input", { class: "field", type: "date", value: today, "aria-label": "시작 날짜" });
+    const end = el("input", { class: "field", type: "date", value: isoAdd(today, 27), "aria-label": "끝 날짜" });
+    const presets = el("div", { class: "presets" }, ...[[2, "2주"], [4, "4주"], [8, "8주"]].map(([w, label]) => {
+      const b = el("button", { type: "button" }, label);
+      b.addEventListener("click", () => (end.value = isoAdd(start.value || today, w * 7 - 1)));
+      return b;
+    }));
+    const oneBox = el("div", { hidden: "" }, el("div", { class: "lbl-sm" }, "날짜"), day);
+    const routineBox = el("div", { class: "sheet-in", style: "padding:0;gap:8px" },
+      el("div", { class: "lbl-sm" }, "요일"), wdBox,
+      el("div", { class: "lbl-sm" }, "기간"), el("div", { class: "row2" }, start, end), presets);
+    const tabs = el("div", { class: "seg", role: "tablist", style: "margin:0;align-self:flex-start" });
+    const setMode = (m) => {
+      mode = m; oneBox.hidden = m !== "one"; routineBox.hidden = m !== "routine";
+      tabs.querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.m === m)));
+    };
+    for (const [m, label] of [["routine", "요일 반복"], ["one", "하루만"]]) {
+      const b = el("button", { type: "button", role: "tab", "data-m": m }, label);
+      b.addEventListener("click", () => setMode(m));
+      tabs.append(b);
+    }
+    const err = el("div", { class: "err", role: "alert" });
+    const close = el("button", { class: "sheet-x", type: "button", "aria-label": "닫기" }, "✕");
+    close.addEventListener("click", () => dlg.close());
+    const cancel = el("button", { class: "btn", type: "button" }, "취소");
+    cancel.addEventListener("click", () => dlg.close());
+    const save = el("button", { class: "btn yellow", type: "submit" }, "달력에 넣기");
+    const form = el("form", { class: "sheet-in", method: "dialog" },
+      el("div", { class: "sheet-head" }, el("div", {}, el("h2", { id: "schedTitle" }, "일정 잡기"), el("div", { class: "sub" }, drill.title)), close),
+      tabs, routineBox, oneBox, err, el("div", { class: "sheet-foot" }, cancel, save));
+    form.addEventListener("submit", async (ev) => {
+      ev.preventDefault(); err.textContent = "";
+      try {
+        if (mode === "one") await api("POST", "/training/plans", { drill_id: drill.id, day: day.value });
+        else await api("POST", "/training/routines", { drill_id: drill.id, weekdays: [...picked].sort(), start: start.value, end: end.value });
+        dlg.close();
+        toast(mode === "one" ? `${md(day.value)} 계획에 넣었어요` : `${wdText([...picked].sort())} 루틴을 만들었어요`);
+        if (mode === "one") selDay = day.value; else selDay = start.value;
+        calYM = [Number(selDay.slice(0, 4)), Number(selDay.slice(5, 7))];
+        await refreshTraining();
+      } catch (e) { err.textContent = e.message; }
+    });
+    setMode("routine");
+    dlg.replaceChildren(form);
+    dlg.showModal();
+  }
+
+  // ── 각도 변화 그래프: 판정과 연결된 항목(척추·무릎·왼팔)의 판정 기록 추이와 교육용 기준 구간 ──
+  // 값 계산(정렬·기준 안 여부·변화)은 서버(training.angle_trend)가 하고, 여기서는 그리기만 합니다.
+  function trendBox(d) {
+    const box = el("div", { class: "trend" }, el("h3", {}, "각도 변화"), el("div", { class: "empty" }, "불러오는 중…"));
+    api("GET", `/training/drills/${d.id}/trend`).then((t) => {
+      const head = el("h3", {}, `${t.label} 변화`);
+      const rangeTxt = t.range.hi == null ? `기준 ${t.range.lo}° 이상` : `기준 ${t.range.lo}~${t.range.hi}°`;
+      if (!t.points.length) { box.replaceChildren(head, el("div", { class: "empty" }, `아직 이 각도의 판정 기록이 없어요. 사진·영상 판정을 받으면 여기에 쌓여요. (${rangeTxt})`)); return; }
+      const sum = el("div", { class: "sum" });
+      if (t.points.length === 1) sum.append(`판정 1번 · ${t.last}° (${rangeTxt}) · 2번 이상 쌓이면 변화가 그래프로 보여요`);
+      else {
+        const sign = t.change > 0 ? "+" : t.change < 0 ? "−" : "±";
+        sum.append(`처음 ${t.first}° → 최근 `, el("b", { class: t.latest_in_range ? "ok" : "bad" }, `${t.last}°`),
+          ` (${sign}${Math.abs(t.change)}°) · ${rangeTxt} · 기준 안 ${t.in_range_count}/${t.points.length}번`);
+      }
+      const wrap = el("div");
+      wrap.innerHTML = trendSvg(t);
+      box.replaceChildren(head, sum, wrap);
+    }).catch((e) => box.replaceChildren(el("h3", {}, "각도 변화"), el("div", { class: "empty" }, e.message)));
+    return box;
+  }
+  function trendSvg(t) {
+    const W = 480, H = 170, L = 34, R = 14, T = 18, B = 26;
+    const vals = t.points.map((p) => p.value);
+    const lo = t.range.lo, hi = t.range.hi ?? lo + 20;
+    const yMin = Math.floor(Math.min(...vals, lo) - 5), yMax = Math.ceil(Math.max(...vals, hi) + 5);
+    const x = (i) => (t.points.length === 1 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (t.points.length - 1));
+    const y = (v) => T + ((yMax - v) * (H - T - B)) / (yMax - yMin);
+    const bandTop = t.range.hi == null ? T : y(hi), bandBot = y(lo);
+    const grid = [yMin, lo, t.range.hi, yMax].filter((v) => v != null)
+      .map((v) => `<text x="${L - 6}" y="${y(v) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${Math.round(v)}°</text>`).join("");
+    const line = t.points.length > 1 ? `<polyline points="${t.points.map((p, i) => `${x(i)},${y(p.value)}`).join(" ")}" fill="none" stroke="var(--yellow)" stroke-width="2.2" stroke-linejoin="round"/>` : "";
+    const showVal = t.points.length <= 10;
+    const step = Math.ceil(t.points.length / 6);   // 날짜 글자는 최대 6~7개만
+    const dots = t.points.map((p, i) => {
+      const c = p.in_range ? "var(--ok)" : "var(--bad)";
+      const day = `${Number(p.at.slice(5, 7))}/${Number(p.at.slice(8, 10))}`;
+      return `<circle cx="${x(i)}" cy="${y(p.value)}" r="4.5" fill="${c}" stroke="var(--surface)" stroke-width="2"><title>${day} ${p.value}°</title></circle>`
+        + (showVal ? `<text x="${x(i)}" y="${y(p.value) - 9}" text-anchor="middle" font-size="10.5" font-weight="600" fill="${c}">${Math.round(p.value)}</text>` : "")
+        + (i % step === 0 || i === t.points.length - 1 ? `<text x="${x(i)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)">${day}</text>` : "");
+    }).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${t.label} 판정 기록 ${t.points.length}번, 최근 ${t.last}도">`
+      + `<rect x="${L}" y="${bandTop}" width="${W - L - R}" height="${Math.max(0, bandBot - bandTop)}" fill="var(--band)" rx="4"/>`
+      + `<line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--line)"/>${grid}${line}${dots}</svg>`;
+  }
+
+  // ── 항목 상세 대화상자: 하는 법·수치·루틴·기록(메모)·내리기 ──
+  async function openDrill(id) {
+    drillDlgId = id;
+    await Promise.all([loadLibrary(), cal ? null : loadCalendar()]);   // 코칭 화면에서 열 때도 하는 법·루틴이 보이게
+    renderDrillDialog();
+    if (training?.drills.some((x) => x.id === id) && !$("drillDlg").open) $("drillDlg").showModal();
+  }
+  function renderDrillDialog() {
+    const dlg = $("drillDlg");
+    const d = training?.drills.find((x) => x.id === drillDlgId);
+    if (!d) { if (dlg.open) dlg.close(); return; }
+    const lib = library?.items.find((it) => it.key === d.key);
+    const close = el("button", { class: "sheet-x", type: "button", "aria-label": "닫기" }, "✕");
+    close.addEventListener("click", () => dlg.close());
+    const stats = el("div", { class: "stats" },
+      stat("이번 주", d.week_days, "", "일"), stat("오늘", d.today_count, "", d.unit), stat("연속", d.streak, "", "일"), stat("누적", d.total_count, "", d.unit));
+    const chips = (cal?.routines || []).filter((r) => r.drill_id === d.id).map((r) => el("span", { class: "routine-chip" }, `${wdText(r.weekdays)} · ${md(r.start)}~${md(r.end)}`));
+    const dayIn = el("input", { class: "field", type: "date", value: todayStr(), max: todayStr(), "aria-label": "연습한 날" });
+    const cnt = el("input", { class: "field", type: "number", min: "1", max: "10000", value: String(d.target), "aria-label": `횟수(${d.unit})` });
+    const memo = el("input", { class: "field", maxlength: "300", placeholder: "메모 (선택) 예: 왼손 리드 의식", "aria-label": "메모" });
+    const err = el("div", { class: "err", role: "alert" });
+    const logForm = el("form", { class: "sheet-in", style: "padding:0;gap:6px" },
+      el("div", { class: "lbl-sm" }, "기록 남기기"), el("div", { class: "row2" }, dayIn, cnt), memo, el("button", { class: "btn yellow", type: "submit" }, "기록"), err);
+    logForm.addEventListener("submit", async (ev) => {
+      ev.preventDefault(); err.textContent = "";
+      try { await api("POST", `/training/drills/${d.id}/logs`, { day: dayIn.value, count: Number(cnt.value), memo: memo.value }); toast("기록했어요"); await refreshTraining(); }
+      catch (e) { err.textContent = e.message; }
+    });
+    const logs = (training?.logs || []).filter((l) => l.drill_id === d.id);
+    const list = el("ul", { class: "tr-logs", "aria-label": "기록" }, ...(logs.length ? logs.map((l) => {
+      const del = el("button", { class: "btn text", type: "button", "aria-label": `${l.day} 기록 삭제` }, "삭제");
+      del.addEventListener("click", () => { if (confirm(`${l.day} ${l.count}${d.unit} 기록을 지울까요?`)) act(() => api("DELETE", `/training/logs/${l.id}`)); });
+      return el("li", {}, el("span", { class: "day" }, md(l.day)), el("span", { class: "n" }, `${l.count}${d.unit}`), el("span", { class: "memo" }, l.memo || ""), del);
+    }) : [el("li", { class: "empty" }, "아직 기록이 없어요.")]));
+    const sched = el("button", { class: "btn", type: "button" }, "일정 잡기");
+    sched.addEventListener("click", () => { dlg.close(); openSchedule(d); });
+    const archive = el("button", { class: "btn text", type: "button" }, "목록에서 내리기");
+    archive.addEventListener("click", () => {
+      if (!confirm(`'${d.title}' 항목을 내릴까요? 남긴 기록은 지워지지 않고, 달력의 계획·루틴에서는 빠집니다.`)) return;
+      dlg.close(); act(() => api("DELETE", `/training/drills/${d.id}`), "항목을 내렸어요");
+    });
+    dlg.replaceChildren(el("div", { class: "sheet-in" },
+      el("div", { class: "sheet-head" },
+        el("div", {}, el("h2", { id: "drillTitle" }, d.title),
+          el("div", { class: "sub" }, `${SRC_KO[d.source] || d.source} · 1회 ${d.target}${d.unit}` + (d.doc_id ? ` · 근거 ${d.doc_id}` : ""))), close),
+      lib ? el("p", { class: "how" }, lib.how) : "",
+      stats, d.metric ? trendBox(d) : "", chips.length ? el("div", {}, ...chips) : "", logForm, list,
+      el("div", { class: "sheet-foot" }, archive, sched)));
+  }
+
+  if (location.hash === "#training") setView("train", false);
 
   renderActive(); renderPast(); renderProfile();
   renderNick(); loadServerInfo(); loadMe();
