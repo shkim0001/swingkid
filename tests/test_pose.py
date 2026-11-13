@@ -2,8 +2,8 @@
 
 import pytest
 
-from src import config
-from src.tools import analyze_pose, detect_apex
+from src.shared import config
+from src.swing.pose import analyze_pose, detect_apex
 from tests.conftest import load_fixture
 
 
@@ -44,7 +44,7 @@ def test_video_without_apex_uses_detection():
 
 def test_side_photo_with_far_leg_hidden_is_still_judged():
     """측면 사진은 몸 반대편 다리가 가려지는 게 정상이라, 보이는 다리 하나로 무릎 각도를 잽니다."""
-    from src.tools import L_ANKLE, L_KNEE, analyze_photo, knee_flex
+    from src.swing.pose import L_ANKLE, L_KNEE, analyze_photo, knee_flex
 
     landmarks = load_fixture("photo_knee_bad")["landmarks"]
     for i in (L_KNEE, L_ANKLE):
@@ -55,7 +55,7 @@ def test_side_photo_with_far_leg_hidden_is_still_judged():
 
 
 def test_photo_without_any_visible_leg_is_not_detected():
-    from src.tools import analyze_photo
+    from src.swing.pose import analyze_photo
 
     finding = analyze_photo(load_fixture("photo_low_visibility")["landmarks"])
     assert not finding.detected
@@ -84,7 +84,7 @@ def test_apex_detection_ignores_jitter_on_the_way_up():
 
 def test_video_finding_has_per_frame_angle_series():
     """영상 판정은 화면 그래프용 프레임별 왼팔 각도를 함께 돌려줍니다(판정 값은 정점 프레임 그대로)."""
-    from src.tools import analyze_pose
+    from src.swing.pose import analyze_pose
 
     pose = load_fixture("video_bent_arm")
     finding = analyze_pose(pose)
@@ -98,6 +98,6 @@ def test_video_finding_has_per_frame_angle_series():
 
 
 def test_photo_has_no_angle_series():
-    from src.tools import analyze_pose
+    from src.swing.pose import analyze_pose
 
     assert analyze_pose(load_fixture("photo_spine_bad")).series is None

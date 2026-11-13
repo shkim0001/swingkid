@@ -2,7 +2,7 @@
 
 import types
 
-from src import config
+from src.shared import config
 from tests.conftest import load_fixture
 
 STANDARD_KEYS = {"answer", "contexts", "trace"}
@@ -58,10 +58,10 @@ def test_follow_up_keeps_thread_context(agent):
 
 def test_model_choice_picks_llm_per_request(monkeypatch):
     """모델을 고르면 그 ID로 만든 모델이 답하고, 고르지 않으면 고정 스택 기본 모델이 답합니다(실제 호출 없음)."""
-    from src import agent as agent_module
-    from src.agent import GolfCoachAgent
-    from src.fakes import FakeCoachLLM
-    from src.retriever import BM25Retriever
+    from src.coach import graph as agent_module
+    from src.coach.graph import GolfCoachAgent
+    from src.shared.fakes import FakeCoachLLM
+    from src.knowledge.retriever import BM25Retriever
 
     made = {}
 
@@ -115,8 +115,8 @@ def test_posture_follow_up_after_photo_uses_the_photo_source(agent):
 
 # ── 모델 대체 경로: 한 모델이 사용량 한도에 걸려도 멈추지 않고 다음 모델로 답합니다 ──
 def test_fallback_chain_starts_with_chosen_model_then_rest_of_list():
-    from src import config
-    from src.agent import fallback_chain
+    from src.shared import config
+    from src.shared.llm import fallback_chain
 
     chain = fallback_chain("us.anthropic.claude-haiku-4-5-20251001-v1:0")
     assert chain[0] == "us.anthropic.claude-haiku-4-5-20251001-v1:0"
@@ -125,7 +125,7 @@ def test_fallback_chain_starts_with_chosen_model_then_rest_of_list():
 
 
 def test_model_label_reports_the_model_that_actually_answered():
-    from src.agent import GolfCoachAgent
+    from src.coach.graph import GolfCoachAgent
 
     agent = GolfCoachAgent(retriever=object(), pose_estimator=object(), web_search=object())
     assert agent.model_label(None, served="global.anthropic.claude-sonnet-4-5-20250929-v1:0") == \
@@ -137,7 +137,7 @@ def test_strict_model_turns_off_fallback(monkeypatch):
     """평가 --strict-model: 고른 모델만 쓰고 다른 모델로 넘기지 않습니다(회차 간 같은 모델 조건)."""
     import langchain_aws
 
-    from src.agent import GolfCoachAgent
+    from src.coach.graph import GolfCoachAgent
 
     class FakeChat:   # 실제 Bedrock 클라이언트를 만들지 않는 가짜 (자격 증명 조회로 느려지지 않게)
         def __init__(self, model, **kwargs):

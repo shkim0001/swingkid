@@ -17,20 +17,11 @@ import hashlib
 import math
 import re
 from collections import Counter
-from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 
-from src import config
-
-
-@dataclass(frozen=True)
-class Chunk:
-    """검색 결과 한 조각. doc_id는 파일명(예: address.md)입니다."""
-
-    doc_id: str
-    text: str
-    score: float = 0.0
+from src.knowledge.schemas import Chunk
+from src.shared import config
 
 
 # ── 문서 읽기와 조각내기 ────────────────────────────────────

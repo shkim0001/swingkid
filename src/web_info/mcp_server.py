@@ -1,7 +1,7 @@
 """골프 웹 검색 MCP 서버 — info_agent 가 MCP 도구로 호출합니다.
 
-실행: `python -m src.mcp_server` (stdio 전송). 보통은 직접 띄우지 않고
-src/web_search.py 의 McpWebSearch 가 MCP 클라이언트(langchain-mcp-adapters)로 자식 프로세스로 띄웁니다.
+실행: `python -m src.web_info.mcp_server` (stdio 전송). 보통은 직접 띄우지 않고
+src/web_info/search.py 의 McpWebSearch 가 MCP 클라이언트(langchain-mcp-adapters)로 자식 프로세스로 띄웁니다.
 
 노출 도구
 - golf_web_search(query, max_results): ddgs 로 골프 웹 검색(엔진 여러 개를 차례로 시도: config.WEB_BACKENDS).
@@ -18,8 +18,8 @@ import sys
 
 from mcp.server.fastmcp import FastMCP
 
-from src import config
-from src.web_search import DuckDuckGoSearch
+from src.shared import config
+from src.web_info.search import DuckDuckGoSearch
 
 logging.basicConfig(stream=sys.stderr, level=logging.WARNING)
 

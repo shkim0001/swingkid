@@ -15,7 +15,7 @@ API 표준 규약
     POST /auth/login   {"username", "password"}  로그인
     POST /auth/logout                            로그아웃
     GET  /auth/me                                {"username": 아이디 또는 null}
-    GET  /auth/avatar.svg                        내 캐릭터 아이콘(가입할 때 무작위로 정함, src/avatar.py)
+    GET  /auth/avatar.svg                        내 캐릭터 아이콘(가입할 때 무작위로 정함, src/accounts/avatar.py)
     관리자 'admin' 은 .env 의 ADMIN_PASSWORD 로 서버가 만듭니다(화면 가입 불가). 관리자 전용(아니면 403):
     GET /admin/threads · DELETE /admin/threads/{thread_id} · GET /admin/avatars/{username}.svg
     질문·사진·영상 판정은 로그인 없이(게스트) 쓸 수 있습니다. 장기 기억은 로그인한 본인만 쓰며,
@@ -31,7 +31,7 @@ API 표준 규약
     DELETE /threads/{thread_id}  하나 지우기 · DELETE /threads 모두 지우기
     대화방(thread_id)은 처음 쓴 계정이 주인입니다. 다른 계정·게스트가 그 thread_id 로 /query 를 보내면 403.
 
-훈련 관리 (SERVICE.md 6장, src/training.py) — 라이브러리 조회 말고는 로그인 필요(401), 남의 것은 403, 없으면 404
+훈련 관리 (SERVICE.md 6장, src/training/service.py) — 라이브러리 조회 말고는 로그인 필요(401), 남의 것은 403, 없으면 404
     GET    /training/library                 훈련 라이브러리(분야·항목). 게스트도 볼 수 있음
     GET    /training                         내 항목과 집계, 최근 기록, 오늘 계획(today_plan), 받을지 기다리는 제안(proposals)
     POST   /training/drills                  {"title", "unit": 회|분|개, "target"} 직접 추가
@@ -55,7 +55,7 @@ API 표준 규약
     - model 이 허용 목록(config.AVAILABLE_MODELS)에 없으면 422 입니다.
 
 실행 모드는 환경변수 GOLF_MODE 로 고릅니다. live(기본, 실제 Bedrock·Chroma·MediaPipe) | offline(가짜 모델·BM25)
-실행: uvicorn src.app:app --port 8000   (miniPJT 폴더에서)
+실행: uvicorn src.api.app:app --port 8000   (miniPJT 폴더에서)
 """
 
 from __future__ import annotations
@@ -64,73 +64,32 @@ import base64
 import binascii
 import csv
 import datetime
+import hmac
 import json
 import os
+import secrets
 import threading
 from functools import lru_cache
 
 from fastapi import FastAPI, HTTPException, Request, Response
-from fastapi.responses import FileResponse
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from fastapi.responses import FileResponse, RedirectResponse
 
-from src import config
-from src.agent import GolfCoachAgent, build_agent
-from src.auth import AccountStore, AuthError, is_admin, memory_owner
-from src.history import THREAD_ID_PATTERN, HistoryStore, ThreadOwnedByOther
-from src.training import TrainingError, TrainingStore
-
-
-def _allowed_model(value: str | None) -> str | None:
-    if value is not None and value not in config.AVAILABLE_MODEL_IDS:
-        raise ValueError("사용할 수 없는 모델입니다. GET /models 목록에서 골라 주세요.")
-    return value
-
-
-class QueryRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", protected_namespaces=())
-
-    question: str = Field(min_length=1, description="사용자 질의")
-    image_base64: str | None = Field(default=None, description="측면(down-the-line) 어드레스 사진")
-    video_base64: str | None = Field(default=None, description="정면(face-on) 스윙 영상 짧은 클립 (mp4·webm·mov, 움직이는 GIF 도 가능)")
-    thread_id: str | None = Field(default=None, description="같은 값을 보내면 대화가 이어집니다")
-    model: str | None = Field(default=None, description="코칭 모델 ID. 없으면 기본 모델(Claude Sonnet 4.5)")
-
-    @field_validator("model")
-    @classmethod
-    def check_model(cls, value: str | None) -> str | None:
-        return _allowed_model(value)
-
-
-class ContextItem(BaseModel):
-    doc_id: str
-    text: str
-
-
-class TraceItem(BaseModel):
-    step: str
-    input: str
-    output: str
-
-
-class QueryResponse(BaseModel):
-    answer: str
-    contexts: list[ContextItem]
-    trace: list[TraceItem]
-    status: str
-    issue_codes: list[str]
-    sources: list[str]
-    agents: list[str] = Field(default_factory=list, description="이번 질문에 supervisor 가 부른 sub-agent (순서대로)")
-    angle_series: dict | None = Field(
-        default=None,
-        description="영상 판정일 때 프레임별 왼팔 각도 {metric, t(초 또는 null), values, apex_index, threshold}",
-    )
-    model: str
-    training_proposal: dict | None = Field(
-        default=None,
-        description="이번 판정으로 만든 2주 연습 플랜 제안 {id, issue_codes, drills, weekdays, start, end, sessions} "
-        "(로그인했고 문제 코드가 나왔을 때만, 같은 문제로 진행 중인 제안·플랜이 있으면 null)",
-    )
-
+from src.accounts.auth import AccountStore, AuthError, is_admin, memory_owner
+from src.accounts.google import CALLBACK_PATH, GoogleOAuth
+from src.accounts.schemas import AuthRequest
+from src.coach.graph import GolfCoachAgent, build_agent
+from src.coach.schemas import DemoFixtureRequest, QueryRequest, QueryResponse
+from src.history.store import THREAD_ID_PATTERN, HistoryStore, ThreadOwnedByOther
+from src.shared import config
+from src.training.schemas import (
+    DrillCreateRequest,
+    FromLibraryRequest,
+    LogCreateRequest,
+    PlanCreateRequest,
+    RoutineCreateRequest,
+    SkipRequest,
+)
+from src.training.service import TrainingError, TrainingStore
 
 app = FastAPI(title="SwingKid · 골프 입문 코치", version="0.1.0")
 
@@ -243,7 +202,7 @@ def models() -> dict:
 # ── 테스트 웹 페이지와 데모 전용 경로 ───────────────────────
 # /query 의 규약은 바꾸지 않습니다. 아래 /demo/* 는 오프라인 모드에서 화면으로 시험해 보기 위한 보조 경로입니다.
 
-STATIC_DIR = config.PROJECT_ROOT / "src" / "static"
+STATIC_DIR = config.PROJECT_ROOT / "src" / "api" / "static"
 
 
 @app.get("/", include_in_schema=False)
@@ -262,7 +221,7 @@ def architecture_script() -> FileResponse:
     return FileResponse(STATIC_DIR / "arch.js", media_type="text/javascript")
 
 
-# 웹앱 설치(PWA) 파일. Cloudflare 배포에서는 Worker 가 src/static 을 직접 내려주고, 여기는 로컬 실행용입니다.
+# 웹앱 설치(PWA) 파일. Cloudflare 배포에서는 Worker 가 src/api/static 을 직접 내려주고, 여기는 로컬 실행용입니다.
 @app.get("/manifest.webmanifest", include_in_schema=False)
 def web_manifest() -> FileResponse:
     return FileResponse(STATIC_DIR / "manifest.webmanifest", media_type="application/manifest+json")
@@ -287,7 +246,7 @@ def app_icon(name: str) -> FileResponse:
 @app.get("/architecture/code/{module}")
 def architecture_code(module: str) -> dict:
     """다이어그램에서 누른 모듈의 중요 코드(실제 소스 파일에서 함수 단위로 잘라 줄 번호와 함께)."""
-    from src.arch_code import MODULES, code_for
+    from src.api.arch_code import MODULES, code_for
 
     if module not in MODULES:
         raise HTTPException(status_code=404, detail="알 수 없는 모듈입니다.")
@@ -368,20 +327,6 @@ def demo_samples() -> dict:
         "queries": [{k: r[k] for k in ("id", "category", "input")} for r in rows],
         "fixtures": fixtures if _demo_enabled() else [],
     }
-
-
-class DemoFixtureRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid", protected_namespaces=())
-
-    question: str = Field(min_length=1)
-    fixture: str = Field(pattern=r"^[a-z_]+$")
-    thread_id: str | None = None
-    model: str | None = None
-
-    @field_validator("model")
-    @classmethod
-    def check_model(cls, value: str | None) -> str | None:
-        return _allowed_model(value)
 
 
 @app.post("/demo/fixture", response_model=QueryResponse)
@@ -500,18 +445,12 @@ def _is_https(request: Request) -> bool:
 
 
 def _set_session(response: Response, request: Request, token: str) -> None:
-    from src.auth import SESSION_DAYS
+    from src.accounts.auth import SESSION_DAYS
 
     response.set_cookie(
         SESSION_COOKIE, token, max_age=SESSION_DAYS * 86400, httponly=True, samesite="lax",
         secure=_is_https(request), path="/",
     )
-
-
-class AuthRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    username: str = Field(min_length=1, max_length=64)
-    password: str = Field(min_length=1, max_length=256)
 
 
 @app.post("/auth/signup")
@@ -544,10 +483,85 @@ def auth_logout(request: Request, response: Response) -> dict:
     return {"username": None}
 
 
+# ── 계정: Google 로그인 (src/accounts/google.py) ─────────────
+
+GOOGLE_STATE_COOKIE = "swingkid_google_state"
+GOOGLE_STATE_PATH = "/auth/google"
+GOOGLE_STATE_SECONDS = 600
+
+
+def get_google() -> GoogleOAuth | None:
+    """.env 에 GOOGLE_CLIENT_ID·GOOGLE_CLIENT_SECRET 이 있을 때만 Google 로그인을 켭니다."""
+    _load_env()
+    return GoogleOAuth.from_env()
+
+
+def _google_redirect_uri(request: Request, google: GoogleOAuth) -> str:
+    """Google 에 등록한 콜백 주소. .env 의 GOOGLE_REDIRECT_URI 가 우선이고, 없으면 브라우저가 보고 있는 주소로 만듭니다.
+
+    Cloudflare Worker 뒤에서는 Host 가 터널 주소로 바뀌므로 Worker 가 넘기는 X-Forwarded-Host 를 먼저 봅니다.
+    이 값을 누가 바꿔 보내도 Google 은 등록한 주소가 아니면 거절하므로 다른 곳으로 코드가 새지 않습니다.
+    """
+    if google.redirect_uri:
+        return google.redirect_uri
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    return f"{'https' if _is_https(request) else 'http'}://{host}{CALLBACK_PATH}"
+
+
+@app.get("/auth/providers")
+def auth_providers() -> dict:
+    """화면이 보여 줄 로그인 방법. Google 은 .env 설정이 있을 때만 True."""
+    return {"password": True, "google": get_google() is not None}
+
+
+@app.get("/auth/google/login", include_in_schema=False)
+def auth_google_login(request: Request) -> RedirectResponse:
+    """Google 동의 화면으로 보냅니다. state·nonce 는 짧게 사는 HttpOnly 쿠키에 두고 콜백에서 맞춰 봅니다."""
+    google = get_google()
+    if google is None:
+        raise HTTPException(status_code=404, detail="Google 로그인이 설정되지 않았습니다.")
+    state, nonce = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
+    response = RedirectResponse(google.auth_url(_google_redirect_uri(request, google), state, nonce), status_code=302)
+    response.set_cookie(
+        GOOGLE_STATE_COOKIE, f"{state}.{nonce}", max_age=GOOGLE_STATE_SECONDS, httponly=True, samesite="lax",
+        secure=_is_https(request), path=GOOGLE_STATE_PATH,
+    )
+    return response
+
+
+@app.get(CALLBACK_PATH, include_in_schema=False)
+def auth_google_callback(
+    request: Request, code: str | None = None, state: str | None = None, error: str | None = None
+) -> RedirectResponse:
+    """Google 이 돌려보내는 곳. 처음이면 계정을 만들고, 세션 쿠키를 심은 뒤 첫 화면으로 보냅니다.
+
+    실패하면 이유를 화면에 알릴 수 있게 /?login_error=google_cancel | google 로 보냅니다.
+    """
+    def finish(query: str = "") -> RedirectResponse:
+        response = RedirectResponse("/" + query, status_code=302)
+        response.delete_cookie(GOOGLE_STATE_COOKIE, path=GOOGLE_STATE_PATH)
+        return response
+
+    google = get_google()
+    if error == "access_denied":
+        return finish("?login_error=google_cancel")
+    saved_state, _, nonce = request.cookies.get(GOOGLE_STATE_COOKIE, "").partition(".")
+    if google is None or error or not code or not state or not saved_state or not hmac.compare_digest(state, saved_state):
+        return finish("?login_error=google")
+    try:
+        identity = google.exchange(code, _google_redirect_uri(request, google), nonce)
+        token, _, _ = get_accounts().google_login(identity.sub, identity.email)
+    except AuthError:
+        return finish("?login_error=google")
+    response = finish()
+    _set_session(response, request, token)
+    return response
+
+
 @app.get("/auth/avatar.svg", include_in_schema=False)
 def auth_avatar(request: Request) -> Response:
     """로그인한 본인의 캐릭터 아이콘. 고정 부품으로만 그린 SVG 입니다."""
-    from src.avatar import render_svg
+    from src.accounts.avatar import render_svg
 
     username = _require_user(request)
     svg = render_svg(get_accounts().avatar(username))
@@ -658,7 +672,7 @@ def admin_delete_thread(thread_id: str, request: Request) -> dict:
 
 @app.get("/admin/avatars/{username}.svg", include_in_schema=False)
 def admin_avatar(username: str, request: Request) -> Response:
-    from src.avatar import render_svg
+    from src.accounts.avatar import render_svg
 
     _require_admin(request)
     avatar = get_accounts().avatar(username)
@@ -667,8 +681,7 @@ def admin_avatar(username: str, request: Request) -> Response:
     return Response(render_svg(avatar), media_type="image/svg+xml", headers={"Cache-Control": "private, max-age=86400"})
 
 
-
-# ── 훈련 관리 (SERVICE.md 6장, src/training.py) ───────────────
+# ── 훈련 관리 (SERVICE.md 6장, src/training/service.py) ───────────────
 # 로그인한 본인 것만. 남의 것은 403, 없는 것은 404. 판정에서 문제 코드가 나오면 2주 플랜을 규칙으로 제안합니다.
 
 
@@ -685,7 +698,7 @@ def _with_training(request: Request, result: dict) -> dict:
 
 def _practice_for(request: Request) -> str | None:
     """코칭 근거로 넘길 연습 요약. 게스트는 None, 로그인했지만 기록이 없으면 ''."""
-    from src.training import practice_summary
+    from src.training.service import practice_summary
 
     username = _current_user(request)
     return practice_summary(get_training(), username) if username else None
@@ -696,20 +709,6 @@ def _check_training_owner(owner: str | None, username: str, what: str) -> None:
         raise HTTPException(status_code=404, detail=f"없는 {what}입니다.")
     if owner != username:
         raise HTTPException(status_code=403, detail=f"다른 계정의 {what}입니다.")
-
-
-class DrillCreateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    title: str = Field(max_length=100)
-    unit: str = Field(max_length=4)
-    target: int
-
-
-class LogCreateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    day: datetime.date | None = Field(default=None, description="연습한 날(YYYY-MM-DD). 없으면 오늘")
-    count: int
-    memo: str = Field(default="", max_length=1000)
 
 
 def _training_view(username: str) -> dict:
@@ -768,7 +767,7 @@ def training_delete_log(log_id: str, request: Request) -> dict:
 @app.get("/training/drills/{drill_id}/trend")
 def training_trend(drill_id: str, request: Request, response: Response) -> dict:
     """판정과 연결된 항목의 각도 변화(내 장기 기억 판정 기록, 오래된 순)와 교육용 기준 구간."""
-    from src.training import angle_trend
+    from src.training.service import angle_trend
 
     username = _require_user(request)
     store = get_training()
@@ -784,14 +783,9 @@ def training_trend(drill_id: str, request: Request, response: Response) -> dict:
 @app.get("/training/library")
 def training_library() -> dict:
     """훈련 라이브러리(골프 지식 문서의 연습 방법에서 정리한 항목, 교육용 더미 데이터). 게스트도 볼 수 있습니다."""
-    from src.training import LEVELS, LIBRARY, LOCATIONS
+    from src.training.service import LEVELS, LIBRARY, LOCATIONS
 
     return {"categories": LIBRARY["categories"], "locations": list(LOCATIONS), "levels": LEVELS, "items": LIBRARY["items"]}
-
-
-class FromLibraryRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    key: str = Field(max_length=64)
 
 
 @app.post("/training/drills/from-library")
@@ -801,12 +795,6 @@ def training_from_library(req: FromLibraryRequest, request: Request) -> dict:
         return get_training().add_from_library(username, req.key)
     except TrainingError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
-
-
-class PlanCreateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    drill_id: str = Field(max_length=64)
-    day: datetime.date
 
 
 @app.post("/training/plans")
@@ -828,14 +816,6 @@ def training_delete_plan(plan_id: str, request: Request) -> dict:
     return {"id": plan_id, "deleted": store.delete_plan(username, plan_id)}
 
 
-class RoutineCreateRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    drill_id: str = Field(max_length=64)
-    weekdays: list[int] = Field(max_length=7, description="0=월 ~ 6=일")
-    start: datetime.date
-    end: datetime.date
-
-
 @app.post("/training/routines")
 def training_add_routine(req: RoutineCreateRequest, request: Request) -> dict:
     username = _require_user(request)
@@ -853,11 +833,6 @@ def training_delete_routine(routine_id: str, request: Request) -> dict:
     store = get_training()
     _check_training_owner(store.routine_owner(routine_id), username, "루틴")
     return {"id": routine_id, "deleted": store.delete_routine(username, routine_id)}
-
-
-class SkipRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    day: datetime.date
 
 
 @app.post("/training/routines/{routine_id}/skip")

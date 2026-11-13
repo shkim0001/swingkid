@@ -5,10 +5,10 @@ import datetime
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src import config
-from src.memory import MEMORY_DOC_ID
-from src.training import PRACTICE_DOC_ID, TrainingStore, is_practice_question, practice_summary
+from src.api import app as app_module
+from src.shared import config
+from src.memory.store import MEMORY_DOC_ID
+from src.training.service import PRACTICE_DOC_ID, TrainingStore, is_practice_question, practice_summary
 from tests.conftest import load_fixture
 
 D = datetime.date

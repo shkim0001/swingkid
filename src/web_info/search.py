@@ -3,7 +3,7 @@
 세 검색기 모두 `search(query) -> list[WebResult]` 하나만 가집니다(주입 가능 구조).
 
 0. McpWebSearch — 라이브 기본값. info_agent 는 웹을 직접 부르지 않고 MCP 도구(golf_web_search)를 호출합니다.
-   도구는 src/mcp_server.py(stdio MCP 서버)가 노출하고, 서버 안에서 아래 DuckDuckGoSearch 로 검색합니다.
+   도구는 src/web_info/mcp_server.py(stdio MCP 서버)가 노출하고, 서버 안에서 아래 DuckDuckGoSearch 로 검색합니다.
 1. DuckDuckGoSearch — MCP 서버 안에서 쓰는 실제 검색기. API 키 없이 쓰는 ddgs 패키지로 검색합니다.
    엔진 여러 개(config.WEB_BACKENDS)와 검색어 2개(키워드 → 문장)를 차례로 시도합니다.
    질문에 '골프'가 없으면 앞에 붙여 골프 관련 결과만 찾게 합니다.
@@ -22,21 +22,14 @@ import logging
 import sys
 import threading
 import time
-from dataclasses import dataclass
 from pathlib import Path
 
-from src import config
+from src.shared import config
+from src.web_info.schemas import WebResult
 
 log = logging.getLogger(__name__)
 
 WEB_FIXTURE = config.FIXTURES_DIR / "web_search.json"
-
-
-@dataclass(frozen=True)
-class WebResult:
-    url: str
-    title: str
-    text: str
 
 
 def golf_query(query: str) -> str:
@@ -50,7 +43,7 @@ def keyword_query(query: str) -> str:
     검색 엔진에 따라 질문 문장을 통째로 넣으면 결과가 없고 키워드로 넣어야 나오는 경우가 있어 두 번째 검색어로 씁니다.
     형태소 분석은 지식 검색(BM25)과 같은 kiwipiepy 토큰화를 그대로 씁니다.
     """
-    from src.retriever import tokenize
+    from src.knowledge.retriever import tokenize
 
     return " ".join(tokenize(query))
 
@@ -117,7 +110,7 @@ class DuckDuckGoSearch:
 class McpWebSearch:
     """라이브용 웹 검색기 — MCP 도구 호출.
 
-    src/mcp_server.py 를 stdio MCP 서버로 띄우고(langchain-mcp-adapters MultiServerMCPClient),
+    src/web_info/mcp_server.py 를 stdio MCP 서버로 띄우고(langchain-mcp-adapters MultiServerMCPClient),
     `golf_web_search` 도구를 불러 결과를 받습니다. 실제 검색(ddgs)은 서버 쪽 DuckDuckGoSearch 가 합니다.
     도구 목록은 처음 한 번만 받아 두고, 호출마다 서버 프로세스를 새로 띄웁니다(세션 없는 호출).
     MCP 패키지가 없거나 서버·도구 호출이 실패하면 빈 목록 + last_error 로 no_answer 가 되게 합니다.
@@ -140,13 +133,13 @@ class McpWebSearch:
         return asyncio.run_coroutine_threadsafe(coro, self._loop).result(timeout=self.timeout)
 
     def connection(self) -> dict:
-        from src.mcp_server import SERVER_NAME
+        from src.web_info.mcp_server import SERVER_NAME
 
         return {
             SERVER_NAME: {
                 "transport": "stdio",
                 "command": sys.executable,
-                "args": ["-m", "src.mcp_server"],
+                "args": ["-m", "src.web_info.mcp_server"],
                 "cwd": str(config.PROJECT_ROOT),
             }
         }
@@ -154,7 +147,7 @@ class McpWebSearch:
     async def _load_tool(self):
         from langchain_mcp_adapters.client import MultiServerMCPClient
 
-        from src.mcp_server import TOOL_NAME
+        from src.web_info.mcp_server import TOOL_NAME
 
         tools = await MultiServerMCPClient(self.connection()).get_tools()
         for tool in tools:

@@ -1,5 +1,5 @@
 // Cloudflare 배포 설정 (데모용)
-//   웹(src/static)은 Cloudflare 가 직접 내려주고,
+//   웹(src/api/static)은 Cloudflare 가 직접 내려주고,
 //   API 요청(/query, /models, /memory ...)은 Worker 가 내 PC 의 백엔드(Cloudflare Tunnel)로 넘깁니다.
 //
 // 터널 주소(BACKEND_URL)는 이 파일이 아니라 Cloudflare Secret 에 둡니다.
@@ -10,7 +10,7 @@
   "main": "cloudflare/worker.js",
   "compatibility_date": "2026-11-01",
   "assets": {
-    "directory": "./src/static",
+    "directory": "./src/api/static",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"

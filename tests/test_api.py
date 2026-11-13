@@ -5,8 +5,8 @@ import base64
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src import config
+from src.api import app as app_module
+from src.shared import config
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ def test_web_page_and_demo_samples(client):
     data = client.get("/demo/samples").json()
     import csv
 
-    from src.evaluate import CSV_PATH
+    from src.evaluation.evaluate import CSV_PATH
 
     n_queries = len(list(csv.DictReader(CSV_PATH.open(encoding="utf-8-sig"))))
     assert data["mode"] == "offline" and len(data["queries"]) == n_queries and "photo_spine_bad" in data["fixtures"]
@@ -141,7 +141,7 @@ def test_architecture_page_is_served_and_linked(client):
 
 def test_architecture_code_comes_from_real_source(client):
     """모듈을 누르면 실제 소스 파일에서 함수 단위로 자른 코드가 줄 번호와 함께 옵니다."""
-    from src.arch_code import MODULES
+    from src.api.arch_code import MODULES
 
     for module in MODULES:
         d = client.get(f"/architecture/code/{module}").json()

@@ -6,9 +6,9 @@ import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src.auth import AccountStore
-from src.avatar import PARTS, is_valid, new_avatar, render_svg
+from src.api import app as app_module
+from src.accounts.auth import AccountStore
+from src.accounts.avatar import PARTS, is_valid, new_avatar, render_svg
 
 
 def test_new_avatar_uses_known_parts_and_varies():

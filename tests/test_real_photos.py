@@ -6,8 +6,8 @@ MediaPipe 나 포즈 모델 파일이 없는 환경(자동 채점 등)에서는 
 
 import pytest
 
-from src import config
-from src.tools import analyze_pose
+from src.shared import config
+from src.swing.pose import analyze_pose
 
 pytest.importorskip("mediapipe")
 pytest.importorskip("cv2")
@@ -19,7 +19,7 @@ PHOTOS = config.PROJECT_ROOT / "data" / "test_photos"
 
 @pytest.fixture(scope="module")
 def estimator():
-    from src.tools import MediaPipeEstimator
+    from src.swing.estimator import MediaPipeEstimator
 
     return MediaPipeEstimator()
 

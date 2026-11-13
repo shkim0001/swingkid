@@ -5,10 +5,10 @@ import sqlite3
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src import config
-from src.agent import build_agent
-from src.memory import MEMORY_DOC_ID, LongTermMemory, describe, is_recall_question
+from src.api import app as app_module
+from src.shared import config
+from src.coach.graph import build_agent
+from src.memory.store import MEMORY_DOC_ID, LongTermMemory, describe, is_recall_question
 from tests.conftest import load_fixture
 
 RECALL_Q = "지난번 내 자세 판정 결과랑 비교해서 알려 주세요"

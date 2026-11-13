@@ -15,20 +15,20 @@
 
   const NODES = [
     { id: "ui", col: "a", row: 0, kind: "frontend", chip: "웹 화면", title: "SwingKid 웹 화면", sub: "질문 · 사진 · 영상 · GIF", file: "static/index.html" },
-    { id: "api", col: "b", row: 0, kind: "api", chip: "API", title: "FastAPI 서버", sub: "POST /query · 입력 검사", file: "src/app.py" },
-    { id: "guard", col: "b", row: 1, kind: "guard", chip: "가드레일", title: "가드레일", sub: "규칙 기반 · 항상 같은 결과", file: "src/guard.py" },
+    { id: "api", col: "b", row: 0, kind: "api", chip: "API", title: "FastAPI 서버", sub: "POST /query · 입력 검사", file: "src/api/app.py" },
+    { id: "guard", col: "b", row: 1, kind: "guard", chip: "가드레일", title: "가드레일", sub: "규칙 기반 · 항상 같은 결과", file: "src/guard/rules.py" },
     { id: "exit", col: "a", row: 1, kind: "exit", chip: "즉시 응답", title: "고정 문구로 응답", sub: "차단(blocked) · 골프 무관", file: "LLM 호출 없음" },
-    { id: "supervisor", col: "b", row: 2, kind: "router", chip: "라우터", title: "Supervisor", sub: "규칙 라우팅 · 웹 폴백", file: "src/agent.py" },
+    { id: "supervisor", col: "b", row: 2, kind: "router", chip: "라우터", title: "Supervisor", sub: "규칙 라우팅 · 웹 폴백", file: "src/coach/graph.py" },
     { id: "memory", col: "a", row: 2, kind: "store", chip: "기억", title: "기억 · 훈련 저장소", sub: "대화방 · 판정 기록 · 연습 기록", file: "SqliteSaver · SqliteStore · training.py" },
-    { id: "coach", col: "b", row: 3, kind: "coach", chip: "LLM 호출", title: "coach", sub: "근거로만 답변 작성", file: "src/agent.py · _coach" },
+    { id: "coach", col: "b", row: 3, kind: "coach", chip: "LLM 호출", title: "coach", sub: "근거로만 답변 작성", file: "src/coach/graph.py · _coach" },
     { id: "claude", col: "b", row: 4, kind: "llm", chip: "LLM", title: "Bedrock · Claude", sub: "답변 생성 (Converse API)", file: "ChatBedrockConverse" },
-    { id: "swing", col: "c", row: 1, kind: "agent", chip: "sub-agent", title: "swing_agent", sub: "사진 · 영상 · GIF 자세 판정", file: "src/subagents.py" },
-    { id: "knowledge", col: "c", row: 2, kind: "agent", chip: "sub-agent", title: "knowledge_agent", sub: "골프 지식 문서 검색", file: "src/subagents.py" },
-    { id: "info", col: "c", row: 3, kind: "agent", chip: "sub-agent", title: "info_agent", sub: "최신 · 문서 밖 정보", file: "src/subagents.py" },
-    { id: "pose", col: "d", row: 1, kind: "tool", chip: "도구", title: "MediaPipe 포즈", sub: "관절 → 각도 판정", file: "src/tools.py" },
-    { id: "docs", col: "d", row: 2, kind: "tool", chip: "RAG", title: "골프 지식 문서 25개", sub: "BM25 + Chroma 벡터", file: "src/retriever.py", h: 118, llmChip: "Titan 임베딩 · Bedrock" },
-    { id: "mcp", col: "d", row: 3, kind: "tool", chip: "MCP 서버", title: "golf-web-search", sub: "stdio · golf_web_search 도구", file: "src/mcp_server.py" },
-    { id: "ddg", col: "d", row: 4, kind: "external", chip: "외부", title: "DuckDuckGo", sub: "골프 웹 검색 (ddgs)", file: "src/web_search.py" },
+    { id: "swing", col: "c", row: 1, kind: "agent", chip: "sub-agent", title: "swing_agent", sub: "사진 · 영상 · GIF 자세 판정", file: "src/swing/agent.py" },
+    { id: "knowledge", col: "c", row: 2, kind: "agent", chip: "sub-agent", title: "knowledge_agent", sub: "골프 지식 문서 검색", file: "src/knowledge/agent.py" },
+    { id: "info", col: "c", row: 3, kind: "agent", chip: "sub-agent", title: "info_agent", sub: "최신 · 문서 밖 정보", file: "src/web_info/agent.py" },
+    { id: "pose", col: "d", row: 1, kind: "tool", chip: "도구", title: "MediaPipe 포즈", sub: "관절 → 각도 판정", file: "src/swing/pose.py" },
+    { id: "docs", col: "d", row: 2, kind: "tool", chip: "RAG", title: "골프 지식 문서 25개", sub: "BM25 + Chroma 벡터", file: "src/knowledge/retriever.py", h: 118, llmChip: "Titan 임베딩 · Bedrock" },
+    { id: "mcp", col: "d", row: 3, kind: "tool", chip: "MCP 서버", title: "golf-web-search", sub: "stdio · golf_web_search 도구", file: "src/web_info/mcp_server.py" },
+    { id: "ddg", col: "d", row: 4, kind: "external", chip: "외부", title: "DuckDuckGo", sub: "골프 웹 검색 (ddgs)", file: "src/web_info/search.py" },
   ];
   const box = (n) => ({ x: COL[n.col], y: ROW[n.row] - (n.h ? (n.h - H) / 2 : 0), w: W[n.col], h: n.h || H });
 

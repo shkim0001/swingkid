@@ -2,8 +2,8 @@
 
 import pytest
 
-from src import config
-from src.training import CATALOG, LEVELS, LIBRARY, LOCATIONS, UNITS, TrainingError, TrainingStore
+from src.shared import config
+from src.training.service import CATALOG, LEVELS, LIBRARY, LOCATIONS, UNITS, TrainingError, TrainingStore
 
 ITEMS = LIBRARY["items"]
 SWING_CODES = {config.SPINE_TILT, config.KNEE_FLEX, config.BENT_LEAD_ARM}

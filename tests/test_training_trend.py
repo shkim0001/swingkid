@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src.training import angle_trend
+from src.api import app as app_module
+from src.training.service import angle_trend
 
 
 def _rec(at, **metrics):

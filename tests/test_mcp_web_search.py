@@ -9,10 +9,10 @@ import json
 
 import pytest
 
-from src import config
-from src.agent import GolfCoachAgent
-from src.mcp_server import TOOL_NAME, golf_web_search
-from src.web_search import McpWebSearch, parse_tool_output
+from src.shared import config
+from src.coach.graph import GolfCoachAgent
+from src.web_info.mcp_server import TOOL_NAME, golf_web_search
+from src.web_info.search import McpWebSearch, parse_tool_output
 
 
 class FakeTool:

@@ -4,8 +4,8 @@ import datetime
 
 import pytest
 
-from src import config
-from src.training import PLAN_DAYS, PLAN_WEEKDAYS, TrainingError, TrainingStore
+from src.shared import config
+from src.training.service import PLAN_DAYS, PLAN_WEEKDAYS, TrainingError, TrainingStore
 
 D = datetime.date
 TODAY = D(2026, 11, 12)   # 목요일

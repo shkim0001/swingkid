@@ -4,8 +4,8 @@ import datetime
 
 import pytest
 
-from src import config
-from src.training import (
+from src.shared import config
+from src.training.service import (
     CATALOG,
     WEEKLY_TARGET_DAYS,
     TrainingError,

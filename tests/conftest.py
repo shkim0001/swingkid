@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from src import config
-from src.agent import build_agent
+from src.shared import config
+from src.coach.graph import build_agent
 
 
 def load_fixture(name: str) -> dict:

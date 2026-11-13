@@ -21,7 +21,7 @@ import secrets
 import sqlite3
 import threading
 
-from src import config
+from src.shared import config
 
 UNITS = ("회", "분", "개")
 TITLE_MAX = 40
@@ -102,7 +102,7 @@ def _rate(days: list[dict], until: datetime.date) -> dict:
     return {"planned": len(planned), "done": done, "rate": round(done / len(planned), 3) if planned else None}
 
 
-METRICS = {   # 각도 이름 → 화면 이름과 교육용 기준(src/config.py). 왼팔은 아래 기준만 있음
+METRICS = {   # 각도 이름 → 화면 이름과 교육용 기준(src/shared/config.py). 왼팔은 아래 기준만 있음
     "spine_tilt": {"label": "척추 앞기울기", "lo": config.SPINE_TILT_RANGE[0], "hi": config.SPINE_TILT_RANGE[1]},
     "knee_flex": {"label": "무릎 각도", "lo": config.KNEE_FLEX_RANGE[0], "hi": config.KNEE_FLEX_RANGE[1]},
     "lead_arm": {"label": "정점 왼팔 각도", "lo": config.LEAD_ARM_MIN, "hi": None},

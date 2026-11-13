@@ -40,3 +40,11 @@
 - [x] **T12. 관리자 훈련 보기** — 사용자별 계획·기록·달성률, 지우기 (2026-11-12, `GET /admin/training`·`/admin/training/{username}`·`DELETE /admin/training/routines/{id}`, API 테스트 2개, Playwright 데스크톱·390px)
 
 - [x] **T13. 문서 정리** — README·HISTORY·아키텍처, 전체 테스트·평가 결과 (2026-11-12, 334 passed, 오프라인 평가 20/20, 가드레일 스트레스 18/18)
+
+## 계정 (SERVICE.md 계정 항목)
+
+- [x] **T14. Google 계정 로그인** — `src/accounts/google.py` · `auth.py` · `api/app.py` · 로그인 화면 (2026-11-13, `tests/test_google_login.py` 28개, 전체 362 passed, 오프라인 평가 20/20, Playwright(Edge) 데스크톱·390px: 버튼 표시·취소 안내·Google 리디렉션 주소, 가로 넘침·화면 오류 없음. 결정: 아이디·비밀번호 가입은 함께 유지, 아이디는 이메일 앞부분·겹치면 숫자, 모든 Google 계정 허용)
+  - `GET /auth/google/login` → Google 동의 화면(state·nonce 쿠키), `GET /auth/google/callback` → 코드 교환 · ID 토큰 검사(iss·aud·exp·nonce) · 처음이면 계정 생성 · 세션 쿠키
+  - `GET /auth/providers` 로 화면이 Google 버튼 표시 여부를 앎. Worker 는 `X-Forwarded-Host` 를 넘기고, `.env` 의 `GOOGLE_REDIRECT_URI` 로 고정할 수도 있음
+  - 새 라이브러리 없음(이미 있는 httpx 로 토큰 교환)
+  - 완료 조건: 단위 테스트(아이디 만들기·겹침·admin 회피, 같은 sub 재로그인, 비밀번호 로그인 불가, ID 토큰 검사 실패 사례), API 테스트(가짜 Google 응답으로 콜백 → 로그인, state 불일치 거절, 미설정 시 숨김), 전체 테스트·오프라인 평가 유지

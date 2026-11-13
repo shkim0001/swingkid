@@ -11,9 +11,9 @@ cd "$(dirname "$0")"
 
 case "${1:-test}" in
   test)     python -m pytest -q ;;
-  eval)     python -m src.evaluate --detail ;;
-  offline)  GOLF_MODE=offline python -m uvicorn src.app:app --port "${PORT:-8000}" ;;
-  live)     GOLF_MODE=live python -m uvicorn src.app:app --port "${PORT:-8000}" ;;
+  eval)     python -m src.evaluation.evaluate --detail ;;
+  offline)  GOLF_MODE=offline python -m uvicorn src.api.app:app --port "${PORT:-8000}" ;;
+  live)     GOLF_MODE=live python -m uvicorn src.api.app:app --port "${PORT:-8000}" ;;
   fixtures) python data/fixtures/make_fixtures.py ;;
   *) echo "사용법: ./run.sh [test|eval|offline|live|fixtures]"; exit 1 ;;
 esac

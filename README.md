@@ -47,24 +47,22 @@ POST /query
 LLM(생성) 호출은 **coach 한 곳**뿐입니다. sub-agent 는 도구만 쓰고, 문서 검색의 의미 검색에 Titan 임베딩을 씁니다.
 화면 맨 아래와 `/architecture` 에서 같은 구조를 다이어그램으로 볼 수 있고, 모듈을 누르면 해당 함수의 실제 코드가 줄 번호와 함께 열립니다.
 
-| 파일 | 역할 |
+소스는 `src/` 아래 **도메인(기능)별 폴더**로 나뉩니다. 각 폴더의 역할과 파일 배치 규칙은 [CLAUDE.md](CLAUDE.md) 에 있습니다.
+
+| 폴더 · 파일 | 역할 |
 |---|---|
-| [src/agent.py](src/agent.py) | 메인 그래프(LangGraph): 가드 → supervisor(라우팅) → sub-agent → coach. 단기 기억(체크포인터) |
-| [src/subagents.py](src/subagents.py) | sub-agent 3개: SwingAgent(자세 판정), KnowledgeAgent(문서 RAG), InfoAgent(웹 검색) |
-| [src/guard.py](src/guard.py) | 규칙 기반 가드레일 (같은 질문은 항상 같은 결과) |
-| [src/tools.py](src/tools.py) | 관절 각도 계산, 문제 코드 판정, 백스윙 정점 검출, MediaPipe 추정기(영상·GIF) |
-| [src/retriever.py](src/retriever.py) | RAG: BM25(kiwipiepy 형태소), Titan/Chroma, 라이브용 하이브리드(BM25 + Chroma) |
-| [src/web_search.py](src/web_search.py) · [src/mcp_server.py](src/mcp_server.py) | 웹 검색: MCP 클라이언트(langchain-mcp-adapters) → stdio MCP 서버 `golf_web_search` → DuckDuckGo(ddgs, API 키 불필요) |
-| [src/memory.py](src/memory.py) | 장기 기억: 로그인 계정별 판정 기록(코드·각도)을 LangGraph Store 에 저장 |
-| [src/history.py](src/history.py) | 코칭 내역: 로그인 계정별 대화 목록 저장, 대화방(thread_id)마다 주인을 정해 남의 대화방을 읽거나 이어 쓰지 못하게 함 |
-| [src/training.py](src/training.py) · [data/training_library.json](data/training_library.json) | 훈련 관리: 라이브러리(문서 기반 25개), 내 항목·기록, 날짜 배치·요일 루틴·하루 빼기, 월 달력(완료·오늘·지남·예정)·달성률, 판정 기반 2주 플랜 제안, 각도 변화, 코칭용 연습 요약. 집계·판정은 모두 코드 |
-| [src/avatar.py](src/avatar.py) | 캐릭터 아이콘: 가입할 때 부품(몸·배경색, 귀·모자·새싹 등, 눈, 입, 볼터치, 무늬)을 무작위로 골라 저장하고 SVG 로 그림 |
-| [src/auth.py](src/auth.py) | 계정: 아이디·비밀번호 가입·로그인·로그아웃(scrypt 해시, 세션 토큰은 SHA-256 만 저장, 표준 라이브러리만 사용) |
-| [src/app.py](src/app.py) | FastAPI: `POST /query`, 화면, 샘플·기억·아키텍처 경로 |
-| [src/llm_judge.py](src/llm_judge.py) | 평가용 LLM 심사(고정 루브릭·고정 모델·temperature 0) |
-| [src/evaluate.py](src/evaluate.py) · [src/calibrate.py](src/calibrate.py) | 자체 평가(코드 채점·라이브·LLM 심사·전후 비교), 검색 기준값·지표 확인 |
-| [src/arch_code.py](src/arch_code.py) · [src/static/arch.js](src/static/arch.js) | 아키텍처 다이어그램과 모듈별 코드 보기 |
-| [src/static/index.html](src/static/index.html) | 웹 화면 |
+| [src/coach/](src/coach/) — `graph.py` · `prompts.py` · `schemas.py` | 메인 그래프(LangGraph): 가드 → supervisor(라우팅) → sub-agent → coach. 단기 기억(체크포인터). 코칭 시스템 프롬프트·프롬프트 조립, 그래프 상태와 `/query` 요청·응답 스키마 |
+| [src/guard/](src/guard/) — `rules.py` · `schemas.py` | 규칙 기반 가드레일 (같은 질문은 항상 같은 결과) |
+| [src/swing/](src/swing/) — `agent.py` · `pose.py` · `estimator.py` · `schemas.py` | SwingAgent(자세 판정), 관절 각도 계산·문제 코드 판정·백스윙 정점 검출(순수 함수), MediaPipe 추정기(사진·영상·GIF) |
+| [src/knowledge/](src/knowledge/) — `agent.py` · `retriever.py` · `schemas.py` | KnowledgeAgent(문서 RAG). BM25(kiwipiepy 형태소), Titan/Chroma, 라이브용 하이브리드(BM25 + Chroma) |
+| [src/web_info/](src/web_info/) — `agent.py` · `search.py` · `mcp_server.py` · `schemas.py` | InfoAgent(웹 검색). MCP 클라이언트(langchain-mcp-adapters) → stdio MCP 서버 `golf_web_search` → DuckDuckGo(ddgs, API 키 불필요) |
+| [src/memory/](src/memory/) — `store.py` | 장기 기억: 로그인 계정별 판정 기록(코드·각도)을 LangGraph Store 에 저장 |
+| [src/history/](src/history/) — `store.py` | 코칭 내역: 로그인 계정별 대화 목록 저장, 대화방(thread_id)마다 주인을 정해 남의 대화방을 읽거나 이어 쓰지 못하게 함 |
+| [src/training/](src/training/) — `service.py` · `schemas.py` · [data/training_library.json](data/training_library.json) | 훈련 관리: 라이브러리(문서 기반 25개), 내 항목·기록, 날짜 배치·요일 루틴·하루 빼기, 월 달력(완료·오늘·지남·예정)·달성률, 판정 기반 2주 플랜 제안, 각도 변화, 코칭용 연습 요약. 집계·판정은 모두 코드 |
+| [src/accounts/](src/accounts/) — `auth.py` · `google.py` · `avatar.py` · `schemas.py` | 계정: 아이디·비밀번호 가입·로그인·로그아웃, Google 계정 로그인(`.env` 의 `GOOGLE_CLIENT_ID`·`GOOGLE_CLIENT_SECRET`, 아이디는 이메일 앞부분·겹치면 숫자)(scrypt 해시, 세션 토큰은 SHA-256 만 저장, 표준 라이브러리만 사용). 캐릭터 아이콘(가입할 때 부품을 무작위로 골라 SVG 로 그림) |
+| [src/evaluation/](src/evaluation/) — `evaluate.py` · `calibrate.py` · `judge.py` · `prompts.py` · `schemas.py` | 자체 평가(코드 채점·라이브·LLM 심사·전후 비교), 검색 기준값·지표 확인. LLM 심사는 고정 루브릭·고정 모델·temperature 0 |
+| [src/api/](src/api/) — `app.py` · `arch_code.py` · `static/` | FastAPI: `POST /query`, 화면, 샘플·기억·계정·훈련·아키텍처 경로. 아키텍처 다이어그램과 모듈별 코드 보기, 웹 화면(`static/index.html`) |
+| [src/shared/](src/shared/) — `config.py` · `llm.py` · `fakes.py` · `trace.py` | 공통: 설정값·고정 문구·기준값, Bedrock LLM 클라이언트(모델 대체 순서), 채점용 가짜 모델, trace 단계 유틸 |
 | [data/docs/](data/docs/) | 교육용 골프 지식 문서 25개 |
 | [data/fixtures/](data/fixtures/) | 채점용 더미 관절 좌표 7개, 가짜 웹 검색 결과 |
 | [data/test_photos/](data/test_photos/) · [data/test_videos/](data/test_videos/) | 시험용 실제 사진 7장·영상 4개 (출처·라이선스는 각 폴더 SOURCES.md) |
@@ -186,7 +184,7 @@ AWS_DEFAULT_REGION=us-east-1
 GOLF_DEMO=1 ./run.sh live   # 라이브 + 더미 관절 좌표 데모 경로
 ```
 
-Windows PowerShell: `python -m pytest -q`, `python -m src.evaluate --detail`, `$env:GOLF_MODE="offline"; python -m uvicorn src.app:app --port 8000`.
+Windows PowerShell: `python -m pytest -q`, `python -m src.evaluation.evaluate --detail`, `$env:GOLF_MODE="offline"; python -m uvicorn src.api.app:app --port 8000`.
 서버를 띄운 뒤 http://localhost:8000 을 엽니다.
 
 처음 라이브로 실행하면 Chroma 검색 색인(`chroma_db/`)을 문서로 만들고, 처음 사진·영상을 분석할 때 포즈 모델 파일(`data/models/`, 약 9MB)을 공식 주소에서 내려받습니다. 둘 다 저장소에는 없습니다. 대화 기록(`checkpoints.sqlite`)과 장기 기억(`memory.sqlite`)도 실행 중에 생깁니다.
@@ -210,9 +208,9 @@ Windows PowerShell: `python -m pytest -q`, `python -m src.evaluate --detail`, `$
 
 | 겹 | 무엇을 | 명령 |
 |---|---|---|
-| A. 코드 채점 | status·issue_codes·sources·agents·처리 단계·고정 문구 | `python -m src.evaluate` (오프라인, 실제 API 없음) |
-| B. LLM 심사 | 기계로 못 보는 기대 특성·금지 항목, 근거 밖 내용, 질문 적합성 | `python -m src.evaluate --live --judge` |
-| C. 검색 진단 | 기대 문서 재현율·1위 비율·MRR | 평가 결과에 함께, `python -m src.calibrate [--live]` |
+| A. 코드 채점 | status·issue_codes·sources·agents·처리 단계·고정 문구 | `python -m src.evaluation.evaluate` (오프라인, 실제 API 없음) |
+| B. LLM 심사 | 기계로 못 보는 기대 특성·금지 항목, 근거 밖 내용, 질문 적합성 | `python -m src.evaluation.evaluate --live --judge` |
+| C. 검색 진단 | 기대 문서 재현율·1위 비율·MRR | 평가 결과에 함께, `python -m src.evaluation.calibrate [--live]` |
 
 - LLM 심사는 judge 모델(Sonnet 4.5)·temperature 0·루브릭을 고정하고, 같은 답을 두 번 채점해 다르면 세 번째로 다수결합니다. 낮은 점수·위반·판정 불일치는 사람 검토 대상으로 모읍니다.
 - 결과를 저장하고(`--save --label v2`) 이전 결과와 비교합니다(`--compare evaluation/results/<이전>.json`). 고쳐진 문항과 회귀(PASS → FAIL)를 함께 보여 줍니다.
@@ -227,7 +225,7 @@ Windows PowerShell: `python -m pytest -q`, `python -m src.evaluate --detail`, `$
 
 오프라인 코드 채점은 20/20, 보정 질문 50개 오류 0건입니다. 3차까지 남았던 웹 검색 환경 실패(6번)는 검색 엔진 대체 경로로 4차에서 해결했습니다. 평가는 `--strict-model` 로 코칭 모델 대체 경로를 꺼서 회차 간 모델 조건을 같게 둡니다.
 
-**가드레일 스트레스 세트** (`evaluation/guardrail_stress.csv` 18건): 표현을 바꾼 공격 12건(돌려 말한 통증, '뭐 사요'·브랜드 비교, 역할 바꾸기·가짜 SYSTEM 메시지·지시문 노출 요청 등)과 막으면 안 되는 정상 질문 6건입니다. 가드 보강 전 8/18(3건은 실제로 답변이 나감) → 보강 후 18/18(라이브도 18/18). 실행: `python -m src.evaluate --set evaluation/guardrail_stress.csv`
+**가드레일 스트레스 세트** (`evaluation/guardrail_stress.csv` 18건): 표현을 바꾼 공격 12건(돌려 말한 통증, '뭐 사요'·브랜드 비교, 역할 바꾸기·가짜 SYSTEM 메시지·지시문 노출 요청 등)과 막으면 안 되는 정상 질문 6건입니다. 가드 보강 전 8/18(3건은 실제로 답변이 나감) → 보강 후 18/18(라이브도 18/18). 실행: `python -m src.evaluation.evaluate --set evaluation/guardrail_stress.csv`
 
 ## 9. 한계
 

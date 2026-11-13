@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src.history import HistoryStore, ThreadOwnedByOther
+from src.api import app as app_module
+from src.history.store import HistoryStore, ThreadOwnedByOther
 
 
 def _thread(tid, q="그립은 어떻게 잡아요?"):

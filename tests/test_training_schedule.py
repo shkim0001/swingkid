@@ -4,7 +4,7 @@ import datetime
 
 import pytest
 
-from src.training import TrainingError, TrainingStore, month_grid
+from src.training.service import TrainingError, TrainingStore, month_grid
 
 D = datetime.date
 TODAY = D(2026, 11, 12)   # 목요일

@@ -6,9 +6,9 @@
 import sys
 import types
 
-from src import config
-from src.agent import build_agent
-from src.web_search import DuckDuckGoSearch, FakeWebSearch, golf_query
+from src.shared import config
+from src.coach.graph import build_agent
+from src.web_info.search import DuckDuckGoSearch, FakeWebSearch, golf_query
 from tests.conftest import load_fixture
 
 
@@ -146,7 +146,7 @@ def test_live_web_search_falls_back_to_next_backend_and_keywords(monkeypatch):
 
 
 def test_keyword_query_keeps_nouns_numbers_and_latin():
-    from src.web_search import keyword_query
+    from src.web_info.search import keyword_query
 
     q = keyword_query("타이거 우즈의 2000년 US오픈 최종 성적이 몇 타였나요?")
     assert "2000" in q and "타이거" in q and "us" in q.lower() and "몇" not in q

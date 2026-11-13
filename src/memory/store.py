@@ -21,7 +21,7 @@ import re
 import uuid
 from collections import Counter
 
-from src import config
+from src.shared import config
 
 MEMORY_DOC_ID = "memory://swing-history"   # 장기 기억을 근거로 쓸 때 contexts·sources 에 남는 이름
 KIND_KO = {"photo": "사진(측면 어드레스)", "video": "영상(정면 스윙)"}

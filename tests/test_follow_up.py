@@ -9,9 +9,10 @@ import json
 
 import pytest
 
-from src import config
-from src.agent import build_agent
-from src.guard import about_pose
+from src.shared import config
+from src.coach.graph import build_agent
+from src.coach.prompts import build_prompt
+from src.guard.rules import about_pose
 
 FIXTURE = json.loads((config.FIXTURES_DIR / "video_bent_arm.json").read_text(encoding="utf-8"))
 
@@ -33,7 +34,7 @@ def test_wrist_follow_up_continues_swing_finding(agent, question):
 def test_follow_up_prompt_repeats_last_finding_and_what_was_measured(agent):
     agent.ask("손목 스냅은 어때?", thread_id="t")
     state = agent.graph.get_state({"configurable": {"thread_id": "t"}}).values
-    prompt = agent._prompt(state)
+    prompt = build_prompt(state)
     assert "직전 판정(같은 대화, 정면 스윙 영상): bent_lead_arm" in prompt
     assert "측정한 항목은 백스윙 정점 왼팔 각도뿐" in prompt
 
@@ -42,7 +43,7 @@ def test_unrelated_follow_up_does_not_carry_finding(agent):
     r = agent.ask("버디가 뭐예요?", thread_id="t")
     assert r["sources"] == ["scoring.md"]
     state = agent.graph.get_state({"configurable": {"thread_id": "t"}}).values
-    assert "직전 판정" not in agent._prompt(state)
+    assert "직전 판정" not in build_prompt(state)
 
 
 def test_wrist_questions_answer_from_docs_without_swing():

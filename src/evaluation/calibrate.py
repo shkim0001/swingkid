@@ -7,8 +7,8 @@ data/calibration.json 의 보정용 질문(평가셋과 별개)으로 현재 기
   - 오답률: 모를 질문에 근거를 내놓은 비율
 평가셋(test_queries.csv) 20건보다 크고 서로 겹치지 않아, 평가셋에만 맞춘 과적합을 잡는 데도 씁니다.
 
-실행: python -m src.calibrate          (오프라인 BM25)
-      python -m src.calibrate --live   (라이브 검색기: BM25 + Titan/Chroma 하이브리드, Titan 임베딩 호출)
+실행: python -m src.evaluation.calibrate          (오프라인 BM25)
+      python -m src.evaluation.calibrate --live   (라이브 검색기: BM25 + Titan/Chroma 하이브리드, Titan 임베딩 호출)
 """
 
 from __future__ import annotations
@@ -16,8 +16,8 @@ from __future__ import annotations
 import argparse
 import json
 
-from src import config
-from src.retriever import BM25Retriever
+from src.shared import config
+from src.knowledge.retriever import BM25Retriever
 
 
 def _retriever(live: bool):
@@ -25,7 +25,7 @@ def _retriever(live: bool):
         return BM25Retriever(), f"오프라인 BM25 — 기준: 점수 >= {config.BM25_MIN_SCORE}, 단어 비율 >= {config.BM25_MIN_COVERAGE}"
     from dotenv import load_dotenv
 
-    from src.retriever import ChromaRetriever, HybridRetriever
+    from src.knowledge.retriever import ChromaRetriever, HybridRetriever
 
     load_dotenv(config.PROJECT_ROOT / ".env")
     return (HybridRetriever(semantic=ChromaRetriever(), lexical=BM25Retriever()),

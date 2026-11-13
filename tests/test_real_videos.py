@@ -6,8 +6,8 @@ MediaPipe 나 포즈 모델 파일이 없는 환경(자동 채점 등)에서는 
 
 import pytest
 
-from src import config
-from src.tools import analyze_pose
+from src.shared import config
+from src.swing.pose import analyze_pose
 
 pytest.importorskip("mediapipe")
 pytest.importorskip("cv2")
@@ -19,7 +19,7 @@ VIDEOS = config.PROJECT_ROOT / "data" / "test_videos"
 
 @pytest.fixture(scope="module")
 def findings():
-    from src.tools import MediaPipeEstimator
+    from src.swing.estimator import MediaPipeEstimator
 
     est = MediaPipeEstimator()
     return {i: analyze_pose(est.estimate_video((VIDEOS / f"face_on_swing_{i}.webm").read_bytes())) for i in range(1, 5)}

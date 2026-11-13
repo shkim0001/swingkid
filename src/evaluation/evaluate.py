@@ -2,7 +2,7 @@
 
 세 겹으로 봅니다.
   A. 정답셋 기반(코드): status·issue_codes·sources·agents·trace 등 답이 정해진 항목 — 아래 '판정 방법'
-  B. LLM 심사(--judge): 기계로 못 보는 기대 특성·금지 항목과 답변 품질 — src/llm_judge.py (고정 루브릭·고정 모델)
+  B. LLM 심사(--judge): 기계로 못 보는 기대 특성·금지 항목과 답변 품질 — src/evaluation/judge.py (고정 루브릭·고정 모델)
   C. RAG 진단: 검색 재현율(기대 문서를 가져왔나)·정밀도(몇 번째였나, 1위 비율·MRR)는 코드로,
      충실성(근거 밖 내용 없음)·답변 적합성(질문에 바로 답함)은 judge 로 계산합니다(RAGAS 4대 지표의 정의를 따름).
 
@@ -26,10 +26,10 @@
 - input 이 "[... fixture: 이름] 질문" 이면 data/fixtures/이름.json 을 pose_fixture 로 주입합니다.
 - note 에 "N번 케이스 다음 턴" 이 있으면 N번 케이스와 같은 thread_id 로 이어서 보냅니다.
 
-실행: python -m src.evaluate                         (오프라인 코드 채점, 요약)
-      python -m src.evaluate --detail                (케이스별 판정 근거까지)
-      python -m src.evaluate --live --judge --save --label v1   (라이브 + LLM 심사, 결과 저장)
-      python -m src.evaluate --live --judge --save --label v2 --compare evaluation/results/<v1 파일>.json  (전후 비교)
+실행: python -m src.evaluation.evaluate                         (오프라인 코드 채점, 요약)
+      python -m src.evaluation.evaluate --detail                (케이스별 판정 근거까지)
+      python -m src.evaluation.evaluate --live --judge --save --label v1   (라이브 + LLM 심사, 결과 저장)
+      python -m src.evaluation.evaluate --live --judge --save --label v2 --compare evaluation/results/<v1 파일>.json  (전후 비교)
 """
 
 from __future__ import annotations
@@ -42,8 +42,8 @@ import re
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from src import config
-from src.agent import build_agent
+from src.shared import config
+from src.coach.graph import build_agent
 
 CSV_PATH = config.PROJECT_ROOT / "evaluation" / "test_queries.csv"
 RESULTS_DIR = config.PROJECT_ROOT / "evaluation" / "results"
@@ -239,7 +239,7 @@ def run(detail: bool = False, mode: str = "offline", judge=None, model: str | No
             case.retrieval = {"expected": docs, "sources": r["sources"], "rank": min((x for x in ranks if x), default=None)}
 
         if judge is not None and r["status"] == config.STATUS_ANSWERED and "coach" in steps:
-            from src.llm_judge import JudgeCase
+            from src.evaluation.schemas import JudgeCase
 
             pose = next((s["output"] for s in r["trace"] if s["step"] == "pose"), "")
             try:
@@ -405,7 +405,7 @@ def main() -> int:
         load_dotenv(config.PROJECT_ROOT / ".env")
     judge = None
     if args.judge:
-        from src.llm_judge import JUDGE_MODEL, LLMJudge
+        from src.evaluation.judge import JUDGE_MODEL, LLMJudge
 
         judge = LLMJudge(model=args.judge_model or JUDGE_MODEL)
     results = run(mode=mode, judge=judge, model=args.model, csv_path=Path(args.set) if args.set else None,

@@ -38,20 +38,20 @@
 
   | 도구 | 도메인 | 기능 | 인터페이스 |
   |---|---|---|---|
-  | 가드레일 | 안전 | 의학·장비 구매·레슨비·개인정보·인젝션을 검색 전에 차단(`guard_` 코드 1개), 골프와 무관한 질문은 no_answer. 규칙 기반(정규식). 돌려 말한 통증(시큰·쑤시·결림), '뭐 사요'·브랜드 비교, 역할 바꾸기·가짜 SYSTEM 메시지·지시문 노출 요청까지 포함 | `src/guard.py` (가장 먼저 실행) |
-  | supervisor | 라우팅 | 질문마다 sub-agent 를 고름(사진·영상 → 스윙 분석, 최신 정보 → 골프 정보, 그 밖 → 골프 지식). 지식 agent 가 근거를 못 찾으면 골프 정보 agent 로 넘김. 규칙 기반이라 결정적 | `src/agent.py` |
-  | 웹 검색기 | 골프 정보 | 골프 정보 agent 의 도구. 라이브는 **MCP 서버**(`golf-web-search`, stdio, 도구 `golf_web_search`)를 langchain-mcp-adapters 로 호출하고 서버 안에서 DuckDuckGo(ddgs) 검색. 채점은 고정 결과의 가짜 검색기. 출처 URL 을 sources 로 반환 | `src/mcp_server.py` · `src/web_search.py` · 주입 가능한 `web_search` |
+  | 가드레일 | 안전 | 의학·장비 구매·레슨비·개인정보·인젝션을 검색 전에 차단(`guard_` 코드 1개), 골프와 무관한 질문은 no_answer. 규칙 기반(정규식). 돌려 말한 통증(시큰·쑤시·결림), '뭐 사요'·브랜드 비교, 역할 바꾸기·가짜 SYSTEM 메시지·지시문 노출 요청까지 포함 | `src/guard/rules.py` (가장 먼저 실행) |
+  | supervisor | 라우팅 | 질문마다 sub-agent 를 고름(사진·영상 → 스윙 분석, 최신 정보 → 골프 정보, 그 밖 → 골프 지식). 지식 agent 가 근거를 못 찾으면 골프 정보 agent 로 넘김. 규칙 기반이라 결정적 | `src/coach/graph.py` |
+  | 웹 검색기 | 골프 정보 | 골프 정보 agent 의 도구. 라이브는 **MCP 서버**(`golf-web-search`, stdio, 도구 `golf_web_search`)를 langchain-mcp-adapters 로 호출하고 서버 안에서 DuckDuckGo(ddgs) 검색. 채점은 고정 결과의 가짜 검색기. 출처 URL 을 sources 로 반환 | `src/web_info/mcp_server.py` · `src/web_info/search.py` · 주입 가능한 `web_search` |
   | 지식 검색기 | 골프 지식 | 25개 문서 검색(최신 결과·순위·시세는 범위 밖). 라이브에서는 BM25 + Titan v2/Chroma 하이브리드, 채점에서는 BM25(kiwipiepy 토큰화) | 주입 가능한 retriever |
   | 포즈 추정기 | 영상 처리 | 사진·영상(mp4·webm·mov, 움직이는 GIF)에서 관절 좌표 추출. 라이브에서는 MediaPipe Pose + OpenCV(GIF 는 Pillow 로 프레임 분리), 채점에서는 더미 관절 좌표 fixture. 영상은 프레임별 각도(`angle_series`)도 돌려줘 화면에 그래프로 표시 | 주입 가능한 `pose_estimator` |
   | 각도 판정기 | 스윙 분석 | 척추 앞기울기, 무릎 각도, 왼팔 팔꿈치 각도를 계산해 문제 코드 3개를 결정적으로 판정 | 순수 함수 |
   | 정점 검출기 | 스윙 분석 | 영상에서 백스윙 정점 프레임 검출. 임팩트 이전 구간만 보며 라이브 전용 | 순수 함수 (단위 테스트 1개) |
   | 코칭 LLM | 코칭 | 검색 문서와 판정 결과를 받아 교정 설명 작성. Bedrock Claude Sonnet 4.5, 채점에서는 가짜 모델 | `llm=None` 주입 |
   | 대화 기억 (단기) | 세션 | `thread_id` 기준으로 대화 이력 유지 | SqliteSaver (`checkpoints.sqlite`) |
-  | 장기 기억 | 사용자 | 로그인 계정 기준으로 사진·영상 판정 기록을 저장해, 대화방이 달라도 "지난번보다 나아졌는지"를 이어서 코칭. 본인만 조회·삭제. 게스트는 저장·조회 안 함 | SqliteStore (`memory.sqlite`, `src/memory.py`) |
-  | 계정 | 사용자 | 아이디·비밀번호 가입·로그인·로그아웃. 비밀번호는 scrypt 해시, 세션 토큰은 SHA-256 만 저장, 세션은 HttpOnly 쿠키(30일). 가입할 때 무작위 캐릭터 아이콘을 정해 저장(`src/avatar.py`, SVG). 관리자 `admin` 은 `.env` 의 `ADMIN_PASSWORD` 로만 생기며 모든 계정의 코칭을 보고 지울 수 있음(이어 쓰기 불가). 표준 라이브러리만 사용 | SQLite (`accounts.sqlite`, `src/auth.py`) |
-  | 코칭 내역 | 사용자 | 로그인 계정별 대화 목록을 서버에 저장해 자기 것만 보이고 기기를 넘어 이어짐. 대화방(thread_id)마다 주인을 정해 다른 계정·게스트는 읽기·덮어쓰기·이어 쓰기 불가(403). 게스트 내역은 브라우저에만, 영상 원본은 브라우저에만 | SQLite (`accounts.sqlite`, `src/history.py`) |
-  | 훈련 관리 | 사용자 | 계정별 연습 항목과 기록(날짜·횟수·메모). 판정 문제 코드에 맞는 연습 항목을 규칙으로 자동 추천하고 사용자가 직접 추가도 함. 주간 달성·연속 연습일은 코드가 계산하고, 판정 각도 추이를 그래프로 보여 줌. 코칭이 연습 기록을 참고. 관리자는 보기·지우기. 자세한 내용은 6장 | SQLite (`accounts.sqlite`, `src/training.py`) |
-  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?, model?` (장기 기억 주인은 세션 쿠키) / 응답 `status, issue_codes, sources, agents, angle_series, model`<br>기타: `GET /health`, `GET /models`, `POST /auth/signup·login·logout`, `GET /auth/me`, `GET /auth/avatar.svg`, `GET /admin/threads`, `DELETE /admin/threads/{thread_id}`, `GET·DELETE /memory`, `GET·DELETE /threads`, `PUT·DELETE /threads/{thread_id}`, `GET /samples/media`, `POST /demo/fixture`, `GET /architecture` | `src/app.py` POST /query |
+  | 장기 기억 | 사용자 | 로그인 계정 기준으로 사진·영상 판정 기록을 저장해, 대화방이 달라도 "지난번보다 나아졌는지"를 이어서 코칭. 본인만 조회·삭제. 게스트는 저장·조회 안 함 | SqliteStore (`memory.sqlite`, `src/memory/store.py`) |
+  | 계정 | 사용자 | 아이디·비밀번호 가입·로그인·로그아웃, **Google 계정 로그인(OAuth 2.0 / OpenID Connect, 모든 Google 계정 허용)**. Google 로 처음 로그인하면 이메일 앞부분으로 아이디를 자동으로 만들고(허용 문자 밖은 `_`, 겹치면 뒤에 2·3… 숫자), 다음부터는 Google 고유 ID(sub)로 같은 계정에 연결. Google 계정은 비밀번호 로그인 불가. `.env` 의 `GOOGLE_CLIENT_ID`·`GOOGLE_CLIENT_SECRET` 이 없으면 Google 버튼을 숨김. 비밀번호는 scrypt 해시, 세션 토큰은 SHA-256 만 저장, 세션은 HttpOnly 쿠키(30일). 가입할 때 무작위 캐릭터 아이콘을 정해 저장(`src/accounts/avatar.py`, SVG). 관리자 `admin` 은 `.env` 의 `ADMIN_PASSWORD` 로만 생기며 모든 계정의 코칭을 보고 지울 수 있음(이어 쓰기 불가). 표준 라이브러리만 사용 | SQLite (`accounts.sqlite`, `src/accounts/auth.py` · `src/accounts/google.py`) |
+  | 코칭 내역 | 사용자 | 로그인 계정별 대화 목록을 서버에 저장해 자기 것만 보이고 기기를 넘어 이어짐. 대화방(thread_id)마다 주인을 정해 다른 계정·게스트는 읽기·덮어쓰기·이어 쓰기 불가(403). 게스트 내역은 브라우저에만, 영상 원본은 브라우저에만 | SQLite (`accounts.sqlite`, `src/history/store.py`) |
+  | 훈련 관리 | 사용자 | 계정별 연습 항목과 기록(날짜·횟수·메모). 판정 문제 코드에 맞는 연습 항목을 규칙으로 자동 추천하고 사용자가 직접 추가도 함. 주간 달성·연속 연습일은 코드가 계산하고, 판정 각도 추이를 그래프로 보여 줌. 코칭이 연습 기록을 참고. 관리자는 보기·지우기. 자세한 내용은 6장 | SQLite (`accounts.sqlite`, `src/training/service.py`) |
+  | API | 진입점 | 표준 규약: 요청 `{question}` → 응답 `{answer, contexts[{doc_id, text}], trace[{step, input, output}]}`<br>추가 필드: 요청 `image_base64?, video_base64?, thread_id?, model?` (장기 기억 주인은 세션 쿠키) / 응답 `status, issue_codes, sources, agents, angle_series, model`<br>기타: `GET /health`, `GET /models`, `POST /auth/signup·login·logout`, `GET /auth/me`, `GET /auth/providers`, `GET /auth/google/login·callback`, `GET /auth/avatar.svg`, `GET /admin/threads`, `DELETE /admin/threads/{thread_id}`, `GET·DELETE /memory`, `GET·DELETE /threads`, `PUT·DELETE /threads/{thread_id}`, `GET /samples/media`, `POST /demo/fixture`, `GET /architecture` | `src/api/app.py` POST /query |
 
 - **데이터 소스**
 

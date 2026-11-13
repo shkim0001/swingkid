@@ -13,17 +13,9 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 
-from src import config
-
-
-@dataclass(frozen=True)
-class GuardResult:
-    blocked: bool
-    code: str | None = None   # guard_ 코드 하나 (차단이 아니면 None)
-    reason: str = ""          # 사람이 읽는 차단 이유 (trace에 남깁니다)
-    golf: bool = True         # False 면 골프와 무관한 질문. 차단하지 않고 검색 없이 no_answer 로 끝냅니다
+from src.guard.schemas import GuardResult
+from src.shared import config
 
 
 # 부상·통증 상담. '스트레칭'은 정상 준비 운동이라 여기에 넣지 않습니다.
@@ -102,7 +94,7 @@ def check(question: str, has_media: bool = False, in_conversation: bool = False)
         return GuardResult(True, config.GUARD_OFF_TOPIC, "개인정보 요청")
     if not has_media and _OTHER_SPORTS.search(q) and "골프" not in q:
         return GuardResult(False, None, "다른 종목 질문(골프와 무관)", golf=False)
-    if not has_media and not in_conversation and not _GOLF_WORDS.search(q) and not _is_follow_up(q):
+    if not has_media and not in_conversation and not _GOLF_WORDS.search(q) and not is_follow_up(q):
         return GuardResult(False, None, "골프와 무관한 질문", golf=False)
     return GuardResult(False)
 
@@ -138,7 +130,7 @@ def about_pose(question: str) -> bool:
     return bool(_POSE_FOLLOW_UP.search(question))
 
 
-def _is_follow_up(question: str) -> bool:
+def is_follow_up(question: str) -> bool:
     """'아까 알려준 교정 방법은…'처럼 이전 대화를 잇는 질문인지 봅니다.
 
     이런 질문은 골프 단어가 없어도 같은 대화(thread_id) 안에서는 정상 질문입니다.

@@ -2,8 +2,8 @@
 
 import pytest
 
-from src import config
-from src.guard import blocked_answer, check
+from src.shared import config
+from src.guard.rules import blocked_answer, check
 
 
 @pytest.mark.parametrize(
@@ -65,7 +65,7 @@ def test_medical_answer_adds_expert_notice():
 
 
 def test_posture_words_count_as_golf_questions():
-    from src.guard import check
+    from src.guard.rules import check
 
     assert not check("무릎은 괜찮은데 척추는 어떻게 고쳐요?").blocked
     assert check("무릎이 아픈데 스윙해도 되나요?").code == config.GUARD_MEDICAL
@@ -73,7 +73,7 @@ def test_posture_words_count_as_golf_questions():
 
 def test_conversation_relaxes_only_the_off_topic_rule():
     """대화 중에는 골프 단어 없는 이어지는 질문을 통과시키되, 다른 차단은 그대로입니다."""
-    from src.guard import check
+    from src.guard.rules import check
 
     assert check("그럼 하루에 몇 번 하면 돼요?").golf is False
     assert check("그럼 하루에 몇 번 하면 돼요?", in_conversation=True).golf

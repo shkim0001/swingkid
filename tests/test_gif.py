@@ -4,14 +4,14 @@ import pathlib
 
 import pytest
 
-from src import config
+from src.shared import config
 
 VIDEO = config.PROJECT_ROOT / "data" / "test_videos" / "face_on_swing_2.webm"
 
 
 def test_gif_delay_follows_browser_rule():
     pytest.importorskip("mediapipe")
-    from src.tools import MediaPipeEstimator
+    from src.swing.estimator import MediaPipeEstimator
 
     assert MediaPipeEstimator.gif_delay(None) == 0.1      # 표시 시간 없음 → 100ms
     assert MediaPipeEstimator.gif_delay(10) == 0.1        # 10ms 이하 → 100ms (브라우저와 같음)
@@ -24,7 +24,8 @@ def test_animated_gif_is_analyzed_like_a_video(tmp_path: pathlib.Path):
     Image = pytest.importorskip("PIL.Image")
     if not VIDEO.exists() or not config.POSE_MODEL_PATH.exists():
         pytest.skip("시험 영상이나 포즈 모델 파일이 없습니다")
-    from src.tools import MediaPipeEstimator, analyze_pose
+    from src.swing.estimator import MediaPipeEstimator
+    from src.swing.pose import analyze_pose
 
     # 시험 영상의 스윙 구간(3~12초)을 10fps GIF 로 만듭니다
     cap = cv2.VideoCapture(str(VIDEO))

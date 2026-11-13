@@ -19,6 +19,9 @@ export default {
     const target = new URL(url.pathname + url.search, env.BACKEND_URL);
     const headers = new Headers(request.headers);
     headers.delete("host");
+    // 백엔드가 Google 로그인 콜백 주소를 브라우저가 보는 도메인으로 만들 수 있게 원래 도메인을 넘깁니다.
+    headers.set("x-forwarded-host", url.host);
+    headers.set("x-forwarded-proto", url.protocol.replace(":", ""));
 
     try {
       return await fetch(target, {

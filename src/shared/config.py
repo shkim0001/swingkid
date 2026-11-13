@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 # ── 경로 ────────────────────────────────────────────────────
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]   # src/shared/config.py → 프로젝트 루트
 DOCS_DIR = PROJECT_ROOT / "data" / "docs"
 FIXTURES_DIR = PROJECT_ROOT / "data" / "fixtures"
 CALIBRATION_FILE = PROJECT_ROOT / "data" / "calibration.json"
@@ -32,8 +32,8 @@ COLLECTION = "sds_policies"
 CHECKPOINT_DB = "checkpoints.sqlite"
 # 장기 기억(사용자별 자세 판정 기록, LangGraph SqliteStore). 대화방 기억(checkpoints.sqlite)과 따로 둡니다.
 MEMORY_DB = "memory.sqlite"
-# 계정(아이디·비밀번호 해시·세션 토큰 해시, src/auth.py). 라이브 모드에서만 파일로 저장합니다.
-ACCOUNTS_DB = "accounts.sqlite"   # 코칭 내역(src/history.py)도 같은 파일에 저장
+# 계정(아이디·비밀번호 해시·세션 토큰 해시, src/accounts/auth.py). 라이브 모드에서만 파일로 저장합니다.
+ACCOUNTS_DB = "accounts.sqlite"   # 코칭 내역(src/history/store.py)도 같은 파일에 저장
 MAX_THREAD_BYTES = 2 * 1024 * 1024   # 코칭 하나(질문·답변·사진 미리보기 JSON)의 최대 크기
 MEMORY_RECENT = 5   # 코칭 때 참고하는 최근 판정 기록 수
 
@@ -70,7 +70,7 @@ MEDICAL_SUFFIX = "통증이나 부상은 전문가와 상담하세요."
 OFF_TOPIC_SUFFIX = "골프와 관련된 질문에만 답할 수 있습니다."
 # 이전 판정을 물었는데 장기 기억에 기록이 없을 때 NO_ANSWER_TEXT 뒤에 붙입니다.
 MEMORY_EMPTY_TEXT = "저장된 이전 자세 판정 기록이 없습니다. 사진이나 영상으로 판정을 받으면 기록이 쌓입니다."
-# 로그인했지만 연습 항목·기록이 없을 때 연습 현황 질문에 붙이는 안내 (src/training.py)
+# 로그인했지만 연습 항목·기록이 없을 때 연습 현황 질문에 붙이는 안내 (src/training/service.py)
 PRACTICE_EMPTY_TEXT = "아직 연습 기록이 없습니다. 훈련 화면에서 연습 항목을 고르고 일정을 잡은 뒤 기록하면, 연습 현황을 짚어 드릴 수 있습니다."
 
 # ── 문제 코드 ───────────────────────────────────────────────
@@ -99,7 +99,7 @@ MAX_MEDIA_BYTES = 10 * 1024 * 1024  # 디코딩 후 10MB
 # 4: 평가 v1 에서 '드라이버 그립' 질문이 grip.md 의 '양손 연결(오버래핑·인터로킹)' 조각(BM25 4위)을 놓쳐 3 → 4
 TOP_K = 4
 # BM25 최고 점수가 이 값보다 낮으면 '문서에 근거 없음'으로 봅니다.
-# data/calibration.json 의 보정용 질문(평가셋과 별개)으로 정한 값입니다. (재현: python -m src.calibrate)
+# data/calibration.json 의 보정용 질문(평가셋과 별개)으로 정한 값입니다. (재현: python -m src.evaluation.calibrate)
 # 문서 25개(조각 100여 개)로 늘리며 다시 보정: '버디가 뭐예요?'처럼 단어 하나짜리 정의 질문도 잡도록 3.5 → 2.5
 BM25_MIN_SCORE = 2.5
 # 1위 조각이 속한 문서가 질문 단어를 희귀도(IDF) 가중 비율로 이 값 이상 담고 있어야 근거로 인정합니다.

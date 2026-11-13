@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from src import app as app_module
-from src.auth import AccountStore, AuthError
+from src.api import app as app_module
+from src.accounts.auth import AccountStore, AuthError
 
 ADMIN_PW = "admin-pass-1234"
 

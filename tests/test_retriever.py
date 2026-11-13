@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from src import config
-from src.retriever import BM25Retriever, load_chunks
+from src.shared import config
+from src.knowledge.retriever import BM25Retriever, load_chunks
 
 
 @pytest.fixture(scope="module")
@@ -50,7 +50,7 @@ def test_calibration_questions(retriever):
     ],
 )
 def test_fresh_info_rule_keeps_normal_questions(question):
-    from src.retriever import needs_fresh_info
+    from src.knowledge.retriever import needs_fresh_info
 
     assert not needs_fresh_info(question)
 
@@ -62,7 +62,8 @@ def test_chroma_sync_reindexes_only_changed_chunks():
 
     from langchain_core.embeddings import DeterministicFakeEmbedding
 
-    from src.retriever import Chunk, ChromaRetriever
+    from src.knowledge.retriever import ChromaRetriever
+    from src.knowledge.schemas import Chunk
 
     a, b, c = Chunk("a.md", "그립 - 왼손 너클"), Chunk("b.md", "퍼팅 - 어깨 스트로크"), Chunk("c.md", "핸디캡 - 계산")
     r = ChromaRetriever(

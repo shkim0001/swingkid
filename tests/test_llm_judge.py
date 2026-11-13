@@ -2,8 +2,10 @@
 
 import json
 
-from src import evaluate
-from src.llm_judge import JUDGE_MODEL, JUDGE_TEMPERATURE, RUBRIC, JudgeCase, JudgeResult, LLMJudge
+from src.evaluation import evaluate
+from src.evaluation.judge import JUDGE_MODEL, JUDGE_TEMPERATURE, LLMJudge
+from src.evaluation.prompts import RUBRIC
+from src.evaluation.schemas import JudgeCase, JudgeResult
 
 
 def result(score=5, correct=True, **kw):
@@ -111,8 +113,8 @@ def test_mode_scoped_atoms():
 
 def _case20_live(verdict):
     """라이브처럼 웹 검색이 선크림 글을 찾았을 때 20번 판정 (실제 호출 없음)."""
-    from src.agent import build_agent
-    from src.web_search import WebResult
+    from src.coach.graph import build_agent
+    from src.web_info.schemas import WebResult
 
     class FoundWeb:
         last_error = None
@@ -138,7 +140,7 @@ def test_case20_live_fails_when_judge_finds_made_up_content():
 
 def test_judge_failure_does_not_stop_the_run():
     """judge 가 사용량 한도 등으로 실패해도 평가 실행은 계속되고, 그 문항은 사람 확인 대상으로 남습니다."""
-    from src.evaluate import run
+    from src.evaluation.evaluate import run
 
     class BrokenJudge:
         def judge(self, case):

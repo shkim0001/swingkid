@@ -14,7 +14,7 @@
 | 항목 | 상태 |
 |---|---|
 | 평가셋 | `evaluation/test_queries.csv` 20건 (positive 8 · negative 4 · edge 5 · guardrail 3) |
-| 코드 채점 (오프라인) | `python -m src.evaluate` **20/20**. 가짜 모델 + BM25 + 가짜 웹 검색기 + 관절 좌표 fixture, 실제 API 호출 없음 |
+| 코드 채점 (오프라인) | `python -m src.evaluation.evaluate` **20/20**. 가짜 모델 + BM25 + 가짜 웹 검색기 + 관절 좌표 fixture, 실제 API 호출 없음 |
 | 기계로 못 보는 항목 | `expected_traits`·`forbidden` 중 **46개가 '수동 확인'**으로 남아 아무도 채점하지 않음 (예: "2023년판 기준임을 밝힘", "출처에 없는 수치 지어내기") |
 | 라이브 평가 | 없음 (Bedrock Claude · Titan/Chroma · MCP 웹 검색 · MediaPipe 실제 경로를 평가셋으로 돌린 적 없음) |
 | LLM 심사(judge) | 없음 |
@@ -27,7 +27,7 @@
 
 | 겹 | 무엇을 | 어떻게 | 언제 | 비용 |
 |---|---|---|---|---|
-| **A. 정답셋 기반 (코드)** | status · issue_codes · sources · agents · trace 단계 · 고정 문구 | 지금 `src/evaluate.py` 그대로 (오프라인 + 라이브) | 모든 변경 | 오프라인 무료 |
+| **A. 정답셋 기반 (코드)** | status · issue_codes · sources · agents · trace 단계 · 고정 문구 | 지금 `src/evaluation/evaluate.py` 그대로 (오프라인 + 라이브) | 모든 변경 | 오프라인 무료 |
 | **B. LLM 심사** | 답변이 질문에 맞게, 근거 안에서, 금지 항목 없이 답했는가 (수동 확인 46개 포함) | 고정 루브릭 judge (4-1 원칙) | 라이브 실행 때 | Bedrock 호출 |
 | **C. RAG 진단 지표** | 실패 원인이 검색인가 생성인가 | RAGAS 4지표를 직접 계산 (라이브러리 설치 없이) | 라이브 실행 때 + 검색 설정을 바꿀 때 | 일부 호출 |
 
@@ -39,7 +39,7 @@
 - `agents`에 기대 sub-agent 포함, `trace`에 기대 단계 포함, 금지 단계(예: 무관 질문에서 검색·LLM 호출) 없음
 - 고정 문구 (근거 없음·차단·재촬영 안내)
 
-추가할 것: **라이브 모드 실행** `python -m src.evaluate --live`. 같은 평가셋을 실제 부품으로 돌려, 오프라인에서는 못 잡는 문제(라이브 검색기의 근거 누락, MCP 웹 검색 시간 초과, MediaPipe 판정 흔들림)를 봅니다.
+추가할 것: **라이브 모드 실행** `python -m src.evaluation.evaluate --live`. 같은 평가셋을 실제 부품으로 돌려, 오프라인에서는 못 잡는 문제(라이브 검색기의 근거 누락, MCP 웹 검색 시간 초과, MediaPipe 판정 흔들림)를 봅니다.
 
 ### B. LLM 심사 (LLM-as-a-Judge)
 
@@ -109,13 +109,13 @@ RAGAS 는 설치하지 않고, 이미 있는 값과 judge 로 같은 질문에 �
 
 | 명령 | 내용 | 시간·비용 (제안) |
 |---|---|---|
-| `python -m src.evaluate` | A. 오프라인 코드 채점 (지금 있음) | 수 초, 무료 |
-| `python -m src.evaluate --live` | A. 라이브 코드 채점 | 20문항 × 실제 그래프 ≈ 3~5분 |
-| `python -m src.evaluate --live --judge` | A + B + C. answered 답변을 judge 로 2회 채점 | Bedrock 호출 약 20(코칭) + 2×answered(심사) 회 |
-| `python -m src.calibrate --live` | C. 라이브 검색기로 검색 지표 | Titan 임베딩 50회 |
-| `python -m src.evaluate --live --judge --save --label v2 --compare evaluation/results/<v1>.json` | 전후 비교(4-3) | 위와 같음 |
+| `python -m src.evaluation.evaluate` | A. 오프라인 코드 채점 (지금 있음) | 수 초, 무료 |
+| `python -m src.evaluation.evaluate --live` | A. 라이브 코드 채점 | 20문항 × 실제 그래프 ≈ 3~5분 |
+| `python -m src.evaluation.evaluate --live --judge` | A + B + C. answered 답변을 judge 로 2회 채점 | Bedrock 호출 약 20(코칭) + 2×answered(심사) 회 |
+| `python -m src.evaluation.calibrate --live` | C. 라이브 검색기로 검색 지표 | Titan 임베딩 50회 |
+| `python -m src.evaluation.evaluate --live --judge --save --label v2 --compare evaluation/results/<v1>.json` | 전후 비교(4-3) | 위와 같음 |
 | `... --strict-model` | 코칭 모델 대체 경로 끄기(회차 비교용, 4차부터) | 같음 |
-| `python -m src.evaluate --set evaluation/guardrail_stress.csv [--live --judge]` | 가드레일 스트레스 세트 18건 | 오프라인 수 초 |
+| `python -m src.evaluation.evaluate --set evaluation/guardrail_stress.csv [--live --judge]` | 가드레일 스트레스 세트 18건 | 오프라인 수 초 |
 
 결과는 `evaluation/results/<날짜>_<버전>.json` 으로 남깁니다(문항별 판정·답변·근거·judge 결과·지표). 화면 출력은 유형별 요약 + 실패·검토 대상만.
 
@@ -183,7 +183,7 @@ SERVICE.md 5장의 완성 기준은 아직 처음 스펙(22문항 · 필수 9문
 
 ## 9. 첫 라이브 기준선 v1 (2026-11-12)
 
-`python -m src.evaluate --live --judge --save --label v1` · 코칭 모델 Sonnet 4.5 · judge Sonnet 4.5(temperature 0)
+`python -m src.evaluation.evaluate --live --judge --save --label v1` · 코칭 모델 Sonnet 4.5 · judge Sonnet 4.5(temperature 0)
 
 | 항목 | 결과 |
 |---|---|
@@ -210,7 +210,7 @@ SERVICE.md 5장의 완성 기준은 아직 처음 스펙(22문항 · 필수 9문
 - 5 (생성기): 시스템 프롬프트에 "근거가 골프 규칙 문서이면 몇 년판 기준인지 밝힌다"
 - 1 (검색기): `TOP_K` 3 → 4 ('양손 연결' 조각이 BM25 4위였음)
 
-`python -m src.evaluate --live --judge --save --label v2 --compare <v1>`
+`python -m src.evaluation.evaluate --live --judge --save --label v2 --compare <v1>`
 
 | 항목 | v1 | v2 |
 |---|---|---|
@@ -246,7 +246,7 @@ v2 에서 새로 나온 것
 
 ## 12. v3 → v4 (2026-11-12)
 
-`python -m src.evaluate --live --judge --strict-model --save --label v4 --compare <v3>` · 코칭·judge 모두 Sonnet 4.5(3차와 같은 조건) · 상세: [round4_report.md](round4_report.md)
+`python -m src.evaluation.evaluate --live --judge --strict-model --save --label v4 --compare <v3>` · 코칭·judge 모두 Sonnet 4.5(3차와 같은 조건) · 상세: [round4_report.md](round4_report.md)
 
 고친 것
 - **웹 검색 대체 경로** — 환경 문제: 이 네트워크에서 DuckDuckGo 가 응답하지 않아, 측정한 성공률 순서(yahoo → yandex → google → bing)로 엔진을 바꿔 가며 시도. 키워드 검색어(kiwipiepy 명사·숫자)를 먼저 쓰고, 검색 전체 40초 제한
