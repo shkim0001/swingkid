@@ -176,6 +176,228 @@ select:focus-visible { outline: none; box-shadow: 0 0 0 4px rgb(0 113 227 / .25)
 .tv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px 20px; flex-wrap: wrap; padding: 4px 4px 0; }
 .tv-head h1 { margin: 0; font-family: var(--font-display); font-size: 32px; font-weight: 700; letter-spacing: -.03em; }
 .tv-sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 460px; }
+/* Agent 교육 화면 (edu.js 가 그림) — 16:9 발표 슬라이드
+   글자 크기는 슬라이드 폭(cqw)에 비례해 전체 화면에서도 같은 비율로 커집니다.
+   제목 도현체 · 본문 주아체 · 코드 D2Coding. 개념마다 --ac 색 하나로 강조합니다. */
+:root { --edu-title: "Do Hyeon", var(--font-display); --edu-body: "Jua", var(--font); --edu-code: "D2Coding", Consolas, var(--mono); }
+/* 서비스 첫 화면 (#homeView) — 상단 바 없이, 빛 번짐 배경 + 히어로 + 핵심 기능 3개 */
+.home[hidden], .page[hidden] { display: none; }
+body.is-home .nav { display: none; }
+.home { position: relative; min-height: 100vh; overflow: hidden; isolation: isolate; }
+.home-glow { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(42% 46% at 82% 18%, rgb(142 92 247 / .16), transparent 70%),
+              radial-gradient(40% 44% at 10% 30%, rgb(47 107 255 / .14), transparent 70%),
+              radial-gradient(36% 40% at 55% 100%, rgb(48 209 88 / .10), transparent 70%); }
+.home-top { max-width: 1200px; margin: 0 auto; padding: 22px 24px 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.home-logo { display: flex; align-items: center; gap: 10px; border: 0; background: none; padding: 0; cursor: pointer; font: 600 19px var(--font); color: var(--fg); }
+.home-logo .brand-mark { width: 34px; height: 34px; }
+.home-links { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: color-mix(in srgb, var(--surface) 70%, transparent);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 0 0 1px var(--line); }
+.home-links button { border: 0; background: none; cursor: pointer; font: 500 14px var(--font); color: var(--fg); padding: 7px 14px; border-radius: 999px; }
+.home-links button:hover { background: var(--surface-2); }
+.home-links button:last-child { color: var(--yellow); }
+.home-in { max-width: 1200px; margin: 0 auto; padding: 24px 24px 40px; display: flex; flex-direction: column; gap: 36px; }
+.home-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .92fr); gap: 64px; align-items: center; min-height: min(640px, calc(100vh - 250px)); }
+.home-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 22px; }
+.home-copy h1, .home-lead { word-break: keep-all; text-wrap: balance; }   /* 한국어는 단어 단위로 줄바꿈 */
+.home-kicker { font-size: 13px; font-weight: 600; color: var(--yellow); background: color-mix(in srgb, var(--yellow) 12%, var(--surface)); padding: 6px 13px; border-radius: 999px; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--yellow) 20%, transparent); }
+.home-copy h1 { margin: 0; font-family: var(--font-display); font-size: clamp(40px, 5.4vw, 66px); line-height: 1.07; font-weight: 800; letter-spacing: -.045em; }
+.home-grad { background: linear-gradient(90deg, #2f6bff, #8e5cf7); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.home-lead { margin: 0; font-size: 19px; line-height: 1.6; color: color-mix(in srgb, var(--fg) 62%, var(--muted)); max-width: 28em; }
+.home-cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.home-btn { padding: 14px 26px; font-size: 16px; }
+.home-btn.yellow { box-shadow: 0 12px 28px color-mix(in srgb, var(--yellow) 34%, transparent); }
+.home-btn.ghost { background: color-mix(in srgb, var(--surface) 80%, transparent); box-shadow: inset 0 0 0 1px var(--line); }
+.home-meta { margin: 2px 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; color: var(--muted); }
+.home-meta span::before { content: "✓"; margin-right: 6px; color: #30d158; font-weight: 700; }
+.home-art { position: relative; }
+.home-art > svg { display: block; width: 100%; height: auto; border-radius: 44px; box-shadow: 0 40px 80px -30px rgb(47 107 255 / .35); }
+.ha-bg { fill: #eef2ff; }
+.ha-b1 { animation: haFloat 14s ease-in-out infinite alternate; }
+.ha-b2 { animation: haFloat 18s ease-in-out infinite alternate-reverse; }
+.ha-b3 { animation: haFloat 22s ease-in-out infinite alternate; }
+@keyframes haFloat { from { transform: translate(0, 0); } to { transform: translate(28px, -22px); } }
+@media (prefers-reduced-motion: reduce) { .ha-b1, .ha-b2, .ha-b3 { animation: none; } }
+/* 핵심 기능 3개 */
+.home-features { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.home-features article { display: flex; gap: 14px; padding: 20px; border-radius: 22px; background: color-mix(in srgb, var(--surface) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 0 0 1px var(--line), var(--shadow); }
+.hf-i { width: 42px; height: 42px; flex: none; border-radius: 13px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #2f6bff, #8e5cf7); }
+.hf-i svg { width: 22px; height: 22px; }
+.home-features h2 { margin: 2px 0 4px; font-family: var(--font-display); font-size: 17px; letter-spacing: -.02em; }
+.home-features p { margin: 0; font-size: 14px; line-height: 1.55; color: color-mix(in srgb, var(--fg) 66%, var(--muted)); word-break: keep-all; }
+.home-foot { margin: 0; text-align: center; font-size: 12px; color: var(--muted); }
+@media (prefers-color-scheme: dark) {
+  .ha-bg { fill: #0e1324; }
+  .home-art > svg { box-shadow: 0 40px 80px -30px rgb(94 92 230 / .45); }
+}
+.brand.is-link { cursor: pointer; }
+@media (max-width: 960px) {
+  .home-hero { grid-template-columns: minmax(0, 1fr); gap: 40px; min-height: 0; }
+  .home-art { max-width: 480px; width: 100%; margin: 0 auto; }
+  .home-features { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 760px) {
+  .home-top { padding: 14px 16px 0; }
+  .home-links button { padding: 6px 10px; font-size: 13px; }
+  .home-logo .wordmark { display: none; }
+  .home-in { padding: 18px 16px 32px; gap: 28px; }
+  .home-lead { font-size: 17px; }
+}
+/* 상단 바 오른쪽 끝의 교육 버튼 */
+.edu-open { margin-left: 4px; background: color-mix(in srgb, var(--yellow) 12%, var(--surface-2)); color: var(--yellow); font-weight: 600; }
+.edu-open svg { width: 17px; height: 17px; }
+/* 교육 팝업: 화면 전체를 덮고, 슬라이드는 무대 크기에 맞춘 16:9 */
+.edu-dlg { inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--bg); color: var(--fg); }
+.edu-dlg[open] { display: flex; flex-direction: column; }
+.edu-dlg::backdrop { background: rgb(0 0 0 / .45); }
+body:has(.edu-dlg[open]) { overflow: hidden; }
+.edu-bar { display: flex; align-items: center; gap: 14px 18px; padding: 10px 20px; background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid var(--line); }
+.edu-bar-title { flex: none; }
+.edu-bar-title h1 { margin: 0; font: 22px var(--edu-title); letter-spacing: -.01em; }
+.edu-bar-title p { margin: 0; font: 12px var(--edu-body); color: var(--muted); }
+.edu-bar .edu-tabs { flex: 1; min-width: 0; }
+.edu-close { font-size: 16px; }
+.edu-stage { flex: 1; min-height: 0; overflow: auto; display: flex; padding: 18px 22px 22px; container: stage / size; }
+.edu-stage > .edu-slide { margin: auto; flex: none; width: min(100cqw, calc(100cqh * 16 / 9)); }
+.edu-ctrl { display: flex; align-items: center; gap: 8px; }
+.edu-ctrl .btn { width: 40px; height: 40px; padding: 0; justify-content: center; font-size: 17px; }
+.edu-pos { min-width: 64px; text-align: center; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.edu-tabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding: 4px 2px; }
+.edu-tabs::-webkit-scrollbar { display: none; }
+.edu-tabs button { flex: none; border: 0; background: var(--surface); box-shadow: var(--shadow); border-radius: 14px; padding: 7px 13px; cursor: pointer; text-align: left; font: 15px var(--edu-title); color: var(--fg); border-top: 3px solid var(--ac, var(--yellow)); }
+.edu-tabs button small { display: block; font: 12px var(--edu-body); color: var(--muted); margin-top: 1px; }
+.edu-tabs button[aria-selected="true"] { background: var(--ac, var(--yellow)); color: #fff; }
+.edu-tabs button[aria-selected="true"] small { color: rgb(255 255 255 / .85); }
+
+/* 슬라이드 틀 */
+#eduBody { min-width: 0; }
+.edu-dlg:fullscreen .edu-bar { display: none; }   /* 전체 화면 발표: 슬라이드만 */
+.edu-dlg:fullscreen .edu-stage { padding: 0; }
+.edu-dlg:fullscreen .edu-slide { border-radius: 0; box-shadow: none; }
+.edu-slide { --ac: var(--yellow); position: relative; container: slide / inline-size; aspect-ratio: 16 / 9;
+  background: var(--surface); border-radius: 26px; box-shadow: var(--shadow); overflow: hidden; font-family: var(--edu-body); color: var(--fg); }
+.edu-slide::before { content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(70% 55% at 0% 0%, color-mix(in srgb, var(--ac) 11%, transparent), transparent 70%),
+              radial-gradient(40% 40% at 100% 100%, color-mix(in srgb, var(--ac) 6%, transparent), transparent 70%); }
+.edu-slide.t-arch { aspect-ratio: auto; }
+.edu-slide b, .edu-slide strong, .edu-slide dt, .edu-slide h2, .edu-slide h3 { font-weight: 400; }
+.es-in { position: relative; height: 100%; box-sizing: border-box; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 1.8cqw; padding: 3cqw 3.6cqw 1.6cqw; }
+.es-head { display: flex; flex-direction: column; gap: .55cqw; }
+.es-kicker { display: flex; align-items: center; gap: .8cqw; font-size: clamp(12px, 1.12cqw, 22px); color: var(--muted); }
+.es-no { font-family: var(--edu-title); color: #fff; background: var(--ac); border-radius: 999px; padding: .15em .7em; letter-spacing: .02em; }
+.es-head h2 { margin: 0; font-family: var(--edu-title); font-size: clamp(25px, 3.25cqw, 64px); line-height: 1.12; letter-spacing: -.01em; }
+.es-sub { margin: 0; max-width: 64em; font-size: clamp(14px, 1.32cqw, 26px); line-height: 1.5; color: color-mix(in srgb, var(--fg) 70%, var(--muted)); }
+.es-main { min-height: 0; min-width: 0; }
+.es-two { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 2.6cqw; align-items: start; }
+.es-two.code { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.es-left, .es-right { display: flex; flex-direction: column; gap: 1.4cqw; min-width: 0; }
+.es-foot { display: flex; justify-content: space-between; align-items: center; font-size: clamp(11px, .95cqw, 18px); color: var(--muted); font-variant-numeric: tabular-nums; }
+.es-progress { position: absolute; left: 0; bottom: 0; height: 4px; background: var(--ac); border-radius: 0 4px 4px 0; transition: width .3s var(--ease); }
+.es-ic { font: .9em var(--edu-code); background: color-mix(in srgb, var(--ac) 12%, transparent); color: color-mix(in srgb, var(--ac) 70%, var(--fg)); padding: .05em .4em; border-radius: .35em; }
+
+/* 흐름도 */
+.es-fig { margin: 0; }
+.es-fig-box { overflow-x: auto; background: color-mix(in srgb, var(--ac) 5%, var(--surface-2)); border-radius: 1.4cqw; padding: 1.1cqw; }
+.es-fig figcaption { margin-top: .6cqw; font-size: clamp(12px, 1.02cqw, 20px); color: var(--muted); }
+.edu-dg { display: block; width: 100%; height: auto; min-width: 560px; font-family: var(--edu-body); }
+.dg-group { fill: color-mix(in srgb, var(--surface) 60%, transparent); stroke: color-mix(in srgb, var(--fg) 14%, transparent); stroke-dasharray: 5 4; }
+.dg-glabel { font-size: 12.5px; fill: var(--muted); }
+.dg-n rect { fill: var(--surface); stroke: color-mix(in srgb, var(--fg) 20%, transparent); stroke-width: 1.3; }
+.dg-n.k-main rect { fill: color-mix(in srgb, var(--ac) 13%, var(--surface)); stroke: var(--ac); stroke-width: 1.6; }
+.dg-n.k-llm rect { fill: color-mix(in srgb, #8e5cf7 15%, var(--surface)); stroke: #8e5cf7; }
+.dg-n.k-store rect { fill: var(--ok-soft); stroke: var(--ok); }
+.dg-n.k-human rect { fill: var(--warn-soft); stroke: var(--warn); }
+.dg-n.k-warn rect { fill: var(--bad-soft); stroke: var(--bad); }
+.dg-n.k-ghost rect { fill: none; stroke-dasharray: 4 3; }
+.dg-t { font-size: 14.5px; fill: var(--fg); text-anchor: middle; }
+.dg-s { font-size: 11.5px; fill: var(--muted); text-anchor: middle; }
+.dg-go { cursor: pointer; }
+.dg-go:hover rect, .dg-go:focus rect { stroke-width: 2.6; }
+.dg-edge { fill: none; stroke-width: 1.7; stroke-linejoin: round; }
+.dg-edge.e-e { stroke: color-mix(in srgb, var(--fg) 50%, transparent); }
+.dg-edge.e-d { stroke: color-mix(in srgb, var(--fg) 42%, transparent); stroke-dasharray: 5 4; }
+.dg-edge.e-m { stroke: color-mix(in srgb, var(--fg) 20%, transparent); stroke-width: 1.2; }
+.dg-head.h-e { fill: color-mix(in srgb, var(--fg) 50%, transparent); }
+.dg-head.h-d { fill: color-mix(in srgb, var(--fg) 42%, transparent); }
+.dg-head.h-m { fill: color-mix(in srgb, var(--fg) 22%, transparent); }
+.dg-elabel { font-size: 12px; fill: var(--ac); text-anchor: middle; paint-order: stroke; stroke: color-mix(in srgb, var(--ac) 5%, var(--surface-2)); stroke-width: 5px; stroke-linejoin: round; }
+.dg-note { font-size: 12.5px; fill: var(--muted); }
+
+/* 번호 매긴 설명 */
+.es-pts { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.es-pts li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1cqw; padding: 1.05cqw 0; border-bottom: 1px dashed color-mix(in srgb, var(--fg) 14%, transparent); }
+.es-pts li:first-child { padding-top: 0; }
+.es-pts li:last-child { border-bottom: 0; }
+.es-n { width: clamp(22px, 2.15cqw, 42px); height: clamp(22px, 2.15cqw, 42px); border-radius: 50%; display: grid; place-items: center; background: var(--ac); color: #fff; font: clamp(13px, 1.2cqw, 24px) var(--edu-title); }
+.es-pts b { display: block; font-size: clamp(15px, 1.5cqw, 29px); line-height: 1.3; color: color-mix(in srgb, var(--ac) 55%, var(--fg)); }
+.es-pts p { margin: .3cqw 0 0; font-size: clamp(13px, 1.17cqw, 23px); line-height: 1.55; color: color-mix(in srgb, var(--fg) 76%, var(--muted)); overflow-wrap: anywhere; }
+.es-pts.small li { padding: .8cqw 0; }
+.es-pts.small b { font-size: clamp(13px, 1.35cqw, 26px); }
+.es-pts.small p { font-size: clamp(11.5px, 1.1cqw, 21px); }
+.es-h3, .es-terms h3, .es-toolbox h3 { margin: 0 0 .7cqw; font: clamp(13px, 1.12cqw, 22px) var(--edu-title); color: var(--ac); letter-spacing: .02em; }
+
+/* 용어 */
+.es-terms dl { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45cqw 2cqw; }
+.es-terms dl > div { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .8cqw; align-items: baseline; padding: .35cqw 0; border-bottom: 1px solid color-mix(in srgb, var(--fg) 8%, transparent); min-width: 0; }
+.es-terms dt { font-size: clamp(13px, 1.15cqw, 22px); color: var(--ac); white-space: nowrap; }
+.es-terms dd { margin: 0; font-size: clamp(12px, 1.02cqw, 20px); line-height: 1.45; color: color-mix(in srgb, var(--fg) 72%, var(--muted)); overflow-wrap: anywhere; }
+
+/* 코드 */
+.es-code { margin: 0; min-width: 0; }
+.es-code figcaption { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: .6cqw; font-size: clamp(12px, 1.05cqw, 20px); color: var(--muted); }
+.es-copy { border: 0; cursor: pointer; font: clamp(11px, .95cqw, 18px) var(--edu-body); color: var(--ac); background: color-mix(in srgb, var(--ac) 12%, transparent); padding: .3em .9em; border-radius: 999px; }
+.es-code pre { margin: 0; max-height: none; overflow-x: auto; background: #15161c; color: #eef0f6; border-radius: 1.3cqw; padding: 1.4cqw 1.6cqw;
+  font: clamp(10.5px, 1.02cqw, 20px)/1.55 var(--edu-code); tab-size: 4; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06); }
+.tk-c { color: #7f8597; } .tk-s { color: #a6e3a1; } .tk-k { color: #f5a3d0; } .tk-d { color: #89c4ff; }
+
+/* 바로 써 볼 도구 */
+.es-toolbox ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: .7cqw; }
+.es-toolbox li { display: grid; grid-template-columns: minmax(0, 1fr); gap: .25cqw; padding: .9cqw 1.1cqw; border-radius: 1cqw; background: color-mix(in srgb, var(--ac) 7%, var(--surface-2)); }
+.es-toolbox b { font-size: clamp(13px, 1.3cqw, 25px); color: color-mix(in srgb, var(--ac) 60%, var(--fg)); }
+.es-toolbox span { font-size: clamp(11.5px, 1.05cqw, 20px); color: color-mix(in srgb, var(--fg) 75%, var(--muted)); }
+.es-toolbox code, .es-card code { justify-self: start; max-width: 100%; font: clamp(11px, .98cqw, 19px)/1.45 var(--edu-code); background: #15161c; color: #eef0f6; padding: .25em .7em; border-radius: .5em; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* 카드 (원칙 · 적용 · 도구) */
+.es-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4cqw; }
+.es-card { position: relative; display: flex; flex-direction: column; gap: .55cqw; padding: 1.5cqw 1.7cqw; border-radius: 1.4cqw; background: color-mix(in srgb, var(--ac) 6%, var(--surface-2)); min-width: 0; overflow: hidden; }
+.es-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--ac); }
+.es-card-k { font: clamp(14px, 1.45cqw, 28px) var(--edu-title); color: var(--ac); }
+.es-card b { font-size: clamp(15px, 1.55cqw, 30px); line-height: 1.3; }
+.es-card p { margin: 0; font-size: clamp(12.5px, 1.13cqw, 22px); line-height: 1.55; color: color-mix(in srgb, var(--fg) 74%, var(--muted)); overflow-wrap: anywhere; }
+.es-note { margin: 1.4cqw 0 0; font-size: clamp(12px, 1.05cqw, 20px); color: var(--warn); }
+
+/* 마지막 개념: 기존 'SwingKid는 이렇게 동작해요' 섹션을 슬라이드 안에 (그림만, 전체 설명은 '크게 보기') */
+#eduView .arch-wrap { max-width: 100%; min-width: 0; padding: 0; }
+.es-arch-slot { min-width: 0; }
+.t-arch .arch-wrap > .card { background: none; box-shadow: none; padding: 0; }
+.t-arch .arch-head { justify-content: flex-end; }
+.t-arch .arch-head h2, .t-arch .arch-lead, .t-arch .arch-note, .t-arch .gka-steps { display: none; }
+.t-arch .arch-mount { margin-top: 0; }
+
+/* 좁은 화면: 16:9 를 풀고 세로로 쌓기 */
+@container slide (max-width: 760px) {
+  .es-two, .es-two.code { grid-template-columns: minmax(0, 1fr); }
+  .es-cards { grid-template-columns: minmax(0, 1fr); }
+  .es-terms dl { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 1000px) { .edu-slide { aspect-ratio: auto; } }
+@media (max-width: 1000px) {
+  .edu-bar { flex-wrap: wrap; }
+  .edu-bar .edu-tabs { order: 3; flex-basis: 100%; }
+  .edu-stage { container-type: inline-size; }
+  .edu-stage > .edu-slide { width: 100%; }
+}
+@media (max-width: 760px) {
+  .edu-open span { display: none; }
+  .edu-open { padding: 8px 10px; }
+  .edu-bar { padding: 8px 12px; }
+  .edu-bar-title p { display: none; }
+  .edu-stage { padding: 10px; }
+  .edu-slide { border-radius: 20px; }
+  .es-in { padding: 20px 16px 14px; gap: 16px; }
+  .edu-full { display: none; }
+}
 .tv-rates { display: flex; gap: 10px; }
 .rate { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow); padding: 10px 14px; min-width: 96px; }
 .rate .lbl { font-size: 11.5px; color: var(--muted); }
@@ -683,6 +905,10 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   .sheet-in { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
 }
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=Jua&display=swap">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css">
 </head>
 <body>
 <nav class="nav" aria-label="상단">
@@ -700,6 +926,9 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       <span id="mode" class="mode">확인 중</span>
       <label class="nav-field" id="modelField" for="model">코칭 모델 <select id="model"></select></label>
     </span>
+    <button class="btn edu-open" id="eduOpen" type="button" aria-haspopup="dialog" aria-label="Agent 교육 자료 열기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5A1.5 1.5 0 0 1 4.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4.5A1.5 1.5 0 0 1 3 16.5z"/><path d="M21 5.5A1.5 1.5 0 0 0 19.5 4H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h5.5a1.5 1.5 0 0 0 1.5-1.5z"/></svg><span>Agent 교육</span>
+    </button>
     <button class="btn yellow install-btn" id="installBtn" type="button" hidden>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>앱 설치
     </button>
@@ -707,7 +936,61 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   </div>
 </nav>
 
-<div class="page">
+<section class="home" id="homeView" aria-label="SwingKid 소개" hidden>
+  <div class="home-glow" aria-hidden="true"></div>
+  <header class="home-top">
+    <button class="home-logo" type="button" data-go="home" aria-label="SwingKid 첫 화면"><span class="brand-mark logo" data-icon="mascot" aria-hidden="true"></span><span class="wordmark">Swing<b>Kid</b></span></button>
+    <nav class="home-links" aria-label="바로 가기">
+      <button type="button" data-go="coach">코칭</button>
+      <button type="button" data-go="train">훈련</button>
+      <button type="button" data-go="edu">Agent 교육</button>
+    </nav>
+  </header>
+  <div class="home-in">
+    <div class="home-hero">
+      <div class="home-copy">
+        <span class="home-kicker">골프 입문 0~3개월을 위한 AI 자세 코치</span>
+        <h1>레슨 없는 날에도,<br><span class="home-grad">내 스윙</span>을 확인하세요</h1>
+        <p class="home-lead">사진 한 장, 영상 한 편이면 자세를 각도로 재고, 골프 문서를 근거로 교정 방법과 연습까지 알려 드려요.</p>
+        <div class="home-cta">
+          <button class="btn yellow home-btn" type="button" data-go="coach">코칭 시작하기 <span aria-hidden="true">→</span></button>
+          <button class="btn home-btn ghost" type="button" data-go="train">훈련 달력</button>
+        </div>
+        <p class="home-meta"><span>로그인 없이 바로</span><span>사진 · 영상 · GIF</span><span>근거 없으면 모른다고 답해요</span></p>
+      </div>
+      <div class="home-art" aria-hidden="true">
+        <svg viewBox="0 0 560 560">
+          <defs>
+            <filter id="haBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="46"/></filter>
+            <linearGradient id="haArc" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset=".55" stop-color="#ffffff" stop-opacity=".9"/><stop offset="1" stop-color="#ffffff"/></linearGradient>
+            <radialGradient id="haBall" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff"/><stop offset=".45" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+            <clipPath id="haClip"><rect width="560" height="560" rx="44"/></clipPath>
+          </defs>
+          <g clip-path="url(#haClip)">
+            <rect width="560" height="560" class="ha-bg"/>
+            <g filter="url(#haBlur)">
+              <circle class="ha-b1" cx="190" cy="210" r="170" fill="#2f6bff"/>
+              <circle class="ha-b2" cx="390" cy="330" r="160" fill="#8e5cf7"/>
+              <circle class="ha-b3" cx="250" cy="450" r="120" fill="#30d158" opacity=".55"/>
+            </g>
+            <path d="M70 470 C 110 170, 410 70, 482 300" fill="none" stroke="url(#haArc)" stroke-width="3" stroke-linecap="round"/>
+            <path d="M70 470 C 120 190, 400 100, 468 310" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M70 470 C 130 210, 390 130, 454 320" fill="none" stroke="#fff" stroke-opacity=".14" stroke-width="1" stroke-linecap="round"/>
+            <circle cx="482" cy="300" r="34" fill="url(#haBall)" opacity=".5"/>
+            <circle cx="482" cy="300" r="9" fill="#fff"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="home-features">
+      <article><span class="hf-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M12 7v6l-3 7M12 13l3 7M8 10l4-2 4 2"/></svg></span><div><h2>각도로 보는 자세</h2><p>관절 좌표에서 척추 · 무릎 · 왼팔 각도를 코드가 계산해 교육용 기준과 비교해요.</p></div></article>
+      <article><span class="hf-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 14l2.5 2.5L16 11"/></svg></span><div><h2>근거로만 답하는 코치</h2><p>골프 지식 문서 25개와 웹 검색을 근거로 답하고, 근거가 없으면 지어내지 않아요.</p></div></article>
+      <article><span class="hf-i"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 15l2 2 4-4"/></svg></span><div><h2>연습까지 이어지게</h2><p>고칠 점이 나오면 2주 연습 플랜을 추천하고, 달력에서 체크하며 달성률을 봐요.</p></div></article>
+    </div>
+    <p class="home-foot">각도 기준값과 골프 문서는 교육용입니다 · 통증 · 부상은 전문가와 상담하세요</p>
+  </div>
+</section>
+<div class="page" id="appPage">
   <div class="scrim" id="scrim" aria-hidden="true"></div>
   <aside class="left" id="sidePanel" aria-label="내 코칭 요약">
     <div class="drawer-head">
@@ -862,23 +1145,41 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     </section>
   </main>
 
+
 </div>
 
 <dialog class="sheet" id="schedDlg" aria-labelledby="schedTitle"></dialog>
 <dialog class="sheet" id="drillDlg" aria-labelledby="drillTitle"></dialog>
+<dialog class="edu-dlg" id="eduView" aria-label="Agent 교육">
+  <header class="edu-bar">
+    <div class="edu-bar-title">
+      <h1 id="eduTitle">Agent 교육</h1>
+      <p id="eduSub"></p>
+    </div>
+    <div class="edu-tabs" id="eduTabs" role="tablist" aria-label="개념 선택"></div>
+    <div class="edu-ctrl">
+      <button class="btn" id="eduPrev" type="button" aria-label="이전">←</button>
+      <span class="edu-pos" id="eduPos" aria-live="polite"></span>
+      <button class="btn yellow" id="eduNext" type="button" aria-label="다음">→</button>
+      <button class="btn edu-full" id="eduFull" type="button" aria-label="전체 화면으로 발표 (F)" title="전체 화면 (F)">⛶</button>
+      <button class="btn edu-close" id="eduClose" type="button" aria-label="교육 자료 닫기 (Esc)" title="닫기 (Esc)">✕</button>
+    </div>
+  </header>
+  <div class="edu-stage" id="eduBody"></div>
+  <section class="arch-wrap" id="architecture" hidden aria-labelledby="archTitle">
+    <div class="card card-pad">
+      <div class="arch-head">
+        <h2 id="archTitle">SwingKid는 이렇게 동작해요</h2>
+        <a class="btn" href="/architecture" target="_blank" rel="noopener">크게 보기 ↗</a>
+      </div>
+      <p class="arch-lead">질문이 들어오면 가드레일이 먼저 거르고, Supervisor가 질문 종류에 맞는 sub-agent를 골라 근거를 모은 뒤, coach가 그 근거로 LLM(Bedrock Claude)을 한 번 불러 답변을 씁니다. 근거가 없으면 LLM을 부르지 않고 모른다고 답합니다. <b>모듈을 누르면 실제 코드가 열려요.</b></p>
+      <div id="archMount" class="arch-mount"></div>
+      <p class="arch-note">채점용 오프라인 모드에서는 Bedrock·웹·포즈 추정 대신 가짜 모델·가짜 웹 검색기·관절 좌표 샘플을 써서 실제 API 호출 없이 같은 흐름을 확인합니다.</p>
+    </div>
+  </section>
+</dialog>
 <div class="toast" id="toast" role="status" hidden></div>
 
-<section class="arch-wrap" id="architecture" aria-labelledby="archTitle">
-  <div class="card card-pad">
-    <div class="arch-head">
-      <h2 id="archTitle">SwingKid는 이렇게 동작해요</h2>
-      <a class="btn" href="/architecture" target="_blank" rel="noopener">크게 보기 ↗</a>
-    </div>
-    <p class="arch-lead">질문이 들어오면 가드레일이 먼저 거르고, Supervisor가 질문 종류에 맞는 sub-agent를 골라 근거를 모은 뒤, coach가 그 근거로 LLM(Bedrock Claude)을 한 번 불러 답변을 씁니다. 근거가 없으면 LLM을 부르지 않고 모른다고 답합니다. <b>모듈을 누르면 실제 코드가 열려요.</b></p>
-    <div id="archMount" class="arch-mount"></div>
-    <p class="arch-note">채점용 오프라인 모드에서는 Bedrock·웹·포즈 추정 대신 가짜 모델·가짜 웹 검색기·관절 좌표 샘플을 써서 실제 API 호출 없이 같은 흐름을 확인합니다.</p>
-  </div>
-</section>
 
 <script>
 (() => {
@@ -902,7 +1203,10 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     lead_arm: { label: "정점 왼팔", lo: 160, hi: 180, min: 100, max: 180, range: "기준 160° 이상" },
   };
   document.querySelectorAll('[data-icon="flag"]').forEach((n) => (n.innerHTML = ICON.flag));
-  document.querySelectorAll('[data-icon="mascot"]').forEach((n) => (n.innerHTML = ICON.mascot));
+  // 로고 SVG 의 그라데이션 id 가 겹치면 숨겨진 첫 로고를 참조해 색이 사라지므로, 넣을 때마다 id 를 고유하게
+  let mascotSeq = 0;
+  const mascotSvg = () => { const k = ++mascotSeq; return ICON.mascot.replaceAll("sk-bg", "sk-bg" + k).replaceAll("sk-sw", "sk-sw" + k); };
+  document.querySelectorAll('[data-icon="mascot"]').forEach((n) => (n.innerHTML = mascotSvg()));
 
   let mode = "live", demo = false, fixtures = [], samples = [], mediaSamples = [];
   const modelLabels = {};
@@ -1252,7 +1556,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     newBtn.disabled = !!busyId;
     newBtn.addEventListener("click", startNew);
     if (!th) {
-      const flag = el("div", { class: "avatar coach", "aria-hidden": "true" }); flag.innerHTML = ICON.mascot;
+      const flag = el("div", { class: "avatar coach", "aria-hidden": "true" }); flag.innerHTML = mascotSvg();
       const hour = new Date().getHours();
       const greet = hour < 5 ? "늦은 밤이에요" : hour < 11 ? "좋은 아침이에요" : hour < 17 ? "좋은 오후예요" : "좋은 저녁이에요";
       $("activeHead").replaceChildren(
@@ -1498,7 +1802,7 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
     stack.append(el("div", { class: "bubble-me" }, t.q));
     const q = el("div", { class: "turn-q" }, el("span", { class: "time" }, clock(t.ts)), stack);
 
-    const avatar = el("div", { class: "avatar coach", "aria-hidden": "true" }); avatar.innerHTML = ICON.mascot;
+    const avatar = el("div", { class: "avatar coach", "aria-hidden": "true" }); avatar.innerHTML = mascotSvg();
     let bubble, label = "";
     if (t.res) {
       const d = t.res.data;
@@ -2108,16 +2412,34 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
   }
 
   function setView(v, push = true) {
-    view = v === "train" ? "train" : "coach";
+    view = v === "train" ? "train" : v === "home" ? "home" : "coach";
+    $("homeView").hidden = view !== "home";
+    $("appPage").hidden = view === "home";
+    document.body.classList.toggle("is-home", view === "home");
     $("coachView").hidden = view !== "coach";
     $("trainView").hidden = view !== "train";
     $("modeSeg").querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === view)));
-    if (push) history.replaceState(null, "", view === "train" ? "#training" : location.pathname + location.search);
+    if (push) history.replaceState(null, "", location.pathname + location.search + (view === "train" ? "#training" : view === "coach" ? "#coach" : ""));
     closeDrawer();
     if (view === "train") { loadTrainScreen(); scrollTo({ top: 0 }); }
+    if (view === "home") scrollTo({ top: 0 });
   }
+  const viewFromHash = (h) => (h === "#training" ? "train" : h === "#coach" ? "coach" : "home");   // 주소 없이 들어오면 첫 화면
   $("modeSeg").addEventListener("click", (e) => { const b = e.target.closest("button[data-view]"); if (b && !busyId) setView(b.dataset.view); });
-  addEventListener("hashchange", () => setView(location.hash === "#training" ? "train" : "coach", false));
+  addEventListener("hashchange", () => {   // #edu… 는 교육 팝업(edu.js), 그 밖은 화면 전환
+    if (window.SwingEdu && SwingEdu.fromHash(location.hash) != null) SwingEdu.open(SwingEdu.fromHash(location.hash));
+    else setView(viewFromHash(location.hash), false);
+  });
+  $("eduOpen").addEventListener("click", () => { closeDrawer(); if (window.SwingEdu) SwingEdu.open(); });
+  $("homeView").addEventListener("click", (e) => {   // 첫 화면 버튼: 코칭 · 훈련 · 교육
+    const b = e.target.closest("[data-go]");
+    if (!b) return;
+    if (b.dataset.go === "edu") { if (window.SwingEdu) SwingEdu.open(); } else if (b.dataset.go !== "home") setView(b.dataset.go);
+  });
+  const brand = document.querySelector(".nav .brand");   // 로고를 누르면 첫 화면으로
+  brand.classList.add("is-link"); brand.setAttribute("role", "link"); brand.setAttribute("tabindex", "0"); brand.setAttribute("title", "첫 화면");
+  brand.addEventListener("click", () => { if (!busyId) setView("home"); });
+  brand.addEventListener("keydown", (e) => { if (e.key === "Enter" && !busyId) setView("home"); });
   $("tvLogin").addEventListener("click", () => {
     if (mqMobile.matches) openDrawer(); else { $("authUser").scrollIntoView({ behavior: "smooth", block: "center" }); $("authUser").focus({ preventScroll: true }); }
   });
@@ -2631,12 +2953,13 @@ pre { max-width: 100%; box-sizing: border-box; margin: 0 0 8px; padding: 10px; b
       el("div", { class: "sheet-foot" }, archive, sched)));
   }
 
-  if (location.hash === "#training") setView("train", false);
+  if (!/^#edu/.test(location.hash)) setView(viewFromHash(location.hash), false);
 
   renderActive(); renderPast(); renderProfile();
   renderNick(); loadServerInfo(); loadMe().then(showLoginError);   // setUser 가 안내를 지우므로 그 뒤에 보여 줌
 })();
 </script>
+<script src="/static/edu.js"></script>
 <script src="/static/arch.js"></script>
 <script>window.SwingKidArch && SwingKidArch.mount(document.getElementById("archMount"));</script>
 <script>

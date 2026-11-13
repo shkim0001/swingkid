@@ -7,9 +7,9 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // 백엔드는 arch.js 를 /static/arch.js 로 내려주므로 같은 경로를 정적 파일로 연결합니다.
-    if (url.pathname === "/static/arch.js") {
-      return env.ASSETS.fetch(new URL("/arch.js", url));
+    // 백엔드는 화면 스크립트(arch.js, edu.js)를 /static/... 로 내려주므로 같은 경로를 정적 파일로 연결합니다.
+    if (["/static/arch.js", "/static/edu.js"].includes(url.pathname)) {
+      return env.ASSETS.fetch(new URL(url.pathname.slice("/static".length), url));
     }
 
     if (!env.BACKEND_URL) {

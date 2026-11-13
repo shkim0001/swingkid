@@ -221,6 +221,12 @@ def architecture_script() -> FileResponse:
     return FileResponse(STATIC_DIR / "arch.js", media_type="text/javascript")
 
 
+@app.get("/static/edu.js", include_in_schema=False)
+def education_script() -> FileResponse:
+    """Agent 교육 화면의 내용과 그리기 코드(정적 파일, SERVICE.md 7장)."""
+    return FileResponse(STATIC_DIR / "edu.js", media_type="text/javascript")
+
+
 # 웹앱 설치(PWA) 파일. Cloudflare 배포에서는 Worker 가 src/api/static 을 직접 내려주고, 여기는 로컬 실행용입니다.
 @app.get("/manifest.webmanifest", include_in_schema=False)
 def web_manifest() -> FileResponse:
