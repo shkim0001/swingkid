@@ -81,7 +81,7 @@ class DuckDuckGoSearch:
         deadline = time.monotonic() + self.total_timeout
         for q in self.queries(query):
             for backend in self.backends:
-                if time.monotonic() > deadline:
+                if time.monotonic() >= deadline:
                     errors.append("전체 시간 제한 초과")
                     break
                 try:
