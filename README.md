@@ -369,7 +369,7 @@ Content-Type: application/json
 - **모바일(760px 이하)**
   - 상단 바는 ☰ · 로고 · 내 캐릭터만 둡니다. 프로필·코칭 목록·판정 기준·모델 선택은 ☰ 로 여는 왼쪽 서랍에 있습니다.
   - 입력창은 한 줄([샘플] [📷] [입력칸] [↑])입니다.
-- **Agent 교육**: 상단 바 오른쪽 끝 'Agent 교육' 버튼을 누르면 화면 전체를 덮는 팝업으로 열립니다(주소 `#edu-<개념>-<장>`, ✕ · Esc 로 닫기). SwingKid 를 만든 SDS AX Agent 교육을 **16:9 발표 슬라이드 41장**으로 정리했습니다. 11개 개념마다 흐름도 · 번호 매긴 설명 · 용어 · 핵심 코드 · 바로 써 볼 도구(archify · graphify · LangGraph Studio · LangSmith · Ouroboros 등)가 있고, ←/→ · Space 로 넘기고 F 로 전체 화면 발표합니다. 폰트는 도현체 · 주아체 · D2Coding. 내용은 [src/api/static/edu.js](src/api/static/edu.js) 의 데이터만 고치면 됩니다.
+- **Agent 교육**: 상단 바 오른쪽 끝 'Agent 교육' 버튼을 누르면 화면 전체를 덮는 팝업으로 열립니다(주소 `#edu-<개념>-<장>`, ✕ · Esc 로 닫기). SwingKid 를 만든 SDS AX Agent 교육을 **16:9 발표 슬라이드 51장**으로 정리했습니다. 12장은 미니 PJT 가이드(일정 · 산출물 규약 · 템플릿 · 12개 패턴 · 제출과 채점)입니다. 11개 개념마다 흐름도 · 번호 매긴 설명 · 용어 · 핵심 코드 · 바로 써 볼 도구(archify · graphify · LangGraph Studio · LangSmith · Ouroboros 등)가 있고, ←/→ · Space 로 넘기고 F 로 전체 화면 발표합니다. 폰트는 도현체 · 주아체 · D2Coding. 내용은 [src/api/static/edu.js](src/api/static/edu.js) 의 데이터만 고치면 됩니다.
 - **아키텍처**: 'SwingKid는 이렇게 동작해요' 다이어그램은 Agent 교육 11장(실전 적용)에 있고, `/architecture` 에서 크게 볼 수 있습니다. 보라색이 LLM·모델 호출이며, 모듈을 누르면 실제 코드가 열립니다.
 
 ## 9. 훈련 관리
